@@ -85,7 +85,7 @@
   *(在末尾追加了自增封包序號與硬體毫秒時間戳)*
 
 ### 5.2 韌體程式碼新增之變數與函數
-最新版韌體 [Gloves/Gloves.ino](file:///C:/Users/Typelin_Station/Desktop/HoloGrip/Gloves/Gloves.ino) 中進行了以下修改以傳送新增參數：
+最新版韌體 [Gloves_Firmware_INO/Gloves_Firmware_INO.ino](../Gloves_Firmware_INO/Gloves_Firmware_INO.ino) 中進行了以下修改以傳送新增參數：
 1. **定義自增 ID 變數**：在 `loop()` 外部宣告了計數器變數：
    `static uint32_t packet_id = 0;`
 2. **呼叫單晶片計時函數 `millis()`**：在 UDP 發送函數 `udp.printf` 中，於最末尾傳入並調用了 Arduino 底層高精度計時函數 **`millis()`**，隨封包發送至電腦：

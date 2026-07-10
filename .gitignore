@@ -1,0 +1,22 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Developer tools & OS files
+.vscode/
+.idea/
+.history/
+.DS_Store
+Thumbs.db
+
+# Folders to exclude from Github upload (as requested)
+Latency_Test/
+Presentations/
+簡報1/
+old/
+vids/
+*.mp4
+*.avi
+*.mov

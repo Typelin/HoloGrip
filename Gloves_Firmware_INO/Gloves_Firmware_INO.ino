@@ -18,7 +18,7 @@ const char* ssid = "Realme";          // 填寫您的 Wi-Fi 熱點名稱
 const char* password = "RealmeZZZ";    // 填寫您的 Wi-Fi 密碼
 
 // ⚠️ 請填寫您電腦目前的區域網路 IP (行動熱點網關通常為 192.168.137.1)
-const char* targetIP = "192.168.137.1"; 
+const char* targetIP = "10.75.182.73"; 
 const int targetPort = 8888;
 const int localPort = 8889;           // 本地 UDP 埠口
 

@@ -6,7 +6,6 @@ from datetime import datetime
 # ================= 設定區 =================
 UDP_PORT = 8888
 TIMEOUT_LIMIT = 15  # 超過 15 秒沒收到封包，判定為設備已斷電關機
-LOG_FILE = os.path.join("Docs", "battery_test_live_log.txt")
 # ==========================================
 
 def format_duration(seconds):
@@ -15,11 +14,11 @@ def format_duration(seconds):
     s = int(seconds % 60)
     return f"{h:02d} 小時 {m:02d} 分鐘 {s:02d} 秒"
 
-def write_log(content, mode='a'):
+def write_log(file_path, content, mode='a'):
     try:
         # 確保 Docs 目錄存在
-        os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-        with open(LOG_FILE, mode, encoding='utf-8') as f:
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, mode, encoding='utf-8') as f:
             f.write(content + "\n")
     except Exception as e:
         print(f"❌ 寫入日誌失敗: {e}")
@@ -36,13 +35,14 @@ def main():
     print("==================================================")
     print(f"🔋 HoloGrip 設備電池續航力自動測試腳本 啟動")
     print(f"📡 正在連接埠 {UDP_PORT} 監聽手套 UDP 封包...")
-    print(f"📝 實時日誌將存於: {os.path.abspath(LOG_FILE)}")
+    print(f"📝 實時日誌將在接收首筆資料後以時間戳格式自動命名並建立")
     print("==================================================")
 
     start_time = None
     last_receive_time = None
     packet_count = 0
     last_file_update = 0  # 用於定時寫入檔案的時間標記
+    log_file = None       # 將在接收首筆資料時動態生成
 
     # 設定 socket 為非阻塞，以便進行超時判斷
     sock.setblocking(False)
@@ -53,12 +53,19 @@ def main():
             packet_count += 1
             current_time = time.time()
 
-            # 第一次接收到封包，啟動計時
+            # 第一次接收到封包，啟動計時並動態命名檔案
             if start_time is None:
                 start_time = current_time
-                start_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                now_dt = datetime.now()
+                start_str = now_dt.strftime('%Y-%m-%d %H:%M:%S')
+                
+                # 自動產生唯一的檔名，例如 battery_test_log_20260712_120530.txt
+                log_filename = f"battery_test_log_{now_dt.strftime('%Y%m%d_%H%M%S')}.txt"
+                log_file = os.path.join("Docs", log_filename)
+                
                 print(f"⚡ [開機偵測] 已接收到首筆封包！")
                 print(f"   * 開始時間: {start_str}")
+                print(f"   * 實時日誌: {os.path.abspath(log_file)}")
                 
                 header = (
                     "==================================================\n"
@@ -68,7 +75,7 @@ def main():
                     f"監聽連接埠  : {UDP_PORT}\n"
                     "--------------------------------------------------"
                 )
-                write_log(header, mode='w')
+                write_log(log_file, header, mode='w')
 
             last_receive_time = current_time
 
@@ -80,7 +87,7 @@ def main():
                 
                 status_text = f"[{current_time_str}] 設備運作中 | 已累計時間: {elapsed_str} | 已接收封包: {packet_count} 筆"
                 print(status_text)
-                write_log(status_text, mode='a')
+                write_log(log_file, status_text, mode='a')
                 last_file_update = current_time
 
         except BlockingIOError:
@@ -109,7 +116,7 @@ def main():
                     )
                     
                     print(report)
-                    write_log(report, mode='a')
+                    write_log(log_file, report, mode='a')
                     break
 
             time.sleep(0.01)  # 降低 CPU 使用率

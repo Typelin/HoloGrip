@@ -1,0 +1,5 @@
+Zone_ID,Zone_Name,Feature_Yaw,Feature_Pitch,Feature_SwingDepth,hardware_version,participant_id,session_id,trial_id,hit_id,hand,timestamp_ms,actual_hit_time_ms,inter_hit_interval_ms,predicted_zone,confidence
+0,小鼓,-12.5,45.2,85.6,TypeCSeparated_1.0,P01,S20260710_P01_TypeCSeparated,T01_R_Snare_20hits,1,R,1783701202687,142530,0,-1,1.0
+0,小鼓,-13.1,44.8,88.2,TypeCSeparated_1.0,P01,S20260710_P01_TypeCSeparated,T01_R_Snare_20hits,2,R,1783701203287,143130,600,-1,1.0
+-1,實戰Demo,-14.2,46.1,90.5,TypeCSeparated_1.0,P01,S20260710_P01_TypeCSeparated,T_Demo_R_Live,1,R,1783701209500,149340,6210,0,0.86
+-1,實戰Demo,35.8,-12.3,72.4,TypeCSeparated_1.0,P01,S20260710_P01_TypeCSeparated,T_Demo_R_Live,2,R,1783701210120,149960,620,3,0.92

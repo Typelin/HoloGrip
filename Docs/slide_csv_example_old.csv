@@ -1,0 +1,4 @@
+Zone_ID,Zone_Name,Feature_Yaw,Feature_Pitch,Feature_SwingDepth,hardware_version,participant_id,hit_id,hand,timestamp_ms,actual_hit_time_ms,inter_hit_interval_ms
+0,小鼓,-12.5,45.2,85.6,1.0,P01,1,R,1783701202687,142530,0
+0,小鼓,-13.1,44.8,88.2,1.0,P01,2,R,1783701203287,143130,600
+1,高音中鼓,35.8,-12.3,72.4,1.0,P01,3,R,1783701210120,149960,620

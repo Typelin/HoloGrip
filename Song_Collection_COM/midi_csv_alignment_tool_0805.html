@@ -106,12 +106,13 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   const dataSection=document.querySelector("[data-offset]")?.closest(".section");
   const dataHelp=dataSection?.querySelector(".help");
   const localSection=E.local?.closest(".section");
-  localSection?.querySelector(".section-head")?.insertAdjacentHTML("afterend",'<div class="sample-window-row" aria-label="採樣窗口設定"><label class="sample-window-field" for="sample-window-ms">採樣窗口半徑 <input id="sample-window-ms" class="sample-window-input" type="number" min="10" max="2500" step="10" value="250" inputmode="numeric"></label><span class="sample-window-hint" data-window-radius>總長度 500 ms｜100Hz 約 51 點</span><div class="sample-window-stats" aria-live="polite"><span>目前事件資料點 <strong data-window-points>—</strong></span><span>目前事件活動率 <strong data-window-activity>—</strong></span><span>目前事件峰值涵蓋 <strong data-window-peak>—</strong></span><span>全曲鼓點群組命中 <strong data-window-events>—</strong></span><span>全曲活動涵蓋 <strong data-window-coverage>—</strong></span><span>窗口外背景活動 <strong data-window-background>—</strong></span></div><div class="sample-window-formula" data-window-method>活動率 = 窗口內 activity ≥ 1.0g 的資料點 ÷ 窗口內全部資料點。這是選窗預覽，不是正式訓練門檻。</div></div>');
+  localSection?.querySelector(".section-head")?.insertAdjacentHTML("afterend",'<div class="sample-window-row" aria-label="採樣窗口設定"><label class="sample-window-field" for="sample-window-ms">採樣窗口半徑 <input id="sample-window-ms" class="sample-window-input" type="number" min="10" max="2500" step="10" value="90" inputmode="numeric"></label><span class="sample-window-hint" data-window-radius>總長度 180 ms｜100Hz 約 19 點</span><div class="sample-window-stats" aria-live="polite"><span>目前事件資料點 <strong data-window-points>—</strong></span><span>目前事件活動率 <strong data-window-activity>—</strong></span><span>目前事件峰值涵蓋 <strong data-window-peak>—</strong></span><span>全曲鼓點群組命中 <strong data-window-events>—</strong></span><span>全曲活動涵蓋 <strong data-window-coverage>—</strong></span><span>窗口外背景活動 <strong data-window-background>—</strong></span></div><div class="sample-window-formula" data-window-method>活動率 = 窗口內 activity ≥ 1.0g 的資料點 ÷ 窗口內全部資料點。這是選窗預覽，不是正式訓練門檻。</div></div>');
   const SW={input:document.querySelector("[data-window-input]")||document.querySelector("#sample-window-ms"),radius:document.querySelector("[data-window-radius]"),points:document.querySelector("[data-window-points]"),activity:document.querySelector("[data-window-activity]"),peak:document.querySelector("[data-window-peak]"),events:document.querySelector("[data-window-events]"),coverage:document.querySelector("[data-window-coverage]"),background:document.querySelector("[data-window-background]"),method:document.querySelector("[data-window-method]")};
   const hoverInfo=document.createElement("div");hoverInfo.className="midi-hover-info";hoverInfo.setAttribute("role","tooltip");hoverInfo.hidden=true;document.body.appendChild(hoverInfo);
   host.querySelector(".subtitle").textContent="從原始 MIDI 與 100Hz 手套 CSV 建立可檢查的候選標記，確認後再交給模型訓練。";
   const renameSection=(anchor,title)=>{const section=document.querySelector(anchor)?.closest(".section"),heading=section?.querySelector("h2");if(heading)heading.textContent=title};
   renameSection("[data-offset]","資料總覽與時間基準");renameSection("[data-midi-time]","單筆事件的對應關係");renameSection("[data-prev]","MIDI 事件瀏覽與播放");renameSection("[data-overview]","整首歌的 MIDI 鼓點分布");renameSection("[data-local]","局部對齊檢查：MIDI 對 CSV");renameSection("[data-details]","目前事件與固定 Zone 對照");
+  const playbackSection=E.prev?.closest(".section");if(playbackSection&&localSection)localSection.after(playbackSection);
   dataSection?.querySelector(".formula")?.insertAdjacentHTML("afterend",`<div class="timeline-note"><strong>候選偏移怎麼來：</strong>程式把每筆 MIDI 事件平移到 CSV 時間軸，逐一測試整體偏移，找「MIDI 鼓點時間附近的手套活動度總分」最高的位置。這是自動候選，不是已確認真值。</div><div class="timeline-note" data-timeline-note></div>`);
   E.prev.insertAdjacentHTML("beforebegin",`<button type="button" class="button button-small" data-first>第一筆 MIDI 鼓點</button>`);
   E.next.insertAdjacentHTML("afterend",`<button type="button" class="button button-small" data-last>最後一筆 MIDI 鼓點</button>`);
@@ -119,8 +120,10 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   boundaryHost?.insertAdjacentHTML("afterend",`<div class="boundary-note" data-boundary-note></div>`);
   const boundaryNote=document.querySelector("[data-boundary-note]");
   firstButton.onclick=()=>select(0);lastButton.onclick=()=>select(S.data.events.length-1);
+  const eventSpacing=index=>{const events=S.data.events||[],sorted=events.map((event,position)=>({event,position,time:+event.mt})).sort((a,b)=>a.time-b.time||a.position-b.position),position=sorted.findIndex(item=>item.position===index),current=position>=0?sorted[position].time:null;return {prev:position>0&&current!==null?current-sorted[position-1].time:null,next:position>=0&&position<sorted.length-1?sorted[position+1].time-current:null}};
+  function renderDetailSpacing(){E.details.querySelectorAll("[data-spacing-row]").forEach(node=>node.remove());const spacing=eventSpacing(S.index),prev=spacing.prev===null?"—":spacing.prev.toFixed(1)+" ms",next=spacing.next===null?"—":spacing.next.toFixed(1)+" ms";E.details.insertAdjacentHTML("beforeend",'<dt data-spacing-row>前一個鼓點間隔</dt><dd data-spacing-row>'+prev+'</dd><dt data-spacing-row>下一個鼓點間隔</dt><dd data-spacing-row>'+next+'</dd>')}
   const ACTIVITY_THRESHOLD=1.0;
-  const windowRadius=()=>{const raw=Number(SW.input?.value);return Math.max(10,Math.min(2500,Number.isFinite(raw)?raw:250))};
+  const windowRadius=()=>{const raw=Number(SW.input?.value);return Math.max(10,Math.min(2500,Number.isFinite(raw)?raw:90))};
   const lowerBound=(rows,t)=>{let lo=0,hi=rows.length;while(lo<hi){const mid=(lo+hi)>>1;if(+rows[mid].t<t)lo=mid+1;else hi=mid}return lo};
   const upperBound=(rows,t)=>{let lo=0,hi=rows.length;while(lo<hi){const mid=(lo+hi)>>1;if(+rows[mid].t<=t)lo=mid+1;else hi=mid}return lo};
   const activityValue=d=>Math.max(Number(d?.l)||0,Number(d?.r)||0);
@@ -169,8 +172,8 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   }
   const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   function midiPointTooltip(index){
-    const event=S.data.events[index];if(!event)return "";const mapped=map(event.note)||{name:event.name||"未知"},center=at(event),evidence=handEvidence(event),windowMetrics=currentWindowMetrics(center,windowRadius()),side=evidence.side==="L"?"左手":"R"===evidence.side?"右手":"未判定",sideClass=evidence.side==="L"?"midi-hover-side-left":"midi-hover-side-right";
-    return '<div class="midi-hover-title">'+escapeHtml(mapped.name)+' <span class="'+sideClass+'">'+side+' 候選 '+percentValue(evidence.confidence)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">MIDI note / 事件</span><span>'+event.note+' / #'+(index+1)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">MIDI 時間</span><span>'+clock(event.mt)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">對齊 CSV 時間</span><span>'+clock(center)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">左右活動峰</span><span class="midi-hover-side-left">左 '+evidence.left.toFixed(3)+'g</span><span class="midi-hover-side-right">右 '+evidence.right.toFixed(3)+'g</span></div><div class="midi-hover-row"><span class="midi-hover-label">目前採樣窗口</span><span>'+windowMetrics.points+' 點 / 活動率 '+percentValue(windowMetrics.activityRate)+'</span></div>';
+    const event=S.data.events[index];if(!event)return "";const mapped=map(event.note)||{name:event.name||"未知"},center=at(event),evidence=handEvidence(event),windowMetrics=currentWindowMetrics(center,windowRadius()),spacing=eventSpacing(index),prev=spacing.prev===null?"—":spacing.prev.toFixed(1)+" ms",next=spacing.next===null?"—":spacing.next.toFixed(1)+" ms",side=evidence.side==="L"?"左手":"R"===evidence.side?"右手":"未判定",sideClass=evidence.side==="L"?"midi-hover-side-left":"midi-hover-side-right";
+    return '<div class="midi-hover-title">'+escapeHtml(mapped.name)+' <span class="'+sideClass+'">'+side+' 候選 '+percentValue(evidence.confidence)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">MIDI note / 事件</span><span>'+event.note+' / #'+(index+1)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">MIDI 時間</span><span>'+clock(event.mt)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">前一個鼓點間隔</span><span>'+prev+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">下一個鼓點間隔</span><span>'+next+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">對齊 CSV 時間</span><span>'+clock(center)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">左右活動峰</span><span class="midi-hover-side-left">左 '+evidence.left.toFixed(3)+'g</span><span class="midi-hover-side-right">右 '+evidence.right.toFixed(3)+'g</span></div><div class="midi-hover-row"><span class="midi-hover-label">目前採樣窗口</span><span>'+windowMetrics.points+' 點 / 活動率 '+percentValue(windowMetrics.activityRate)+'</span></div>';
   }
   function showMidiTooltip(pointerEvent,index){
     hoverInfo.innerHTML=midiPointTooltip(index);hoverInfo.hidden=false;const margin=12,left=Math.max(margin,Math.min(window.innerWidth-hoverInfo.offsetWidth-margin,pointerEvent.clientX+14)),top=Math.max(margin,Math.min(window.innerHeight-hoverInfo.offsetHeight-margin,pointerEvent.clientY+14));hoverInfo.style.left=left+"px";hoverInfo.style.top=top+"px";
@@ -179,7 +182,7 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     const current=sel()?at(sel()):0,overviewMin=S.mode==="local"?Math.max(0,current-5000):0,overviewMax=S.mode==="local"?Math.min(S.data.duration,current+5000):S.data.duration,localMin=Math.max(0,Math.min(S.data.duration-5000,current-2500)),localMax=Math.min(S.data.duration,localMin+5000),visible=(min,max)=>eventRows().filter(row=>row.time>=min&&row.time<=max),bind=(host,rows)=>{host.querySelectorAll("circle").forEach((dot,position)=>{const row=rows[position];if(!row)return;dot.classList.add("midi-point");dot.dataset.midiIndex=String(row.index);dot.setAttribute("aria-label",midiPointTooltip(row.index).replace(/<[^>]+>/g," "));dot.onpointerenter=event=>showMidiTooltip(event,row.index);dot.onpointermove=event=>showMidiTooltip(event,row.index);dot.onpointerleave=()=>{hoverInfo.hidden=true};dot.onclick=event=>{event.stopPropagation();select(row.index)}})};
     const overviewSvg=E.overview.querySelector("svg"),hit=overviewSvg?.querySelector("[data-overview-hit]");if(hit&&overviewSvg)overviewSvg.insertBefore(hit,overviewSvg.firstChild);bind(E.overview,visible(overviewMin,overviewMax));bind(E.local,visible(localMin,localMax));
   }
-  const baseRender=render;render=()=>{baseRender();drawWindowBand();updateWindowUi();attachPointTooltips()};SW.input?.addEventListener("input",()=>render());SW.input?.addEventListener("change",()=>{SW.input.value=windowRadius();render()});drawWindowBand();updateWindowUi();attachPointTooltips();
+  const baseRender=render;render=()=>{baseRender();drawWindowBand();updateWindowUi();attachPointTooltips();renderDetailSpacing()};SW.input?.addEventListener("input",()=>render());SW.input?.addEventListener("change",()=>{SW.input.value=windowRadius();render()});drawWindowBand();updateWindowUi();attachPointTooltips();renderDetailSpacing();
   const cleanName=name=>name||"未選擇檔案";
   const setStatus=(message,error=false)=>{if(LF.status){LF.status.textContent=message;LF.status.classList.toggle("error",error)}if(LF.dataStatus)LF.dataStatus.textContent=error?"載入失敗，請檢查檔案格式":(S.data.status==="pending_manual_alignment_review"?"候選對齊，待人工確認":"已載入新資料，候選對齊")};
   const readU32=(v,p)=>v.getUint32(p,false),readU16=(v,p)=>v.getUint16(p,false);
@@ -222,6 +225,104 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   LF.restore.onclick=()=>{S.data=DATA;S.offset=DATA.offset;globalWindowStatsCache={key:"",value:null};S.index=0;S.time=at(sel());LF.midi.value="";LF.csv.value="";LF.midiSource.textContent="目前使用內嵌 0805 MIDI：Drum Midi_110BPM (0805).mid";LF.csvSource.textContent="目前使用內嵌 0805 CSV：S20260805_P01_song01_raw_100hz...";updateDataUi();render();setStatus("已恢復內嵌 0805 範例資料。")};
   E.offset.addEventListener("input",updateDataUi);
   updateDataUi();
+})();
+</script>
+<script>
+(function(){
+  const DENSE_ONSET_TOLERANCE_MS=12;
+  let denseFilter="all";
+  const localSection=E.local?.closest(".section");
+  if(!localSection)return;
+  document.head.insertAdjacentHTML("beforeend",`<style>
+    .dense-review-bar{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px 14px;align-items:center;margin:0 0 10px;padding:10px 12px;border:1px solid #e6c887;border-radius:8px;background:#fffaf0;color:var(--ink);font-size:13px}
+    .dense-review-title{font-weight:700;color:#8b5a12}
+    .dense-review-field{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+    .dense-review-select{border:1px solid #d7b56d;border-radius:6px;background:#fff;color:var(--ink);padding:6px 8px;font:inherit}
+    .dense-review-summary,.dense-review-current,.dense-review-rule{grid-column:1/-1;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+    .dense-review-current{color:var(--ink);font-weight:650}
+    .dense-review-rule{line-height:1.5}
+    .dense-review-bar .button{padding:6px 9px;font-size:12px}
+    .chart .dense-track{stroke:#d7b56d;stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
+    .chart .dense-connector{stroke:#d7b56d;stroke-width:1;stroke-dasharray:2 3;opacity:.85;vector-effect:non-scaling-stroke}
+    .chart .dense-marker{stroke:#fff;stroke-width:1;vector-effect:non-scaling-stroke}
+    .chart .dense-marker-single{fill:#3a9b73}
+    .chart .dense-marker-overlap{fill:#d88b22}
+    .chart .dense-marker-multi{fill:#d6535d}
+    .chart .dense-marker-multi-overlap{fill:#a54254}
+    .chart .safe-window{fill:#d6535d;opacity:.08;pointer-events:none}
+    .chart .dense-label{fill:#84343d;font-size:11px;font-weight:650}
+    @media(max-width:640px){.dense-review-bar{grid-template-columns:1fr}.dense-review-summary,.dense-review-current,.dense-review-rule{grid-column:1}}
+  </style>`);
+  localSection.querySelector(".sample-window-row")?.insertAdjacentHTML("afterend",`<div class="dense-review-bar" aria-label="密集 MIDI 事件檢查">
+    <span class="dense-review-title">密集區判定</span>
+    <label class="dense-review-field" for="dense-filter">局部圖顯示
+      <select id="dense-filter" class="dense-review-select" data-dense-filter>
+        <option value="all">全部事件</option>
+        <option value="single">只看可單獨標記</option>
+        <option value="review">只看需要複核</option>
+      </select>
+    </label>
+    <div class="toolbar"><button type="button" class="button button-small" data-dense-prev>上一個需複核事件</button><button type="button" class="button button-small" data-dense-next>下一個需複核事件</button></div>
+    <div class="dense-review-summary" data-dense-summary></div>
+    <div class="dense-review-current" data-dense-current></div>
+    <div class="dense-review-rule">判定規則：同一個 12 ms 內的 MIDI 合併為同時事件群組；若前後鼓點間隔小於目前窗口總長度（±窗口半徑的兩倍），就不能當成單一鼓點訓練資料。</div>
+  </div>`);
+  const filterSelect=document.querySelector("[data-dense-filter]"),summary=document.querySelector("[data-dense-summary]"),current=document.querySelector("[data-dense-current]"),densePrev=document.querySelector("[data-dense-prev]"),denseNext=document.querySelector("[data-dense-next]"),hoverInfo=document.querySelector(".midi-hover-info");
+  let denseModel={groups:[],byIndex:new Map(),reviewIndices:[]};
+  const denseEscape=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
+  const denseWindowRadius=()=>{const raw=Number(document.querySelector("#sample-window-ms")?.value);return Math.max(10,Math.min(2500,Number.isFinite(raw)?raw:90))};
+  const densePercent=value=>Number.isFinite(value)?(value*100).toFixed(1)+"%":"—";
+  const denseGap=value=>Number.isFinite(value)?value.toFixed(1)+" ms":"歌曲邊界";
+  const denseStatusText=info=>info.multiLabel?(info.overlapReview?"同時多鼓點＋窗口重疊":"同時多鼓點"):info.overlapReview?"窗口重疊，需複核":"可單獨標記";
+  const denseStatusClass=info=>info.multiLabel?(info.overlapReview?"multi-overlap":"multi"):info.overlapReview?"overlap":"single";
+  const denseGroupNotes=rows=>{const seen=new Set(),names=[];for(const row of rows){const event=row.event,m=map(event.note)||{name:event.name||"未知"},label=event.note+" "+m.name;if(!seen.has(label)){seen.add(label);names.push(label)}}return names.join("、")};
+  function buildDenseModel(radius){
+    const groups=[];
+    for(const row of eventRows()){
+      let group=groups[groups.length-1];
+      if(!group||row.time-group.time>DENSE_ONSET_TOLERANCE_MS){group={time:row.time,rows:[]};groups.push(group)}
+      group.rows.push(row);
+    }
+    const byIndex=new Map();
+    groups.forEach((group,groupIndex)=>{
+      const prevGap=groupIndex?group.time-groups[groupIndex-1].time:Infinity,nextGap=groupIndex<groups.length-1?groups[groupIndex+1].time-group.time:Infinity,nearestGap=Math.min(prevGap,nextGap),multiLabel=group.rows.length>1,overlapReview=Number.isFinite(nearestGap)&&nearestGap<radius*2;
+      for(const row of group.rows){const info={...row,group,groupIndex,prevGap,nextGap,nearestGap,multiLabel,overlapReview,needsReview:multiLabel||overlapReview,safeHalfMs:Number.isFinite(nearestGap)?Math.min(radius,nearestGap/2):radius,groupNotes:denseGroupNotes(group.rows)};byIndex.set(row.index,info)}
+    });
+    const reviewIndices=[...byIndex.values()].filter(info=>info.needsReview).sort((a,b)=>a.time-b.time||a.index-b.index).map(info=>info.index);
+    return {groups,byIndex,reviewIndices};
+  }
+  const denseInfo=index=>denseModel.byIndex.get(index);
+  const denseFilterAllows=info=>denseFilter==="review"?info?.needsReview:denseFilter==="single"?!info?.needsReview:true;
+  function renderDenseUi(){
+    const radius=denseWindowRadius();denseModel=buildDenseModel(radius);const selected=denseInfo(S.index),reviewCount=denseModel.reviewIndices.length,total=S.data.events.length;
+    if(filterSelect)filterSelect.value=denseFilter;
+    if(summary)summary.textContent="目前窗口 ±"+radius+" ms（總長度 "+(radius*2)+" ms）："+reviewCount.toLocaleString()+" / "+total.toLocaleString()+" 筆事件需要複核。";
+    if(current)current.textContent=selected?"目前第 "+(selected.index+1)+" 筆："+denseStatusText(selected)+"｜群組："+selected.groupNotes+"｜前一群組 "+denseGap(selected.prevGap)+"｜下一群組 "+denseGap(selected.nextGap)+"｜不碰鄰近群組的最大半徑約 ±"+selected.safeHalfMs.toFixed(1)+" ms":"目前沒有選取事件";
+    E.details.querySelectorAll("[data-dense-detail-row]").forEach(node=>node.remove());
+    if(selected){E.details.insertAdjacentHTML("beforeend",'<dt data-dense-detail-row>密集事件判定</dt><dd data-dense-detail-row>'+denseEscape(denseStatusText(selected))+'</dd><dt data-dense-detail-row>同一事件群組</dt><dd data-dense-detail-row>'+denseEscape(selected.groupNotes)+'</dd><dt data-dense-detail-row>可分離最大半徑</dt><dd data-dense-detail-row>±'+selected.safeHalfMs.toFixed(1)+' ms</dd>')}
+  }
+  function renderDenseLayer(){
+    const chart=E.local.querySelector("svg");if(!chart)return;chart.querySelectorAll("[data-dense-layer]").forEach(node=>node.remove());const W=Math.max(360,E.local.clientWidth||900),H=270,l=W<550?56:82,r=18,t=42,b=220,pw=W-l-r,e=sel(),c=e?at(e):0,half=2500,min=Math.max(0,Math.min(S.data.duration-half*2,c-half)),max=Math.min(S.data.duration,min+half);if(max<=min)return;const radius=denseWindowRadius(),layer=svg("g",{"data-dense-layer":"true"}),trackY=25;layer.append(svg("line",{x1:l,y1:trackY,x2:l+pw,y2:trackY,class:"dense-track"}),svg("text",{x:l,y:trackY-7,class:"muted"},"事件判定"));
+    for(const group of denseModel.groups){if(group.time<min||group.time>max)continue;const first=denseInfo(group.rows[0].index),x=sx(group.time,l,pw,min,max),markerWidth=Math.max(8,Math.min(20,group.rows.length*6)),className="dense-marker dense-marker-"+denseStatusClass(first);layer.append(svg("rect",{x:x-markerWidth/2,y:trackY-8,width:markerWidth,height:16,rx:3,class:className,"data-dense-group":String(first.groupIndex)}),svg("line",{x1:x,y1:trackY+8,x2:x,y2:92,class:"dense-connector"}))}
+    const selected=denseInfo(S.index);if(selected){const safeHalf=selected.safeHalfMs,safeStart=Math.max(min,c-safeHalf),safeEnd=Math.min(max,c+safeHalf),x0=sx(safeStart,l,pw,min,max),x1=sx(safeEnd,l,pw,min,max);if(safeHalf<radius){layer.append(svg("rect",{x:x0,y:95,width:Math.max(1,x1-x0),height:b-95,class:"safe-window","data-safe-window":"true"}),svg("text",{x:Math.min(W-r-8,Math.max(l+4,x0+4)),y:110,class:"dense-label"},"可分離約 ±"+safeHalf.toFixed(1)+" ms"))}const labelText=denseStatusText(selected)+"｜"+selected.groupNotes;layer.append(svg("text",{x:Math.min(W-r-8,Math.max(l+4,sx(c,l,pw,min,max)+7)),y:38,class:"dense-label","data-dense-selected-label":"true"},labelText))}
+    chart.append(layer);
+  }
+  function applyDenseFilter(){
+    for(const host of [E.overview,E.local])for(const dot of host.querySelectorAll("circle[data-midi-index]")){const index=Number(dot.dataset.midiIndex),info=denseInfo(index),keep=denseFilterAllows(info)||index===S.index;dot.style.opacity=keep?(index===S.index?"1":".8"):".08";dot.style.pointerEvents=keep?"auto":"none";dot.setAttribute("aria-hidden",String(!keep))}
+  }
+  function showDenseTooltip(pointerEvent,index){
+    const info=denseInfo(index),event=S.data.events[index];if(!info||!event||!hoverInfo)return;const m=map(event.note)||{name:event.name||"未知"},side=event.hand==="L"?"左手":event.hand==="R"?"右手":"未判定";hoverInfo.innerHTML='<div class="midi-hover-title">'+denseEscape(m.name)+' <span class="'+(event.hand==="L"?"midi-hover-side-left":"midi-hover-side-right")+'">'+side+' 候選 '+densePercent(event.conf)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">MIDI note / 事件</span><span>'+event.note+' / #'+(index+1)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">MIDI 時間</span><span>'+clock(event.mt)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">對齊 CSV 時間</span><span>'+clock(at(event))+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">密集事件判定</span><span>'+denseEscape(denseStatusText(info))+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">同一群組</span><span>'+denseEscape(info.groupNotes)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">前一／下一群組</span><span>'+denseGap(info.prevGap)+' ／ '+denseGap(info.nextGap)+'</span></div><div class="midi-hover-row"><span class="midi-hover-label">目前 ±窗口</span><span>'+denseWindowRadius()+" ms｜不碰鄰近約 ±"+info.safeHalfMs.toFixed(1)+" ms</span></div>";hoverInfo.hidden=false;const margin=12,left=Math.max(margin,Math.min(window.innerWidth-hoverInfo.offsetWidth-margin,pointerEvent.clientX+14)),top=Math.max(margin,Math.min(window.innerHeight-hoverInfo.offsetHeight-margin,pointerEvent.clientY+14));hoverInfo.style.left=left+"px";hoverInfo.style.top=top+"px";
+  }
+  function bindDenseTooltips(){
+    for(const host of [E.overview,E.local])for(const dot of host.querySelectorAll("circle[data-midi-index]")){const index=Number(dot.dataset.midiIndex);dot.onpointerenter=event=>showDenseTooltip(event,index);dot.onpointermove=event=>showDenseTooltip(event,index);dot.onpointerleave=()=>{if(hoverInfo)hoverInfo.hidden=true};dot.onclick=event=>{event.stopPropagation();select(index)}}
+  }
+  function renderDense(){renderDenseUi();renderDenseLayer();applyDenseFilter();bindDenseTooltips()}
+  function jumpReview(direction){const list=denseModel.reviewIndices;if(!list.length)return;let position=list.indexOf(S.index);if(position<0)position=direction>0?-1:list.length;select(list[(position+direction+list.length)%list.length])}
+  densePrev?.addEventListener("click",()=>jumpReview(-1));denseNext?.addEventListener("click",()=>jumpReview(1));filterSelect?.addEventListener("change",()=>{denseFilter=filterSelect.value;render()});
+  const baseRender=render;render=()=>{baseRender();renderDense()};
+  new ResizeObserver(()=>{renderDenseLayer();applyDenseFilter();bindDenseTooltips()}).observe(E.local);
+  E.download.onclick=()=>{const header=["event_id","midi_time_ms","aligned_csv_time_ms","midi_note","zone_id","zone_name","velocity","hand_candidate","hand_confidence","onset_group_id","group_notes","previous_onset_gap_ms","next_onset_gap_ms","multi_label","overlap_review","single_label_eligible","safe_half_window_ms","label_status"],cell=value=>{const text=String(value??"");return '"'+text.replace(/"/g,'""')+'"'},rows=[header.join(",")];for(const event of S.data.events){const info=denseInfo(event.id-1);rows.push([event.id,event.mt.toFixed(3),at(event).toFixed(3),event.note,event.zone,event.name,event.vel,event.hand,event.conf,info?.groupIndex===undefined?"":info.groupIndex+1,info?.groupNotes||"",info?.prevGap===undefined?"":info.prevGap.toFixed(3),info?.nextGap===undefined?"":info.nextGap.toFixed(3),info?.multiLabel?"true":"false",info?.overlapReview?"true":"false",info&&!info.needsReview?"true":"false",info?.safeHalfMs===undefined?"":info.safeHalfMs.toFixed(3),"pending_manual_alignment_review"].map(cell).join(","))}const link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+rows.join("\n")],{type:"text/csv;charset=utf-8"}));link.download="candidate_midi_csv_density_review_"+Math.round(S.offset)+"ms.csv";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),0)};
+  render();
 })();
 </script>
 </body></html>

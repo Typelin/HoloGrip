@@ -10,6 +10,9 @@ The 0805 MIDI/CSV alignment page now shows dense MIDI onsets as grouped, overlap
 - Python AST parse and self-test pass.
 - Temporary real-data pipeline run: 1,820 candidate rows, 398 single-label eligible, 1,422 review events.
 - Embedded 3:31.176 data: the 211176.136 ms group is 38 小鼓 + 51 Ride + 46 Hi-Hat, classified as multi_label_overlap at ±90 ms.
+- 80/90 analysis: ±80 yields 429 nominal clean events; ±90 yields 398 conservative clean events.
+- On the common 398 events, ±80 preserves 100% of activity peaks and 96.36% mean activity energy.
+- Recommendation: use the 180 ms gap rule for clean-event selection, then crop model input to ±80 ms.
 
 ## Guardrails
 

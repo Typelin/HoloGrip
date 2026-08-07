@@ -10,6 +10,8 @@ HoloGrip 是一款基於九軸慣性量測單元 (IMU) 與 ESP32 控制板的穿
 
 * **📁 `UDP_version_release/`** (原 `UDP正式版`)
   * 包含實時打擊接收與動作分類的電腦端 GUI 軟體 `server.py`。
+* **📁 `Song_Collection_COM/`**
+  * 流音歌曲資料收集的有線 COM 專用入口；CSV 與 UDP 資料分開保存。
 * **📁 `Gloves/`**
   * 包含手套端最新 ESP32 UDP 發送韌體 `Gloves.ino`。
 * **📁 `Docs/`**
@@ -51,3 +53,46 @@ HoloGrip 是一款基於九軸慣性量測單元 (IMU) 與 ESP32 控制板的穿
 ---
 
 *本專案供 HoloGrip 研發團隊、林老師團隊及學術交接使用。*
+
+## 歌曲資料收集端（流音系使用）
+
+歌曲資料收集請使用獨立的收集程式，不需要啟動 KNN 訓練介面。兩種入口輸出相同的時間軸欄位，差別只在傳輸方式：
+
+### UDP 無線版
+
+第一次使用先安裝介面套件：
+
+```bash
+python -m pip install -r UDP_version_release/requirements-song-collection.txt
+```
+
+```bash
+python UDP_version_release/song_collection_udp.py
+```
+
+適用於手套透過 Wi-Fi 將 `D,R,...`／`D,L,...` 封包送到電腦 `8888` port 的情況。
+Windows 也可以直接雙擊 `UDP_version_release/run_song_collection_udp.bat`。
+
+### COM 有線版
+
+先安裝一次歌曲收集端套件：
+
+```bash
+python -m pip install -r Song_Collection_COM/requirements.txt
+```
+
+請使用獨立入口：
+
+```bash
+python Song_Collection_COM/song_collection_com.py
+```
+
+COM 版需要使用 `Gloves_Firmware_INO_COM/Gloves_Firmware_INO_COM.ino`。左右手各燒錄一次，分別將 `HAND_ID` 設成 `R` 與 `L`，並在介面選擇兩個 COM 埠。
+Windows 也可以直接雙擊 `Song_Collection_COM/run_song_collection_com.bat`。
+
+### 介面中的兩種資料模式
+
+* `100 Hz 原始串流`：每個感測封包都寫入 CSV，不經過彈跳、峰值或動作過濾，適合事後重新標註與重新設計演算法。
+* `彈跳後打擊事件`：只寫入通過現有局部峰值、抬手／水平動作過濾與 150–250 ms 動態防彈跳的有效打擊。
+
+按下「開始歌曲收集」時建立 `song_time_ms = 0` 起點；請在按下後立即播放與 MIDI 對應的歌曲。COM CSV 會寫入 `CSV_Data/Song_Collection_COM/`；UDP CSV 則寫入 `CSV_Data/UDP_Collections/`，並由背景 writer 執行緒寫檔。

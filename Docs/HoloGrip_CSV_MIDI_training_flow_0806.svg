@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#6f8783"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#72817e" flood-opacity="0.18"/>
+    </filter>
+    <style>
+      .font { font-family: "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif; fill: #17231f; }
+      .title { font-size: 38px; font-weight: 700; }
+      .subtitle { font-size: 21px; fill: #48615d; }
+      .section { font-size: 25px; font-weight: 700; fill: #ffffff; }
+      .section-small { font-size: 18px; font-weight: 600; fill: #d9f3ee; }
+      .step { font-size: 22px; font-weight: 700; fill: #0f716e; }
+      .card-title { font-size: 23px; font-weight: 700; }
+      .body { font-size: 17px; fill: #344946; }
+      .small { font-size: 15px; fill: #58706c; }
+      .panel-title { font-size: 22px; font-weight: 700; fill: #ffffff; }
+      .panel-body { font-size: 17px; fill: #e5f1ed; }
+      .footer { font-size: 16px; fill: #55716c; }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#eef4f2"/>
+  <rect x="0" y="0" width="15" height="1080" fill="#0f7c76"/>
+
+  <text x="38" y="62" class="font title">HoloGrip 7 鼓點：CSV + MIDI 標記與模型訓練流程</text>
+  <text x="38" y="100" class="font subtitle">流音原生 MIDI + 雙手手套 Raw 100 Hz CSV → 110 BPM 對齊 → 7 類標記 → 訓練模型</text>
+  <rect x="1540" y="29" width="330" height="48" rx="12" fill="#f5fbf9" stroke="#0f7c76" stroke-width="2"/>
+  <text x="1570" y="60" class="font" font-size="18" font-weight="700" fill="#0f716e">0805：110 BPM 為時間基準</text>
+  <line x1="38" y1="145" x2="1870" y2="145" stroke="#b9c9c7" stroke-width="2"/>
+
+  <rect x="35" y="185" width="150" height="350" rx="16" fill="#117c76" filter="url(#shadow)"/>
+  <text x="110" y="325" text-anchor="middle" class="font section">原始資料</text>
+  <text x="110" y="360" text-anchor="middle" class="font section-small">已完成</text>
+  <text x="110" y="392" text-anchor="middle" class="font section-small">CSV + MIDI</text>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="185" width="300" height="290" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="250" cy="225" r="22" fill="#0f7c76"/>
+    <text x="250" y="233" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">1</text>
+    <text x="285" y="233" class="font step">原始手套 CSV</text>
+    <text x="245" y="280" class="font body">COM4 右手 + COM5 左手</text>
+    <text x="245" y="311" class="font body">Raw 100 Hz 感測串流</text>
+    <text x="245" y="342" class="font body">時間戳、封包 ID、IMU</text>
+    <rect x="245" y="382" width="240" height="55" rx="10" fill="#e5f5ef"/>
+    <text x="265" y="416" class="font small">6 分鐘資料已驗證完整</text>
+
+    <rect x="555" y="185" width="300" height="290" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="585" cy="225" r="22" fill="#0f7c76"/>
+    <text x="585" y="233" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">2</text>
+    <text x="620" y="233" class="font step">原生演奏 MIDI</text>
+    <text x="580" y="280" class="font body">實際演奏的 Note On</text>
+    <text x="580" y="311" class="font body">事件時間 + note number</text>
+    <text x="580" y="342" class="font body">保留原始檔，不改來源</text>
+    <rect x="580" y="382" width="240" height="55" rx="10" fill="#e5f5ef"/>
+    <text x="600" y="416" class="font small">7 類 note，無未知音符</text>
+
+    <rect x="890" y="185" width="300" height="290" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="920" cy="225" r="22" fill="#e2a21c"/>
+    <text x="920" y="233" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">3</text>
+    <text x="955" y="233" class="font step" fill="#9b6c00">時間基準</text>
+    <text x="915" y="280" class="font body">以 110 BPM 為準</text>
+    <text x="915" y="311" class="font body">MIDI tick → 秒</text>
+    <text x="915" y="342" class="font body">不採用檔內 120 BPM</text>
+    <rect x="915" y="382" width="240" height="55" rx="10" fill="#fff4c8"/>
+    <text x="935" y="416" class="font small">流音已確認 110 BPM</text>
+
+    <rect x="1225" y="185" width="300" height="290" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="1255" cy="225" r="22" fill="#e2a21c"/>
+    <text x="1255" y="233" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">4</text>
+    <text x="1290" y="233" class="font step" fill="#9b6c00">CSV / MIDI 對齊</text>
+    <text x="1250" y="280" class="font body">校正錄製起點偏移</text>
+    <text x="1250" y="311" class="font body">必要時修正時鐘漂移</text>
+    <text x="1250" y="342" class="font body">用事件時間定位</text>
+    <rect x="1250" y="382" width="240" height="55" rx="10" fill="#fff4c8"/>
+    <text x="1270" y="416" class="font small">目前後處理階段</text>
+
+    <rect x="1560" y="185" width="300" height="290" rx="14" fill="#ffffff" stroke="#d56a57" stroke-width="2"/>
+    <circle cx="1590" cy="225" r="22" fill="#d56a57"/>
+    <text x="1590" y="233" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">5</text>
+    <text x="1625" y="233" class="font step" fill="#b34d3d">7 類事件標記</text>
+    <text x="1585" y="280" class="font body">Note → Zone_ID</text>
+    <text x="1585" y="311" class="font body">投影到 100 Hz 樣本</text>
+    <text x="1585" y="342" class="font body">建立事件標記視窗</text>
+    <rect x="1585" y="382" width="240" height="55" rx="10" fill="#fff0ed"/>
+    <text x="1605" y="416" class="font small">輸出可訓練標記資料</text>
+  </g>
+
+  <line x1="525" y1="330" x2="548" y2="330" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="860" y1="330" x2="883" y2="330" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="1195" y1="330" x2="1218" y2="330" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="1530" y1="330" x2="1553" y2="330" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="220" y="520" width="835" height="150" rx="14" fill="#17231f" filter="url(#shadow)"/>
+  <text x="250" y="557" class="font panel-title">0805 七類鼓點標記字典</text>
+  <line x1="250" y1="575" x2="1025" y2="575" stroke="#405650" stroke-width="1"/>
+  <text x="250" y="610" class="font panel-body">37/38 小鼓　　48 高音 Tom　　45 中音 Tom　　43 落地 Tom</text>
+  <text x="250" y="642" class="font panel-body">46 Hi-Hat　　49 Crash　　51 Ride</text>
+  <text x="250" y="665" class="font small" fill="#f7df9b">36 大鼓、44 腳踏 Hi-Hat：不納入手部標籤</text>
+
+  <rect x="1080" y="520" width="780" height="150" rx="14" fill="#fff4c8" stroke="#e2a21c" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1110" y="558" class="font card-title" fill="#8d6500">對齊品質檢查</text>
+  <text x="1110" y="600" class="font body">事件數量、未知 note、第一個事件位置、最後事件位置</text>
+  <text x="1110" y="632" class="font body">通過後才產生正式標記；不通過就回到時間軸校正</text>
+
+  <rect x="35" y="735" width="150" height="245" rx="16" fill="#243d61" filter="url(#shadow)"/>
+  <text x="110" y="838" text-anchor="middle" class="font section">標記與</text>
+  <text x="110" y="874" text-anchor="middle" class="font section">模型訓練</text>
+  <text x="110" y="909" text-anchor="middle" class="font section-small">下一階段</text>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="735" width="365" height="245" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="250" cy="775" r="22" fill="#243d61"/>
+    <text x="250" y="783" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">6</text>
+    <text x="285" y="783" class="font step" fill="#243d61">建立訓練視窗</text>
+    <text x="245" y="830" class="font body">感測特徵 + 7 類標籤</text>
+    <text x="245" y="861" class="font body">保留原始連續資料</text>
+    <text x="245" y="892" class="font body">切出事件附近固定長度視窗</text>
+    <rect x="245" y="920" width="300" height="34" rx="8" fill="#e9eef8"/>
+    <text x="260" y="943" class="font small">可另外保留 Background 視窗</text>
+
+    <rect x="620" y="735" width="365" height="245" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="650" cy="775" r="22" fill="#243d61"/>
+    <text x="650" y="783" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">7</text>
+    <text x="685" y="783" class="font step" fill="#243d61">資料分割</text>
+    <text x="645" y="830" class="font body">Train / Validation / Test</text>
+    <text x="645" y="861" class="font body">依歌曲與 Session 分割</text>
+    <text x="645" y="892" class="font body">避免同一首歌洩漏到不同集合</text>
+    <rect x="645" y="920" width="300" height="34" rx="8" fill="#e9eef8"/>
+    <text x="660" y="943" class="font small">先切分，再做模型訓練</text>
+
+    <rect x="1020" y="735" width="365" height="245" rx="14" fill="#ffffff" stroke="#b7c8c4" stroke-width="2"/>
+    <circle cx="1050" cy="775" r="22" fill="#243d61"/>
+    <text x="1050" y="783" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">8</text>
+    <text x="1085" y="783" class="font step" fill="#243d61">模型訓練</text>
+    <text x="1045" y="830" class="font body">輸入：手套 IMU 時序特徵</text>
+    <text x="1045" y="861" class="font body">輸出：7 類鼓點</text>
+    <text x="1045" y="892" class="font body">訓練分類或時序模型</text>
+    <rect x="1045" y="920" width="300" height="34" rx="8" fill="#e9eef8"/>
+    <text x="1060" y="943" class="font small">模型版本與設定一併保存</text>
+
+    <rect x="1420" y="735" width="440" height="245" rx="14" fill="#ffffff" stroke="#d56a57" stroke-width="2"/>
+    <circle cx="1450" cy="775" r="22" fill="#d56a57"/>
+    <text x="1450" y="783" text-anchor="middle" class="font" font-size="20" font-weight="700" fill="#ffffff">9</text>
+    <text x="1485" y="783" class="font step" fill="#b34d3d">驗證與錯誤回看</text>
+    <text x="1445" y="830" class="font body">Accuracy、F1、混淆矩陣</text>
+    <text x="1445" y="861" class="font body">回看 WAV / CSV / MIDI 對齊</text>
+    <text x="1445" y="892" class="font body">必要時修正標記規則再重訓</text>
+    <rect x="1445" y="920" width="380" height="34" rx="8" fill="#fff0ed"/>
+    <text x="1460" y="943" class="font small">以實際錯誤案例決定下一版</text>
+  </g>
+
+  <line x1="590" y1="855" x2="610" y2="855" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="990" y1="855" x2="1010" y2="855" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="1390" y1="855" x2="1410" y2="855" stroke="#6f8783" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <text x="38" y="1030" class="font footer">HoloGrip · 流音原生 MIDI + 雙手手套 Raw 100 Hz · 0806 流程圖</text>
+  <text x="1870" y="1030" text-anchor="end" class="font footer">PPT 16:9 · 原始資料保留不覆蓋</text>
+</svg>

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HoloGrip 影片手別審核｜0807</title>
+  <style>
+    :root{--ink:#17212b;--muted:#607080;--line:#d7e0e8;--page:#f3f6f8;--surface:#fff;--blue:#1678c2;--blue-soft:#e8f4fc;--red:#d64755;--red-soft:#fff0f1;--green:#16856d;--green-soft:#eaf8f2;--dark:#12212d;--warn:#a85e08;--warn-soft:#fff5e7;--radius:7px}
+    *{box-sizing:border-box} body{margin:0;background:var(--page);color:var(--ink);font:15px/1.55 "Segoe UI","Microsoft JhengHei",sans-serif;letter-spacing:0} button,input,select{font:inherit} button{cursor:pointer}.page{max-width:1200px;margin:0 auto;padding:24px 22px 44px}.header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding:4px 0 22px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--blue);font-size:12px;font-weight:700;letter-spacing:0;text-transform:uppercase}.header h1{font-size:28px;margin:3px 0 2px;line-height:1.25}.header p{margin:0;color:var(--muted)}.status{max-width:350px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;color:var(--muted);font-size:13px}.status[data-kind="error"]{border-color:#f0b9be;background:var(--red-soft);color:#9f2634}.status[data-kind="ok"]{border-color:#a8ddcc;background:var(--green-soft);color:#126b59}.section{padding:24px 0;border-bottom:1px solid var(--line)}.section:last-child{border-bottom:0}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:14px}.section h2{font-size:19px;margin:0}.help{margin:3px 0 0;color:var(--muted);font-size:14px}.load-grid{display:grid;grid-template-columns:minmax(240px,1fr) minmax(240px,1fr) 160px;gap:14px;align-items:end}.field{display:grid;gap:6px}.field label{font-weight:650;font-size:14px}.field input,.field select{width:100%;min-height:40px;border:1px solid #b9c8d4;border-radius:var(--radius);padding:8px 10px;background:#fff;color:var(--ink)}.field input:focus,.field select:focus,.button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.metric{min-height:70px;padding:10px 12px;border-left:3px solid #b8c7d3;background:var(--surface)}.metric:nth-child(1){border-left-color:var(--blue)}.metric:nth-child(2){border-left-color:var(--green)}.metric:nth-child(3){border-left-color:var(--warn)}.metric:nth-child(4){border-left-color:var(--red)}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{font-size:20px}.review-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(310px,.8fr);gap:22px;align-items:start}.video-shell{background:var(--dark);border-radius:var(--radius);overflow:hidden;min-height:300px;display:grid;place-items:center}.video-shell video{width:100%;max-height:650px;display:block;background:#071018}.video-empty{padding:32px;color:#cad9e3;text-align:center}.event-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}.event-title{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:10px}.event-title h3{font-size:21px;margin:0}.event-index{color:var(--muted);font-size:13px}.details{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:14px 0}.details div{padding:8px 0;border-bottom:1px solid #edf1f4}.details dt{color:var(--muted);font-size:12px}.details dd{margin:1px 0 0;font-weight:600}.candidate{padding:10px 11px;border:1px solid #d3e2ed;background:#f8fbfd;border-radius:var(--radius);margin:10px 0 14px}.candidate strong.left{color:var(--blue)}.candidate strong.right{color:var(--red)}.candidate small{display:block;color:var(--muted);margin-top:2px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.button{border:1px solid #b9c8d4;border-radius:var(--radius);background:#fff;color:var(--ink);min-height:39px;padding:8px 11px;font-weight:600}.button:hover{background:#f5f9fc;border-color:#8aa6ba}.button.primary{background:var(--blue);border-color:var(--blue);color:#fff}.button.primary:hover{background:#0d649f}.button:disabled{opacity:.5;cursor:not-allowed}.button.left{background:var(--blue-soft);border-color:#99caea;color:#075b98}.button.left.selected{background:var(--blue);color:#fff;border-color:var(--blue)}.button.right{background:var(--red-soft);border-color:#f0b8bf;color:#ae2937}.button.right.selected{background:var(--red);color:#fff;border-color:var(--red)}.button.both{background:var(--green-soft);border-color:#a7ddca;color:#116950}.button.both.selected{background:var(--green);border-color:var(--green);color:#fff}.button.skip{background:#f5f6f7;border-color:#cbd3d9;color:#56636e}.button.skip.selected{background:#66737d;border-color:#66737d;color:#fff}.button.danger{color:#a72634;border-color:#e1abb2;background:#fff}.review-actions{display:grid;gap:9px;margin-top:16px}.review-actions .label-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.note-row{display:grid;gap:5px}.note-row label{font-size:13px;color:var(--muted)}.clip-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.progress-wrap{margin:17px 0 0}.progress-line{height:8px;background:#dfe7ed;border-radius:999px;overflow:hidden}.progress-line span{display:block;height:100%;background:var(--green);width:0;transition:width .12s}.progress-copy{display:flex;justify-content:space-between;gap:12px;margin-top:5px;color:var(--muted);font-size:13px}.queue{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-top:14px}.queue button{min-width:0;height:27px;padding:0;border:1px solid #c8d4dd;border-radius:3px;background:#fff;font-size:11px;color:#66737d}.queue button.current{outline:2px solid var(--blue);outline-offset:1px}.queue button[data-state="L"]{background:var(--blue);border-color:var(--blue);color:#fff}.queue button[data-state="R"]{background:var(--red);border-color:var(--red);color:#fff}.queue button[data-state="B"]{background:var(--green);border-color:var(--green);color:#fff}.queue button[data-state="S"]{background:#68747e;border-color:#68747e;color:#fff}.export-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.notice{margin:14px 0 0;padding:10px 12px;border-left:3px solid var(--warn);background:var(--warn-soft);color:#6c4818;font-size:13px}.hidden{display:none!important}@media(max-width:850px){.page{padding:18px 14px 34px}.header,.section-head{display:block}.status{margin-top:12px;max-width:none}.load-grid,.review-layout{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.video-shell{min-height:220px}.queue{grid-template-columns:repeat(10,1fr)}}@media(max-width:470px){.metrics{grid-template-columns:1fr}.details{grid-template-columns:1fr}.clip-row,.review-actions .label-row{grid-template-columns:1fr}.header h1{font-size:24px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <div class="eyebrow">HoloGrip video hand review</div>
+        <h1>MIDI 影片手別審核</h1>
+        <p>MIDI 決定鼓點與時間；影片只確認左手、右手或同時擊打。</p>
+      </div>
+      <div class="status" id="status" aria-live="polite">請先載入審核清單與演奏影片。</div>
+    </header>
+
+    <section class="section">
+      <div class="section-head"><div><h2>載入資料</h2><p class="help">審核清單由 Python 從乾淨的單鼓點事件產生。影片不會上傳或離開此電腦。</p></div></div>
+      <div class="load-grid">
+        <div class="field"><label for="seed-file">1. 審核清單 JSON</label><input id="seed-file" type="file" accept="application/json,.json"></div>
+        <div class="field"><label for="video-file">2. 演奏影片</label><input id="video-file" type="file" accept="video/*,.mov,.MOV,.mp4,.MP4"></div>
+        <div class="field"><label for="video-offset">MIDI → 影片偏移 ms</label><input id="video-offset" type="number" step="1" value="14500"></div>
+      </div>
+      <div class="metrics" id="metrics">
+        <div class="metric"><span>審核事件</span><strong id="metric-total">0</strong></div>
+        <div class="metric"><span>已確認</span><strong id="metric-done">0</strong></div>
+        <div class="metric"><span>略過／不確定</span><strong id="metric-skip">0</strong></div>
+        <div class="metric"><span>尚未審核</span><strong id="metric-pending">0</strong></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>逐筆影片審核</h2><p class="help">播放片段就是模型採樣窗口：MIDI 中心點前後各 80 ms。標記結果以影片判讀為準。</p></div></div>
+      <div class="review-layout">
+        <div>
+          <div class="video-shell" id="video-shell"><div class="video-empty" id="video-empty">載入影片後，這裡會定位到目前 MIDI 事件附近。</div><video id="video" class="hidden" controls playsinline></video></div>
+          <div class="toolbar" style="margin-top:12px">
+            <button class="button" id="previous" type="button">上一筆</button>
+            <button class="button primary" id="play-clip" type="button">播放採樣窗口</button>
+            <button class="button" id="seek-hit" type="button">定位打點</button>
+            <button class="button" id="next" type="button">下一筆</button>
+            <label class="field" style="display:flex;grid-template-columns:auto 92px;align-items:center;gap:6px"><span style="font-size:13px;color:var(--muted)">播放速度</span><select id="playback-rate"><option value="0.25" selected>0.25x</option><option value="0.5">0.5x</option><option value="1">1x</option></select></label>
+          </div>
+          <div class="notice">若畫面被大鈸、人員或動態模糊遮住，請選「看不清／略過」。這些事件不會進入有手別的訓練集。</div>
+        </div>
+        <aside class="event-panel">
+          <div class="event-title"><h3 id="event-zone">尚未載入</h3><span class="event-index" id="event-index">-- / --</span></div>
+          <dl class="details">
+            <div><dt>MIDI 事件</dt><dd id="detail-event">--</dd></div>
+            <div><dt>MIDI note / velocity</dt><dd id="detail-note">--</dd></div>
+            <div><dt>MIDI 時間</dt><dd id="detail-midi-time">--</dd></div>
+            <div><dt>影片打點時間</dt><dd id="detail-video-time">--</dd></div>
+            <div><dt>前一鼓點距離</dt><dd id="detail-prev-gap">--</dd></div>
+            <div><dt>下一鼓點距離</dt><dd id="detail-next-gap">--</dd></div>
+          </dl>
+          <div class="candidate" id="candidate">CSV 候選手別：尚未載入<small>這只是手套活動量推測，不是人工確認結果。</small></div>
+          <div class="review-actions">
+            <div class="label-row"><button class="button left" data-label="L" type="button">左手</button><button class="button right" data-label="R" type="button">右手</button></div>
+            <div class="label-row"><button class="button both" data-label="B" type="button">雙手／同時</button><button class="button skip" data-label="S" type="button">看不清／略過</button></div>
+            <div class="note-row"><label for="review-note">備註（可留白）</label><input id="review-note" type="text" maxlength="200" placeholder="例如：大鈸遮住左手"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="progress-wrap"><div class="progress-line"><span id="progress-fill"></span></div><div class="progress-copy"><span id="progress-text">尚未載入審核清單</span><span id="current-label">目前：未審核</span></div></div>
+      <div class="queue" id="queue" aria-label="事件審核進度"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>保存審核結果</h2><p class="help">下載後可再次載入以繼續審核。CSV 只保存人工確認，不會改動 MIDI 或原始手套資料。</p></div></div>
+      <div class="export-row">
+        <button class="button primary" id="download-review" type="button" disabled>下載手別確認 CSV</button>
+        <label class="button" for="review-import">載入先前確認 CSV</label><input id="review-import" class="hidden" type="file" accept="text/csv,.csv">
+        <button class="button danger" id="clear-review" type="button" disabled>清除本頁標記</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  (() => {
+    'use strict';
+    const $ = selector => document.querySelector(selector);
+    const el = {
+      status: $('#status'), seed: $('#seed-file'), videoFile: $('#video-file'), videoOffset: $('#video-offset'),
+      video: $('#video'), videoEmpty: $('#video-empty'), previous: $('#previous'), next: $('#next'), playClip: $('#play-clip'), seekHit: $('#seek-hit'), playbackRate: $('#playback-rate'),
+      eventZone: $('#event-zone'), eventIndex: $('#event-index'), detailEvent: $('#detail-event'), detailNote: $('#detail-note'), detailMidiTime: $('#detail-midi-time'), detailVideoTime: $('#detail-video-time'), detailPrevGap: $('#detail-prev-gap'), detailNextGap: $('#detail-next-gap'), candidate: $('#candidate'), reviewNote: $('#review-note'),
+      total: $('#metric-total'), done: $('#metric-done'), skip: $('#metric-skip'), pending: $('#metric-pending'), progressFill: $('#progress-fill'), progressText: $('#progress-text'), currentLabel: $('#current-label'), queue: $('#queue'), download: $('#download-review'), reviewImport: $('#review-import'), clear: $('#clear-review')
+    };
+    const state = { events: [], index: 0, reviews: new Map(), offsetMs: 14500, clipPreMs: 80, clipPostMs: 80, stopAt: null, clipToken: 0, objectUrl: null, seedName: '', storeKey: '' };
+    const labelText = { L: '左手', R: '右手', B: '雙手／同時', S: '看不清／略過' };
+
+    function setStatus(message, kind = '') { el.status.textContent = message; el.status.dataset.kind = kind; }
+    function clock(ms) { const total = Math.max(0, Number(ms) || 0); const minutes = Math.floor(total / 60000); const seconds = Math.floor(total / 1000) % 60; const millis = Math.round(total % 1000); return `${minutes}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`; }
+    function gap(value) { const number = Number(value); return Number.isFinite(number) && number > 0 ? `${number.toFixed(1)} ms` : '無'; }
+    function current() { return state.events[state.index] || null; }
+    function videoTime(event) { return (Number(event?.midi_time_ms) || 0) + state.offsetMs; }
+    function activeReview() { return current() ? state.reviews.get(String(current().event_id)) : null; }
+    function percent(value) { return `${Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 100)}%`; }
+    function storageKey() { const first = state.events[0]?.event_id || 'none'; const last = state.events.at(-1)?.event_id || 'none'; return `hologrip-video-review-v1:${state.seedName}:${state.events.length}:${first}:${last}`; }
+    function persist() { if (!state.storeKey) return; try { localStorage.setItem(state.storeKey, JSON.stringify([...state.reviews.entries()])); } catch (_) {} }
+    function restore() { state.reviews.clear(); try { const saved = JSON.parse(localStorage.getItem(state.storeKey) || '[]'); for (const item of saved) if (Array.isArray(item) && item.length === 2 && item[1]?.label) state.reviews.set(String(item[0]), item[1]); } catch (_) {} }
+    function clipRange(event) { const hit = videoTime(event); return { start: Math.max(0, hit - state.clipPreMs), hit, end: hit + state.clipPostMs }; }
+    function labelClass(label) { return label || ''; }
+
+    function updateMetrics() {
+      const values = [...state.reviews.values()]; const skipped = values.filter(item => item.label === 'S').length; const verified = values.length - skipped; const pending = state.events.length - values.length;
+      el.total.textContent = state.events.length.toLocaleString(); el.done.textContent = verified.toLocaleString(); el.skip.textContent = skipped.toLocaleString(); el.pending.textContent = pending.toLocaleString();
+      const percentDone = state.events.length ? Math.round(values.length / state.events.length * 100) : 0; el.progressFill.style.width = `${percentDone}%`; el.progressText.textContent = state.events.length ? `已處理 ${values.length} / ${state.events.length} 筆（${percentDone}%）` : '尚未載入審核清單';
+      el.download.disabled = !state.events.length; el.clear.disabled = !state.reviews.size;
+    }
+    function renderQueue() {
+      el.queue.replaceChildren();
+      const fragment = document.createDocumentFragment();
+      state.events.forEach((event, index) => { const button = document.createElement('button'); const review = state.reviews.get(String(event.event_id)); button.type = 'button'; button.textContent = index + 1; button.dataset.state = labelClass(review?.label); button.title = `#${event.event_id} ${event.zone_name}｜${review ? labelText[review.label] : '未審核'}`; if (index === state.index) button.classList.add('current'); button.addEventListener('click', () => { state.index = index; seekToHit(); render(); }); fragment.append(button); });
+      el.queue.append(fragment);
+    }
+    function renderButtons() { document.querySelectorAll('[data-label]').forEach(button => button.classList.toggle('selected', button.dataset.label === activeReview()?.label)); }
+    function render() {
+      const event = current(); const review = activeReview(); const enabled = Boolean(event);
+      [el.previous, el.next, el.playClip, el.seekHit].forEach(button => { button.disabled = !enabled; }); el.playClip.textContent = `播放採樣窗口（±${Math.max(state.clipPreMs, state.clipPostMs)} ms）`;
+      if (!event) { el.eventZone.textContent = '尚未載入'; el.eventIndex.textContent = '-- / --'; el.candidate.innerHTML = 'CSV 候選手別：尚未載入<small>這只是手套活動量推測，不是人工確認結果。</small>'; updateMetrics(); renderQueue(); renderButtons(); return; }
+      el.eventZone.textContent = event.zone_name; el.eventIndex.textContent = `第 ${state.index + 1} / ${state.events.length} 筆`;
+      el.detailEvent.textContent = `#${event.event_id}`; el.detailNote.textContent = `${event.midi_note} / ${event.velocity}`; el.detailMidiTime.textContent = clock(event.midi_time_ms); el.detailVideoTime.textContent = clock(videoTime(event)); el.detailPrevGap.textContent = gap(event.previous_onset_gap_ms); el.detailNextGap.textContent = gap(event.next_onset_gap_ms);
+      const candidateClass = event.hand_candidate === 'L' ? 'left' : 'right'; const candidateText = event.hand_candidate === 'L' ? '左手' : event.hand_candidate === 'R' ? '右手' : '未判定'; el.candidate.innerHTML = `CSV 候選手別：<strong class="${candidateClass}">${candidateText}</strong>（活動差異信心 ${percent(event.hand_confidence)}）<small>這是由左右手套活動量推測；請以影片看到的實際手別為準。</small>`;
+      el.reviewNote.value = review?.note || ''; el.currentLabel.textContent = `目前：${review ? labelText[review.label] : '未審核'}`; updateMetrics(); renderQueue(); renderButtons();
+    }
+    function seekToHit() { const event = current(); if (!event || el.video.classList.contains('hidden')) return; state.stopAt = null; state.clipToken += 1; el.video.pause(); el.video.currentTime = Math.min((videoTime(event) / 1000), Math.max(0, (el.video.duration || Infinity) - .02)); }
+    function watchClipEnd(token) { if (typeof el.video.requestVideoFrameCallback !== 'function') return; const check = (_now, frame) => { if (token !== state.clipToken || state.stopAt === null) return; if (frame.mediaTime >= state.stopAt) { el.video.pause(); state.stopAt = null; return; } el.video.requestVideoFrameCallback(check); }; el.video.requestVideoFrameCallback(check); }
+    function playClip() {
+      const event = current(); if (!event || el.video.classList.contains('hidden')) { setStatus('請先載入演奏影片。', 'error'); return; }
+      const range = clipRange(event); if (Number.isFinite(el.video.duration) && range.hit / 1000 > el.video.duration) { setStatus('目前偏移使影片打點超出影片長度，請檢查 MIDI → 影片偏移。', 'error'); return; }
+      state.stopAt = range.end / 1000; const token = ++state.clipToken; el.video.pause(); el.video.currentTime = range.start / 1000; const start = () => { if (token !== state.clipToken) return; el.video.playbackRate = Number(el.playbackRate.value); watchClipEnd(token); el.video.play().catch(() => setStatus('瀏覽器無法播放此影片；請改用 H.264 MP4 預覽檔。', 'error')); }; el.video.addEventListener('seeked', start, { once: true });
+    }
+    function move(direction) { if (!state.events.length) return; state.index = Math.max(0, Math.min(state.events.length - 1, state.index + direction)); seekToHit(); render(); }
+    function setReview(label) {
+      const event = current(); if (!event) return; state.reviews.set(String(event.event_id), { label, note: el.reviewNote.value.trim(), reviewed_at_local: new Date().toISOString() }); persist();
+      if (state.index < state.events.length - 1) state.index += 1; seekToHit(); render();
+    }
+    function saveNote() { const item = activeReview(); if (!item) return; item.note = el.reviewNote.value.trim(); item.reviewed_at_local = new Date().toISOString(); state.reviews.set(String(current().event_id), item); persist(); }
+    function parseCsvLine(line) { const cells = []; let value = ''; let quoted = false; for (let i = 0; i < line.length; i += 1) { const char = line[i]; if (char === '"') { if (quoted && line[i + 1] === '"') { value += '"'; i += 1; } else quoted = !quoted; } else if (char === ',' && !quoted) { cells.push(value); value = ''; } else value += char; } cells.push(value); return cells; }
+    function csvCell(value) { return `"${String(value ?? '').replaceAll('"', '""')}"`; }
+    function downloadReview() {
+      const header = ['event_id','midi_time_ms','video_time_ms','midi_note','zone_id','zone_name','velocity','hand_candidate','hand_confidence','previous_onset_gap_ms','next_onset_gap_ms','review_hand','review_status','reviewed_at_local','reviewer_note'];
+      const rows = [header.join(',')];
+      for (const event of state.events) { const review = state.reviews.get(String(event.event_id)); const status = review ? (review.label === 'S' ? 'skipped_uncertain' : 'verified_video') : 'pending_video_review'; rows.push(header.map(field => { const values = { ...event, video_time_ms: videoTime(event).toFixed(3), review_hand: review?.label || '', review_status: status, reviewed_at_local: review?.reviewed_at_local || '', reviewer_note: review?.note || '' }; return csvCell(values[field]); }).join(',')); }
+      const link = document.createElement('a'); const url = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' })); link.href = url; link.download = `video_hand_review_${new Date().toISOString().slice(0,10).replaceAll('-','')}.csv`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 0); setStatus('已下載手別確認 CSV。未審核與略過事件會保留狀態，不會被誤當成已確認。', 'ok');
+    }
+    async function loadSeed(file) {
+      try { const payload = JSON.parse(await file.text()); if (!Array.isArray(payload.events) || !payload.events.length) throw new Error('JSON 裡沒有事件清單'); const required = ['event_id','midi_time_ms','zone_name']; for (const field of required) if (!(field in payload.events[0])) throw new Error(`JSON 缺少欄位：${field}`); state.events = payload.events; state.index = 0; state.seedName = file.name; state.offsetMs = Number(payload.video_offset_ms ?? 14500); state.clipPreMs = Number(payload.clip_pre_ms ?? 80); state.clipPostMs = Number(payload.clip_post_ms ?? 80); el.videoOffset.value = String(Math.round(state.offsetMs)); state.storeKey = storageKey(); restore(); render(); setStatus(`已載入 ${state.events.length} 個乾淨單鼓點事件；已恢復 ${state.reviews.size} 筆本機標記。`, 'ok'); } catch (error) { setStatus(`審核清單讀取失敗：${error.message || '格式無法辨識'}`, 'error'); }
+    }
+    async function importReview(file) {
+      try { const lines = (await file.text()).replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean); if (lines.length < 2) throw new Error('CSV 沒有資料列'); const header = parseCsvLine(lines.shift()); const index = Object.fromEntries(header.map((name, position) => [name, position])); if (index.event_id === undefined || index.review_hand === undefined) throw new Error('CSV 缺少 event_id 或 review_hand 欄位'); let restored = 0; for (const line of lines) { const row = parseCsvLine(line); const label = row[index.review_hand]; const id = row[index.event_id]; if (['L','R','B','S'].includes(label) && state.events.some(event => String(event.event_id) === String(id))) { state.reviews.set(String(id), { label, note: row[index.reviewer_note] || '', reviewed_at_local: row[index.reviewed_at_local] || '' }); restored += 1; } } persist(); render(); setStatus(`已載入 ${restored} 筆手別確認結果。`, 'ok'); } catch (error) { setStatus(`確認 CSV 讀取失敗：${error.message || '格式無法辨識'}`, 'error'); }
+    }
+    function loadVideo(file) { if (state.objectUrl) URL.revokeObjectURL(state.objectUrl); state.objectUrl = URL.createObjectURL(file); el.video.src = state.objectUrl; el.video.classList.remove('hidden'); el.videoEmpty.classList.add('hidden'); el.video.load(); setStatus(`正在載入影片：${file.name}`, ''); }
+
+    el.seed.addEventListener('change', () => { const file = el.seed.files[0]; if (file) loadSeed(file); });
+    el.videoFile.addEventListener('change', () => { const file = el.videoFile.files[0]; if (file) loadVideo(file); });
+    el.videoOffset.addEventListener('change', () => { const value = Number(el.videoOffset.value); if (Number.isFinite(value)) { state.offsetMs = value; seekToHit(); render(); setStatus(`影片偏移已更新為 ${value.toFixed(0)} ms。`, 'ok'); } });
+    el.video.addEventListener('loadedmetadata', () => { seekToHit(); setStatus(`影片已載入：${clock(el.video.duration * 1000)}。目前可播放 MIDI 打點前後 ${state.clipPreMs} / ${state.clipPostMs} ms。`, 'ok'); });
+    el.video.addEventListener('timeupdate', () => { if (typeof el.video.requestVideoFrameCallback !== 'function' && state.stopAt !== null && el.video.currentTime >= state.stopAt) { el.video.pause(); state.stopAt = null; } });
+    el.video.addEventListener('error', () => setStatus('瀏覽器無法解碼此影片。請產生 H.264 MP4 預覽檔後再載入。', 'error'));
+    el.previous.addEventListener('click', () => move(-1)); el.next.addEventListener('click', () => move(1)); el.seekHit.addEventListener('click', seekToHit); el.playClip.addEventListener('click', playClip); el.playbackRate.addEventListener('change', () => { el.video.playbackRate = Number(el.playbackRate.value); });
+    document.querySelectorAll('[data-label]').forEach(button => button.addEventListener('click', () => setReview(button.dataset.label))); el.reviewNote.addEventListener('change', saveNote); el.download.addEventListener('click', downloadReview); el.reviewImport.addEventListener('change', () => { const file = el.reviewImport.files[0]; if (file) importReview(file); });
+    el.clear.addEventListener('click', () => { if (!state.reviews.size || !confirm('清除目前頁面所有手別標記？已下載的 CSV 不會受影響。')) return; state.reviews.clear(); persist(); render(); setStatus('已清除本頁本機標記。', 'ok'); });
+    window.addEventListener('keydown', event => { if (event.target.matches('input,select,textarea')) return; if (event.key === 'ArrowLeft') move(-1); else if (event.key === 'ArrowRight') move(1); else if (event.key.toLowerCase() === 'l') setReview('L'); else if (event.key.toLowerCase() === 'r') setReview('R'); else if (event.key.toLowerCase() === 'b') setReview('B'); else if (event.key.toLowerCase() === 's') setReview('S'); });
+    render();
+  })();
+  </script>
+</body>
+</html>

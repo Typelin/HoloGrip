@@ -1,0 +1,544 @@
+"""Designed operator UI for the HoloGrip song collection core."""
+
+from __future__ import annotations
+
+import time
+import tkinter as tk
+from pathlib import Path
+from tkinter import messagebox
+from typing import Any
+
+import customtkinter as ctk
+
+try:
+    from .song_collection_server import HAND_NAMES, SongCollectionApp
+except ImportError:
+    from song_collection_server import HAND_NAMES, SongCollectionApp
+
+
+BG = "#0D0F1A"
+PANEL = "#1A1B2E"
+PANEL_ALT = "#252738"
+BORDER = "#36394D"
+TEXT = "#FFFFFF"
+MUTED = "#A6ADC8"
+TEAL = "#A6E3A1"
+BLUE = "#89B4FA"
+RED = "#F38BA8"
+AMBER = "#F9E2AF"
+
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
+
+
+class DesignedSongCollectionApp(SongCollectionApp):
+    """A focused collection console for non-technical operators."""
+
+    def _build_ui(self) -> None:
+        window_width = min(1600, max(1100, self.winfo_screenwidth() - 60))
+        window_height = min(1000, max(780, self.winfo_screenheight() - 70))
+        self.geometry(f"{window_width}x{window_height}")
+        self.minsize(1000, 720)
+        self.configure(bg=BG)
+
+        self.hero_instruction_var = tk.StringVar(value="確認 MIDI 與錄影後，按下開始")
+        self.hero_subtitle_var = tk.StringVar(value="按下按鈕的瞬間即為歌曲時間 0 ms")
+
+        header = ctk.CTkFrame(self, fg_color=BG, corner_radius=0, height=108)
+        header.pack(fill="x", padx=28, pady=(22, 10))
+        header.pack_propagate(False)
+        header.grid_columnconfigure(0, weight=1)
+
+        brand = ctk.CTkFrame(header, fg_color="transparent")
+        brand.grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(
+            brand,
+            text="HoloGrip",
+            text_color=TEXT,
+            font=("Microsoft JhengHei UI", 42, "bold"),
+        ).pack(side="left")
+        ctk.CTkLabel(
+            brand,
+            text="歌曲資料收集",
+            text_color=MUTED,
+            font=("Microsoft JhengHei UI", 32, "bold"),
+        ).pack(side="left", padx=(14, 0), pady=(5, 0))
+
+        transport_text = "UDP 無線" if self.transport == "udp" else "COM 有線"
+        transport_color = BLUE if self.transport == "udp" else AMBER
+        ctk.CTkLabel(
+            header,
+            text=transport_text,
+            fg_color=PANEL_ALT,
+            text_color=transport_color,
+            corner_radius=6,
+            height=46,
+            width=150,
+            font=("Microsoft JhengHei UI", 20, "bold"),
+        ).grid(row=0, column=1, sticky="e", padx=(12, 0))
+        ctk.CTkLabel(
+            header,
+            textvariable=self.status_var,
+            text_color=MUTED,
+            font=("Microsoft JhengHei UI", 18),
+            anchor="e",
+        ).grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+
+        content = ctk.CTkScrollableFrame(
+            self,
+            fg_color="transparent",
+            corner_radius=0,
+            scrollbar_button_color="#26313E",
+            scrollbar_button_hover_color="#354456",
+        )
+        content.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        self.content = content
+
+        self._build_settings_panel(content)
+        self._build_recording_panel(content)
+        self._build_hand_panel(content)
+        self._responsive_after_id = None
+        self.bind("<Configure>", self._schedule_responsive_layout, add="+")
+        self.after_idle(lambda: self._apply_responsive_layout(self.winfo_width()))
+
+    def _card(self, parent: Any) -> ctk.CTkFrame:
+        return ctk.CTkFrame(
+            parent,
+            fg_color=PANEL,
+            border_color=BORDER,
+            border_width=0,
+            corner_radius=12,
+        )
+
+    def _section_label(self, parent: Any, text: str) -> ctk.CTkLabel:
+        return ctk.CTkLabel(
+            parent,
+            text=text,
+            text_color=MUTED,
+            font=("Microsoft JhengHei UI", 17, "bold"),
+            anchor="w",
+        )
+
+    def _build_settings_panel(self, content: ctk.CTkFrame) -> None:
+        panel = self._card(content)
+        self.settings_panel = panel
+        panel.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        panel.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(panel, text="收集設定", text_color=TEXT, font=("Microsoft JhengHei UI", 28, "bold"), anchor="w").grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 18))
+        self._section_label(panel, "場次／歌曲 ID").grid(row=1, column=0, sticky="ew", padx=20)
+        self.session_entry = ctk.CTkEntry(
+            panel,
+            textvariable=self.session_var,
+            fg_color="#090A10",
+            border_color=BORDER,
+            text_color=TEXT,
+            height=54,
+            corner_radius=8,
+            font=("Consolas", 18),
+        )
+        self.session_entry.grid(row=2, column=0, sticky="ew", padx=20, pady=(7, 18))
+
+        self.calibrate_button = ctk.CTkButton(
+            panel,
+            text="🎯  雙手統一歸零",
+            command=self._calibrate_both,
+            fg_color="#45475A",
+            hover_color="#5B6078",
+            border_color=BORDER,
+            border_width=0,
+            text_color=TEXT,
+            corner_radius=8,
+            height=56,
+            font=("Microsoft JhengHei UI", 18, "bold"),
+        )
+        self.calibrate_button.grid(row=3, column=0, sticky="ew", padx=20, pady=(0, 16))
+
+        next_row = 4
+        if self.transport == "serial":
+            next_row = self._build_serial_settings(panel, next_row)
+
+        self._section_label(panel, "資料模式").grid(row=next_row, column=0, sticky="ew", padx=20)
+        self.mode_segment = ctk.CTkSegmentedButton(
+            panel,
+            values=["原始 100 Hz", "有效打擊"],
+            command=self._select_mode,
+            selected_color=BLUE,
+            selected_hover_color="#A6C8FF",
+            unselected_color=PANEL_ALT,
+            unselected_hover_color="#45475A",
+            text_color=TEXT,
+            corner_radius=8,
+            height=50,
+            font=("Microsoft JhengHei UI", 18, "bold"),
+        )
+        self.mode_segment.grid(row=next_row + 1, column=0, sticky="ew", padx=20, pady=(7, 10))
+        self.mode_segment.set("有效打擊")
+        self.mode_buttons = [self.mode_segment]
+
+        ctk.CTkLabel(
+            panel,
+            textvariable=self.mode_desc_var,
+            text_color=MUTED,
+            justify="left",
+            anchor="nw",
+            wraplength=265,
+            font=("Microsoft JhengHei UI", 16),
+        ).grid(row=next_row + 2, column=0, sticky="ew", padx=20)
+
+
+    def _build_serial_settings(self, panel: ctk.CTkFrame, row: int) -> int:
+        self._section_label(panel, "左右手 COM 埠").grid(row=row, column=0, sticky="ew", padx=20)
+        self.com_a_var = tk.StringVar(value="選擇 COM A")
+        self.com_b_var = tk.StringVar(value="選擇 COM B")
+        ports = ctk.CTkFrame(panel, fg_color="transparent")
+        ports.grid(row=row + 1, column=0, sticky="ew", padx=20, pady=(7, 8))
+        ports.grid_columnconfigure((0, 1), weight=1)
+        self.com_a_box = ctk.CTkOptionMenu(
+            ports,
+            variable=self.com_a_var,
+            values=["選擇 COM A"],
+            fg_color=PANEL_ALT,
+            button_color="#45475A",
+            button_hover_color="#5B6078",
+            text_color=TEXT,
+            corner_radius=8,
+            height=48,
+            font=("Consolas", 16),
+        )
+        self.com_a_box.grid(row=0, column=0, sticky="ew", padx=(0, 4))
+        self.com_b_box = ctk.CTkOptionMenu(
+            ports,
+            variable=self.com_b_var,
+            values=["選擇 COM B"],
+            fg_color=PANEL_ALT,
+            button_color="#45475A",
+            button_hover_color="#5B6078",
+            text_color=TEXT,
+            corner_radius=8,
+            height=48,
+            font=("Consolas", 16),
+        )
+        self.com_b_box.grid(row=0, column=1, sticky="ew", padx=(4, 0))
+
+        actions = ctk.CTkFrame(panel, fg_color="transparent")
+        actions.grid(row=row + 2, column=0, sticky="ew", padx=20, pady=(0, 18))
+        actions.grid_columnconfigure((0, 1), weight=1)
+        ctk.CTkButton(
+            actions,
+            text="⟳  重新整理",
+            command=self._refresh_serial_ports,
+            fg_color="#45475A",
+            hover_color="#5B6078",
+            border_color="#45475A",
+            border_width=0,
+            height=48,
+            corner_radius=8,
+        ).grid(row=0, column=0, sticky="ew", padx=(0, 4))
+        self.serial_connect_button = ctk.CTkButton(
+            actions,
+            text="🔗  連接 COM",
+            command=self._connect_serial_ports,
+            fg_color=BLUE,
+            hover_color="#A6C8FF",
+            text_color="#11131D",
+            height=48,
+            corner_radius=8,
+        )
+        self.serial_connect_button.grid(row=0, column=1, sticky="ew", padx=(4, 0))
+        return row + 3
+
+    def _build_recording_panel(self, content: ctk.CTkFrame) -> None:
+        center = ctk.CTkFrame(content, fg_color="transparent")
+        self.recording_panel = center
+        center.grid(row=0, column=1, sticky="nsew", padx=0)
+        center.grid_columnconfigure(0, weight=1)
+        center.grid_rowconfigure(0, weight=1)
+
+        hero = self._card(center)
+        hero.grid(row=0, column=0, sticky="nsew")
+        hero.grid_columnconfigure(0, weight=1)
+        hero.grid_rowconfigure(3, weight=1)
+
+        self.record_state_label = ctk.CTkLabel(
+            hero,
+            text="●  準備就緒",
+            text_color=TEAL,
+            fg_color="#1F3D2E",
+            corner_radius=8,
+            height=44,
+            width=160,
+            font=("Microsoft JhengHei UI", 17, "bold"),
+        )
+        self.record_state_label.grid(row=0, column=0, pady=(28, 14))
+        ctk.CTkLabel(
+            hero,
+            textvariable=self.hero_instruction_var,
+            text_color=TEXT,
+            font=("Microsoft JhengHei UI", 34, "bold"),
+            wraplength=490,
+        ).grid(row=1, column=0, padx=24)
+
+        action_row = ctk.CTkFrame(hero, fg_color="transparent")
+        action_row.grid(row=2, column=0, sticky="ew", padx=28, pady=(18, 10))
+        action_row.grid_columnconfigure((0, 1), weight=1)
+        self.start_button = ctk.CTkButton(
+            action_row,
+            text="▶  開始歌曲收集",
+            command=self._start_recording,
+            fg_color="#A6E3A1",
+            hover_color="#B8F2B4",
+            text_color="#11131D",
+            corner_radius=10,
+            height=68,
+            font=("Microsoft JhengHei UI", 22, "bold"),
+        )
+        self.start_button.grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        self.stop_button = ctk.CTkButton(
+            action_row,
+            text="■  停止並存檔",
+            command=self._stop_recording,
+            fg_color=RED,
+            hover_color="#FFABC2",
+            text_color="#11131D",
+            text_color_disabled="#5B1D32",
+            corner_radius=10,
+            height=68,
+            font=("Microsoft JhengHei UI", 22, "bold"),
+            state="disabled",
+        )
+        self.stop_button.grid(row=0, column=1, sticky="ew", padx=(6, 0))
+
+        timer_box = ctk.CTkFrame(hero, fg_color="transparent")
+        timer_box.grid(row=3, column=0, sticky="nsew", padx=24, pady=(0, 0))
+        timer_box.grid_columnconfigure(0, weight=1)
+        timer_box.grid_rowconfigure(0, weight=1)
+        ctk.CTkLabel(
+            timer_box,
+            textvariable=self.elapsed_var,
+            text_color=TEXT,
+            font=("Consolas", 72, "bold"),
+        ).grid(row=0, column=0, sticky="s")
+        ctk.CTkLabel(
+            timer_box,
+            textvariable=self.count_var,
+            text_color=MUTED,
+            font=("Consolas", 18),
+        ).grid(row=1, column=0, pady=(2, 6))
+        ctk.CTkLabel(
+            timer_box,
+            textvariable=self.hero_subtitle_var,
+            text_color=MUTED,
+            font=("Microsoft JhengHei UI", 17),
+        ).grid(row=2, column=0, pady=(0, 12))
+        ctk.CTkLabel(
+            hero,
+            textvariable=self.file_var,
+            text_color=MUTED,
+            font=("Consolas", 15),
+            wraplength=520,
+            anchor="center",
+        ).grid(row=4, column=0, sticky="ew", padx=28, pady=(14, 24))
+
+        log_card = self._card(center)
+        log_card.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+        ctk.CTkLabel(log_card, text="操作紀錄", text_color=MUTED, font=("Microsoft JhengHei UI", 17, "bold"), anchor="w").pack(fill="x", padx=16, pady=(12, 5))
+        self.log_text = ctk.CTkTextbox(
+            log_card,
+            height=170,
+            fg_color="#090A10",
+            border_width=0,
+            text_color="#C8D1DA",
+            font=("Consolas", 16),
+            corner_radius=8,
+        )
+        self.log_text.pack(fill="x", padx=12, pady=(0, 12))
+        self.log_text.configure(state="disabled")
+
+    def _build_hand_panel(self, content: ctk.CTkFrame) -> None:
+        panel = self._card(content)
+        self.hand_panel = panel
+        self.hand_cards = {}
+        panel.grid(row=0, column=2, sticky="nsew", padx=(12, 0))
+        panel.grid_columnconfigure(0, weight=1)
+        panel.grid_rowconfigure((1, 2), weight=1)
+        self.hand_panel_title = ctk.CTkLabel(panel, text="手套狀態", text_color=TEXT, font=("Microsoft JhengHei UI", 28, "bold"), anchor="w")
+        self.hand_panel_title.grid(row=0, column=0, sticky="ew", padx=18, pady=(20, 12))
+
+        for row, hand in enumerate(("R", "L"), start=1):
+            hand_card = ctk.CTkFrame(panel, fg_color="#090A10", corner_radius=10, border_width=0)
+            self.hand_cards[hand] = hand_card
+            hand_card.grid(row=row, column=0, sticky="nsew", padx=14, pady=(0, 10 if hand == "R" else 16))
+            hand_card.grid_columnconfigure(0, weight=1)
+            ctk.CTkLabel(
+                hand_card,
+                text=HAND_NAMES[hand],
+                text_color=BLUE if hand == "R" else TEAL,
+                font=("Microsoft JhengHei UI", 24, "bold"),
+                anchor="w",
+            ).grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 3))
+            ctk.CTkLabel(
+                hand_card,
+                textvariable=self.hand_status_vars[hand],
+                text_color=MUTED,
+                font=("Microsoft JhengHei UI", 17, "bold"),
+                anchor="w",
+            ).grid(row=1, column=0, sticky="ew", padx=14)
+            ctk.CTkLabel(
+                hand_card,
+                textvariable=self.hand_count_vars[hand],
+                text_color=TEXT,
+                font=("Consolas", 17),
+                anchor="w",
+            ).grid(row=2, column=0, sticky="ew", padx=14, pady=(12, 8))
+            ctk.CTkLabel(
+                hand_card,
+                textvariable=self.hand_latest_vars[hand],
+                text_color="#C8D1DA",
+                fg_color=PANEL_ALT,
+                corner_radius=8,
+                justify="left",
+                anchor="nw",
+                font=("Consolas", 16),
+                height=110,
+            ).grid(row=3, column=0, sticky="nsew", padx=14, pady=(0, 14))
+
+    def _schedule_responsive_layout(self, event: Any) -> None:
+        if event.widget is not self:
+            return
+        if self._responsive_after_id is not None:
+            try:
+                self.after_cancel(self._responsive_after_id)
+            except tk.TclError:
+                pass
+        self._responsive_after_id = self.after(80, lambda: self._apply_responsive_layout(self.winfo_width()))
+
+    def _apply_responsive_layout(self, width: int) -> None:
+        """Reflow panels so DPI and window resizing never hide controls."""
+        if not hasattr(self, "content"):
+            return
+        content = self.content
+        self._responsive_after_id = None
+        for column in range(3):
+            content.grid_columnconfigure(column, weight=0, minsize=0)
+        for row in range(3):
+            content.grid_rowconfigure(row, weight=0, minsize=0)
+        for panel in (self.settings_panel, self.recording_panel, self.hand_panel):
+            panel.grid_forget()
+
+        if width >= 1250:
+            content.grid_columnconfigure(1, weight=1)
+            content.grid_rowconfigure(0, weight=1)
+            self.settings_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=0)
+            self.recording_panel.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
+            self.hand_panel.grid(row=0, column=2, sticky="nsew", padx=(12, 0), pady=0)
+            self._layout_hand_cards(horizontal=False)
+        elif width >= 940:
+            content.grid_columnconfigure(1, weight=1)
+            content.grid_rowconfigure(0, weight=1)
+            self.settings_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=0)
+            self.recording_panel.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
+            self.hand_panel.grid(row=1, column=0, columnspan=2, sticky="ew", padx=0, pady=(14, 0))
+            self._layout_hand_cards(horizontal=True)
+        else:
+            content.grid_columnconfigure(0, weight=1)
+            self.settings_panel.grid(row=0, column=0, sticky="ew", pady=(0, 14))
+            self.recording_panel.grid(row=1, column=0, sticky="ew", pady=(0, 14))
+            self.hand_panel.grid(row=2, column=0, sticky="ew")
+            self._layout_hand_cards(horizontal=False)
+
+    def _layout_hand_cards(self, horizontal: bool) -> None:
+        panel = self.hand_panel
+        for column in range(2):
+            panel.grid_columnconfigure(column, weight=0, minsize=0)
+        for card in self.hand_cards.values():
+            card.grid_forget()
+        if horizontal:
+            panel.grid_columnconfigure(0, weight=1)
+            panel.grid_columnconfigure(1, weight=1)
+            self.hand_panel_title.grid_configure(columnspan=2)
+            for index, hand in enumerate(("R", "L")):
+                self.hand_cards[hand].grid(row=1, column=index, sticky="nsew", padx=(14, 7) if index == 0 else (7, 14), pady=(0, 14))
+        else:
+            panel.grid_columnconfigure(0, weight=1)
+            self.hand_panel_title.grid_configure(columnspan=1)
+            for index, hand in enumerate(("R", "L"), start=1):
+                self.hand_cards[hand].grid(row=index, column=0, sticky="nsew", padx=14, pady=(0, 10 if hand == "R" else 16))
+
+    def _select_mode(self, label: str) -> None:
+        self.mode_var.set("raw_100hz" if label.startswith("原始") else "hit_events")
+        self._update_mode_description()
+
+    def _update_mode_description(self) -> None:
+        if self.mode_var.get() == "raw_100hz":
+            self.mode_desc_var.set("完整保存每個感測封包，不套用打擊判定。適合後續重新標註與時序模型。")
+        else:
+            self.mode_desc_var.set("只保存通過峰值、動作過濾與 150–250 ms 防彈跳的有效打擊。")
+
+    def _refresh_serial_ports(self) -> None:
+        if self.transport != "serial":
+            return
+        try:
+            from serial.tools import list_ports
+        except ImportError:
+            self.status_var.set("COM 版本需要 pyserial")
+            self._append_log("請執行：python -m pip install pyserial")
+            return
+        ports = [port.device for port in list_ports.comports()]
+        values = ports or ["未找到 COM"]
+        self.com_a_box.configure(values=values)
+        self.com_b_box.configure(values=values)
+        if ports:
+            self.com_a_var.set(ports[0])
+            self.com_b_var.set(ports[1] if len(ports) > 1 else "選擇 COM B")
+        self._append_log(f"找到 COM 埠：{', '.join(ports) if ports else '無'}")
+
+    def _set_recording_widgets(self, recording: bool) -> None:
+        super()._set_recording_widgets(recording)
+        if self.transport == "serial":
+            self.com_a_box.configure(state="disabled" if recording else "normal")
+            self.com_b_box.configure(state="disabled" if recording else "normal")
+            self.serial_connect_button.configure(state="disabled" if recording else "normal")
+
+    def _start_recording(self) -> None:
+        super()._start_recording()
+        recorder = getattr(self, "recorder", None)
+        if recorder is None or not recorder.active:
+            return
+        self.record_state_label.configure(text="●  錄製中", text_color=RED, fg_color="#321B1C")
+        self.hero_instruction_var.set("現在播放歌曲，開始演奏")
+        self.hero_subtitle_var.set("歌曲結束後按「停止並存檔」")
+
+    def _stop_recording(self) -> None:
+        recorder = getattr(self, "recorder", None)
+        if recorder is None or not recorder.active:
+            return
+        super()._stop_recording()
+        self.record_state_label.configure(text="●  已完成", text_color=TEAL, fg_color="#102821")
+        self.hero_instruction_var.set("CSV 已儲存，可以進行下一首")
+        self.hero_subtitle_var.set("修改歌曲 ID 後即可再次開始")
+        path = getattr(recorder, "path", None)
+        if isinstance(path, Path):
+            self.file_var.set(path.name)
+
+    def _append_log(self, message: str) -> None:
+        self.log_text.configure(state="normal")
+        self.log_text.insert("end", f"[{time.strftime('%H:%M:%S')}] {message}\n")
+        self.log_text.see("end")
+        self.log_text.configure(state="disabled")
+
+    def _on_close(self) -> None:
+        if getattr(self, "_responsive_after_id", None) is not None:
+            try:
+                self.after_cancel(self._responsive_after_id)
+            except tk.TclError:
+                pass
+        super()._on_close()
+
+
+if __name__ == "__main__":
+    import sys
+
+    transport = "serial" if "--serial" in sys.argv else "udp"
+    DesignedSongCollectionApp(transport=transport).mainloop()

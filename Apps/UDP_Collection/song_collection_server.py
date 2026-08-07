@@ -33,10 +33,10 @@ from typing import Any, Callable, Optional
 
 
 UDP_PORT = 8888
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 COLLECTION_OUTPUT_DIRS = {
-    "udp": PROJECT_ROOT / "CSV_Data" / "UDP_Collections",
-    "serial": PROJECT_ROOT / "CSV_Data" / "Song_Collection_COM",
+    "udp": PROJECT_ROOT / "Data" / "Raw" / "UDP_Collections",
+    "serial": PROJECT_ROOT / "Data" / "Raw" / "Song_Collection_COM",
 }
 HAND_NAMES = {"R": "右手", "L": "左手"}
 

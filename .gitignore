@@ -11,12 +11,17 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Folders to exclude from Github upload (as requested)
-Latency_Test/
+# Large local research assets and archived experiments
+Data/Raw/Song_Collection_COM/
+Data/Raw/Song_Collections/
+Data/Raw/UDP_Collections/
+Data/Derived/
+Data/External/
 Presentations/
-簡報1/
-old/
-vids/
+Media/
+Tests/Latency/
+Archive/Legacy_Code/
+Archive/Generated_Cache_*/
 *.mp4
 *.avi
 *.mov

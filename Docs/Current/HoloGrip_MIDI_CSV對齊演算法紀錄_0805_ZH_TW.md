@@ -13,8 +13,8 @@
 
 ## 來源資料
 
-- MIDI：`流音給/Drum Midi_110BPM (0805).mid`
-- Raw CSV：`CSV_Data/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv`
+- MIDI：`Data/External/FlowAudio_20260805/Drum Midi_110BPM (0805).mid`
+- Raw CSV：`Data/Raw/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv`
 - BPM：`110`
 - MIDI：Format 0、PPQN 96、1,820 個映射事件
 - CSV：74,592 列，左右手各 37,296 列，時間長度 373,125 ms

@@ -19,17 +19,18 @@ from typing import Any
 import midi_label_pipeline as pipeline
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_ROOT = PROJECT_ROOT / "Data"
 DEFAULT_RAW_CSV = (
-    PROJECT_ROOT
-    / "CSV_Data"
+    DATA_ROOT
+    / "Raw"
     / "Song_Collection_COM"
     / "S20260805_P01_song01_raw_100hz_20260805_161628.csv"
 )
-DEFAULT_MIDI = PROJECT_ROOT / "流音給" / "Drum Midi_110BPM (0805).mid"
+DEFAULT_MIDI = DATA_ROOT / "External" / "FlowAudio_20260805" / "Drum Midi_110BPM (0805).mid"
 DEFAULT_OUTPUT = (
-    PROJECT_ROOT
-    / "Derived_Data"
+    DATA_ROOT
+    / "Derived"
     / "Song_Collection_COM"
     / "S20260805_P01_song01"
     / "hand_label_triage_0807"

@@ -22,21 +22,21 @@
 
 目前場次可以直接雙擊：
 
-`Song_Collection_COM/run_midi_label_pipeline_0805.bat`
+`Apps/Song_Collection_COM/run_midi_label_pipeline_0805.bat`
 
 或在專案根目錄執行：
 
 ```powershell
-python Song_Collection_COM/midi_label_pipeline.py `
-  --raw-csv CSV_Data/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv `
-  --midi "流音給/Drum Midi_110BPM (0805).mid" `
-  --out-dir Derived_Data/Song_Collection_COM/S20260805_P01_song01 `
+python Apps/Song_Collection_COM/midi_label_pipeline.py `
+  --raw-csv Data/Raw/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv `
+  --midi "Data/External/FlowAudio_20260805/Drum Midi_110BPM (0805).mid" `
+  --out-dir Data/Derived/Song_Collection_COM/S20260805_P01_song01 `
   --bpm 110
 ```
 
 ## 輸出
 
-`Derived_Data/Song_Collection_COM/<session_id>/` 會產生：
+`Data/Derived/Song_Collection_COM/<session_id>/` 會產生：
 
 - `midi_events.csv`：每個 MIDI 事件與 7 類 Zone_ID。
 - `alignment_report.json`：BPM、offset、來源檔 hash、事件統計與複核門檻。

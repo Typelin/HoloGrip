@@ -15,10 +15,11 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_ROOT = PROJECT_ROOT / "Data"
 DEFAULT_EVENT_CSV = (
-    PROJECT_ROOT
-    / "Derived_Data"
+    DATA_ROOT
+    / "Derived"
     / "Song_Collection_COM"
     / "S20260805_P01_song01"
     / "midi_events.csv"

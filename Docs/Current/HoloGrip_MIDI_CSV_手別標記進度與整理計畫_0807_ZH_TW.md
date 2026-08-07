@@ -2,16 +2,18 @@
 
 更新日期：2026-08-07
 
+> 資料夾實體遷移已於 2026-08-07 完成。本文件中的目前操作路徑已更新為 `Apps/`、`Firmware/` 與 `Data/` 結構；第 8 節保留整理前盤點，供追溯使用。
+
 ## 1. 本次資料與目的
 
 目標是將雙手手套的 100 Hz CSV，配合電子鼓本次實際演奏產生的 MIDI，建立可追溯的左右手鼓點訓練資料。
 
 | 資料 | 目前檔案 | 用途 |
 |---|---|---|
-| 原始手套資料 | `CSV_Data/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv` | 左右手 IMU，100 Hz |
-| 演奏 MIDI | `流音給/Drum Midi_110BPM (0805).mid` | 鼓點時間、7 類鼓點、velocity |
-| 演奏影片 | `流音給/IMG_6060.MOV` | 人工確認左右手 |
-| 演奏音訊 | `流音給/Drum Audio_110BPM (0805).wav` | 輔助影片初始對時 |
+| 原始手套資料 | `Data/Raw/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv` | 左右手 IMU，100 Hz |
+| 演奏 MIDI | `Data/External/FlowAudio_20260805/Drum Midi_110BPM (0805).mid` | 鼓點時間、7 類鼓點、velocity |
+| 演奏影片 | `Data/External/FlowAudio_20260805/IMG_6060.MOV` | 人工確認左右手 |
+| 演奏音訊 | `Data/External/FlowAudio_20260805/Drum Audio_110BPM (0805).wav` | 輔助影片初始對時 |
 
 MIDI 有 1,820 個 7 鼓點事件，但沒有原生左手／右手欄位。MIDI 負責「何時、哪個鼓」；影片與手套活動才用於補足「哪隻手」。
 
@@ -109,18 +111,18 @@ MIDI 並非最多只會同時 2 點。第一版雙手模型只使用「高信心
 
 ### 自動分流與同時 MIDI 人工審核
 
-啟動：`Song_Collection_COM/run_hand_label_triage_0807.bat`
+啟動：`Apps/Song_Collection_COM/run_hand_label_triage_0807.bat`
 
-它會先執行：`Song_Collection_COM/hand_label_triage_0807.py`
+它會先執行：`Apps/Song_Collection_COM/hand_label_triage_0807.py`
 
-接著開啟：`Song_Collection_COM/simultaneous_midi_hand_review_0807.html`
+接著開啟：`Apps/Song_Collection_COM/simultaneous_midi_hand_review_0807.html`
 
 群組審核頁要載入：
 
-1. `Derived_Data/Song_Collection_COM/S20260805_P01_song01/hand_label_triage_0807/manual_simultaneous_groups.json`
-2. `流音給/IMG_6060.MOV`
+1. `Data/Derived/Song_Collection_COM/S20260805_P01_song01/hand_label_triage_0807/manual_simultaneous_groups.json`
+2. `Data/External/FlowAudio_20260805/IMG_6060.MOV`
 
-產出目錄：`Derived_Data/Song_Collection_COM/S20260805_P01_song01/hand_label_triage_0807/`
+產出目錄：`Data/Derived/Song_Collection_COM/S20260805_P01_song01/hand_label_triage_0807/`
 
 | 檔案 | 意義 |
 |---|---|
@@ -130,7 +132,7 @@ MIDI 並非最多只會同時 2 點。第一版雙手模型只使用「高信心
 | `excluded_events.csv` | 本輪不使用的事件與原因 |
 | `hand_label_triage_summary.json` | 可供程式讀取的統計 |
 
-## 8. HoloGrip 資料夾盤點
+## 8. 整理前資料夾盤點（歷史紀錄）
 
 目前根目錄有幾個正確但混雜的區塊：
 
@@ -145,17 +147,17 @@ MIDI 並非最多只會同時 2 點。第一版雙手模型只使用「高信心
 | `Docs/` | 規格、計畫、電池紀錄 | 需要區分 current、logs、archive |
 | `old/`、`CSV_Data_Legacy/`、`outputs/`、根目錄暫存檔 | 舊資料或暫存輸出 | 需要盤點後封存 |
 
-## 9. 建議整理方式
+## 9. 已完成的整理方式
 
-### 第一階段：現在可做，零搬檔風險
+### 已完成：穩定資料路徑與分類
 
-1. 維持 `CSV_Data/` 與 `Derived_Data/` 現有位置。
-2. 維持 `Song_Collection_COM/` 現有位置，因為 BAT 與 Python 使用相對／既有路徑。
-3. 將此文件作為目前唯一的 MIDI/CSV 進度入口。
-4. 後續新增資料統一遵守：原始檔只進 `CSV_Data/` 或外部來源目錄；產生物只進 `Derived_Data/`。
-5. 所有提供人閱讀的繁體中文報告與說明文件，檔名統一以 `_ZH_TW` 結尾，例如：`HoloGrip_MIDI_CSV_手別標記進度與整理計畫_0807_ZH_TW.md`。原始資料、程式、BAT、韌體與第三方交付檔維持原檔名，避免破壞工具路徑與可追溯性。
+1. 原始資料統一在 `Data/Raw/`，推導標記統一在 `Data/Derived/`，流音交付素材統一在 `Data/External/FlowAudio_20260805/`。
+2. COM 與 UDP 程式統一在 `Apps/`，兩套韌體統一在 `Firmware/`。
+3. 此文件與 `README.md` 為目前 MIDI/CSV 流程入口。
+4. 後續新增資料遵守：原始檔只進 `Data/Raw/` 或 `Data/External/`；產生物只進 `Data/Derived/`。
+5. 所有提供人閱讀的繁體中文報告與說明文件，檔名統一以 `_ZH_TW` 結尾。原始資料、程式、BAT、韌體與第三方交付檔維持原檔名，避免破壞工具路徑與可追溯性。
 
-### 第二階段：確認後再遷移
+### 遷移後實際結構
 
 目標結構：
 
@@ -183,7 +185,7 @@ HoloGrip/
   Archive/
 ```
 
-此階段會改變現有程式路徑與 Git 目錄，因此要先建立遷移表、更新 BAT/Python 路徑、跑一次收集測試與標記測試，再搬動舊資料。不要直接拖曳或刪除目前資料夾。
+遷移前已建立 Git 基線、更新 BAT/Python 路徑並完成靜態驗證。搬遷後仍需在下次連接實體手套時，執行一次 COM 實機收集與 MIDI triage 冒煙測試。
 
 ## 10. 下一步
 

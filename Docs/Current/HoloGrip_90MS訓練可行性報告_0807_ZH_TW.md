@@ -2,7 +2,7 @@
 
 日期：2026-08-07
 
-> 最新的 80 ms／90 ms 深度比較與最終窗口建議，請以 [REPORT_0807_80MS_90MS_WINDOW_AND_TRAINING_ZH_TW.md](REPORT_0807_80MS_90MS_WINDOW_AND_TRAINING_ZH_TW.md) 為準。
+> 最新的 80 ms／90 ms 深度比較與最終窗口建議，請以 [HoloGrip_80MS_90MS窗口與訓練評估_0807_ZH_TW.md](HoloGrip_80MS_90MS窗口與訓練評估_0807_ZH_TW.md) 為準。
 
 ## 一、計算條件
 

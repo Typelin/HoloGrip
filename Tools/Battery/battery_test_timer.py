@@ -2,10 +2,13 @@ import socket
 import time
 import os
 from datetime import datetime
+from pathlib import Path
 
 # ================= 設定區 =================
 UDP_PORT = 8888
 TIMEOUT_LIMIT = 15  # 超過 15 秒沒收到封包，判定為設備已斷電關機
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+LOG_DIR = PROJECT_ROOT / "Docs" / "Logs"
 # ==========================================
 
 def format_duration(seconds):
@@ -61,7 +64,7 @@ def main():
                 
                 # 自動產生唯一的檔名，例如 battery_test_log_20260712_120530.txt
                 log_filename = f"battery_test_log_{now_dt.strftime('%Y%m%d_%H%M%S')}.txt"
-                log_file = os.path.join("Docs", log_filename)
+                log_file = str(LOG_DIR / log_filename)
                 
                 print(f"⚡ [開機偵測] 已接收到首筆封包！")
                 print(f"   * 開始時間: {start_str}")

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HoloGrip 資料集最終進度總覽｜0807</title>
+  <style>
+    :root {
+      --canvas: #0b0c0e;
+      --panel: #14161a;
+      --panel-raised: #1b1f24;
+      --panel-soft: #111317;
+      --paper: #f2efe8;
+      --ink: #ece8df;
+      --muted: #9da3a7;
+      --faint: #6d747a;
+      --line: rgba(242, 239, 232, .12);
+      --amber: #e0a106;
+      --amber-soft: rgba(224, 161, 6, .13);
+      --teal: #2f9e8f;
+      --teal-soft: rgba(47, 158, 143, .14);
+      --left: #4c9ddd;
+      --left-soft: rgba(76, 157, 221, .16);
+      --right: #d45b64;
+      --right-soft: rgba(212, 91, 100, .16);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--canvas); }
+    body { margin: 0; background: var(--canvas); color: var(--ink); font: 15px/1.5 "IBM Plex Sans", "Microsoft JhengHei", "Segoe UI", sans-serif; }
+    button, input { font: inherit; }
+    a { color: inherit; }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 24px 28px 56px; }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 19px; border-bottom: 1px solid var(--line); }
+    .kicker, .mono, .metric-label, th { font-family: "IBM Plex Mono", Consolas, monospace; letter-spacing: .03em; }
+    .kicker { color: var(--amber); font-size: 11px; text-transform: uppercase; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { margin-top: 4px; font-size: clamp(24px, 3vw, 34px); line-height: 1.15; letter-spacing: 0; }
+    h2 { font-size: 19px; line-height: 1.25; letter-spacing: 0; }
+    h3 { font-size: 15px; line-height: 1.35; letter-spacing: 0; }
+    .lede { max-width: 700px; margin-top: 9px; color: var(--muted); }
+    .state { display: grid; gap: 4px; min-width: 240px; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: var(--radius); background: var(--panel); color: var(--muted); }
+    .state strong { color: var(--ink); font-size: 14px; }
+    .workflow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 18px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .workflow a { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 12px 14px; background: var(--panel); text-decoration: none; }
+    .workflow a:hover, .workflow a[aria-current="page"] { background: var(--panel-raised); }
+    .workflow .step-no { color: var(--amber); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 12px; }
+    .workflow strong { display: block; font-size: 14px; }
+    .workflow span:last-child { display: block; margin-top: 1px; color: var(--muted); font-size: 12px; }
+    section { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 13px; }
+    .section-note { color: var(--muted); font-size: 13px; }
+    .loadbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px; align-items: end; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    .field { display: grid; gap: 5px; min-width: 0; }
+    .field label { color: var(--muted); font-size: 12px; }
+    .field input[type="file"] { width: 100%; min-height: 38px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--panel-soft); }
+    .button { min-height: 38px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--panel-raised); cursor: pointer; }
+    .button:hover { border-color: rgba(224, 161, 6, .65); background: #242a30; }
+    .button.primary { color: #17130a; border-color: var(--amber); background: var(--amber); font-weight: 700; }
+    .button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .source-status { margin-top: 9px; min-height: 21px; color: var(--muted); font-size: 13px; }
+    .source-status[data-kind="ok"] { color: #73cabe; }
+    .source-status[data-kind="error"] { color: #ef969c; }
+    .metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .metric { min-height: 92px; padding: 12px 13px; border: 1px solid var(--line); border-top: 2px solid var(--faint); border-radius: var(--radius); background: var(--panel); }
+    .metric:nth-child(1) { border-top-color: var(--amber); }
+    .metric:nth-child(2) { border-top-color: var(--left); }
+    .metric:nth-child(3) { border-top-color: var(--teal); }
+    .metric:nth-child(4) { border-top-color: var(--right); }
+    .metric:nth-child(5) { border-top-color: #b4a68e; }
+    .metric-label { display: block; color: var(--muted); font-size: 11px; }
+    .metric-value { display: block; margin-top: 4px; color: var(--ink); font-size: 25px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .metric-detail { display: block; margin-top: 5px; color: var(--faint); font-size: 12px; }
+    .split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: 18px; align-items: start; }
+    .instrument { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); overflow: hidden; }
+    .instrument-head { display: flex; justify-content: space-between; gap: 15px; align-items: baseline; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .instrument-head small { color: var(--muted); }
+    .bars { padding: 14px; display: grid; gap: 13px; }
+    .bar-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 64px; gap: 10px; align-items: center; }
+    .bar-name { color: var(--ink); font-size: 13px; }
+    .bar-track { height: 12px; display: flex; overflow: hidden; background: #262b30; border-radius: 2px; }
+    .bar-track span { display: block; height: 100%; min-width: 0; }
+    .bar-track .auto { background: var(--amber); }
+    .bar-track .manual { background: var(--teal); }
+    .bar-track .excluded { background: #626a70; }
+    .bar-count { color: var(--muted); text-align: right; font: 12px "IBM Plex Mono", Consolas, monospace; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 14px 13px; color: var(--muted); font-size: 12px; }
+    .legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 1px; vertical-align: -1px; }
+    .legend .auto { background: var(--amber); }
+    .legend .manual { background: var(--teal); }
+    .readiness { padding: 14px; display: grid; gap: 14px; }
+    .readiness-line { display: flex; justify-content: space-between; gap: 15px; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+    .readiness-line:last-child { padding-bottom: 0; border-bottom: 0; }
+    .readiness-line span { color: var(--muted); font-size: 13px; }
+    .readiness-line strong { color: var(--ink); font-size: 18px; font-variant-numeric: tabular-nums; }
+    .readiness-line strong.good { color: #73cabe; }
+    .readiness-line strong.warn { color: #e5b344; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { color: var(--muted); font-size: 11px; font-weight: 500; }
+    td { color: var(--ink); font-size: 13px; }
+    tbody tr:last-child td { border-bottom: 0; }
+    td.number { font-family: "IBM Plex Mono", Consolas, monospace; text-align: right; }
+    .hand-left { color: var(--left); }
+    .hand-right { color: var(--right); }
+    .zone-progress { display: flex; min-width: 120px; height: 8px; overflow: hidden; background: #282d31; border-radius: 2px; }
+    .zone-progress span { display: block; min-width: 0; }
+    .zone-progress .left { background: var(--left); }
+    .zone-progress .right { background: var(--right); }
+    .callout { display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 14px; border-left: 3px solid var(--amber); background: var(--amber-soft); }
+    .callout strong { color: var(--ink); }
+    .callout p { margin-top: 2px; color: var(--muted); font-size: 13px; }
+    .next-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .next-step { padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    .next-step .step-index { color: var(--amber); font: 12px "IBM Plex Mono", Consolas, monospace; }
+    .next-step strong { display: block; margin-top: 4px; }
+    .next-step p { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .mono { font-family: "IBM Plex Mono", Consolas, monospace; }
+    @media (max-width: 930px) { .topbar, .section-head { display: block; } .state { margin-top: 14px; } .loadbar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); } .split { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .shell { padding: 18px 14px 42px; } .workflow { grid-template-columns: 1fr; } .loadbar, .metrics, .next-steps { grid-template-columns: 1fr; } .bar-row { grid-template-columns: 112px minmax(0, 1fr) 55px; gap: 7px; } h1 { font-size: 26px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="kicker">HOLOGRIP / DATASET STATUS / 0805</div>
+        <h1>資料集最終進度總覽</h1>
+        <p class="lede">把 MIDI 時間、CSV 活動、影片手別與訓練可用量放在同一個判讀畫面。</p>
+      </div>
+      <div class="state" id="state-box"><strong id="state-title">目前顯示：0805 資料快照</strong><span id="state-detail">尚未載入外部統計檔</span></div>
+    </header>
+
+    <nav class="workflow" aria-label="HoloGrip 三頁工作流程">
+      <a href="HoloGrip_MIDI_CSV對齊檢查_0807_ZH_TW.html"><span class="step-no">01</span><span><strong>MIDI + CSV 對齊檢查</strong><span>時間、活動峰與採樣窗口</span></span></a>
+      <a href="HoloGrip_同時MIDI影片手別標記_0807_ZH_TW.html"><span class="step-no">02</span><span><strong>同時 MIDI + 影片手別標記</strong><span>逐組判讀左手、右手或略過</span></span></a>
+      <a href="HoloGrip_資料集最終進度總覽_0807_ZH_TW.html" aria-current="page"><span class="step-no">03</span><span><strong>資料集最終進度總覽</strong><span>確認資料是否可以進訓練</span></span></a>
+    </nav>
+
+    <section>
+      <div class="section-head"><div><h2>載入目前資料</h2><p class="section-note">不選檔案時顯示 0805 triage 快照；選擇後會用實際人工審核結果重新計算。</p></div><button class="button" id="restore" type="button">恢復 0805 快照</button></div>
+      <div class="loadbar">
+        <div class="field"><label for="summary-file">Triage 統計 JSON（可選）</label><input id="summary-file" type="file" accept=".json,application/json"></div>
+        <div class="field"><label for="auto-file">自動高信心 CSV（可選）</label><input id="auto-file" type="file" accept=".csv,text/csv"></div>
+        <div class="field"><label for="group-file">同時 MIDI 群組 JSON（可選）</label><input id="group-file" type="file" accept=".json,application/json"></div>
+        <div class="field"><label for="review-file">第 2 頁下載的人工手別 CSV（可選）</label><input id="review-file" type="file" accept=".csv,text/csv"></div>
+        <button class="button primary" id="apply-files" type="button">套用已選檔案</button>
+      </div>
+      <div class="source-status" id="source-status" aria-live="polite">目前使用 0805 快照：1,820 個 MIDI 事件、247 個自動高信心單點。</div>
+    </section>
+
+    <section>
+      <div class="section-head"><div><h2>目前資料量</h2><p class="section-note">「已可用」只計入自動高信心單點與已人工指定左／右手的事件。</p></div></div>
+      <div class="metrics">
+        <div class="metric"><span class="metric-label">全部 7 類 MIDI</span><strong class="metric-value" id="m-all">1,820</strong><small class="metric-detail">本次原生演奏事件</small></div>
+        <div class="metric"><span class="metric-label">已可用標籤</span><strong class="metric-value" id="m-ready">247</strong><small class="metric-detail" id="m-ready-detail">自動高信心單點</small></div>
+        <div class="metric"><span class="metric-label">完成的固定窗口</span><strong class="metric-value" id="m-windows">247</strong><small class="metric-detail" id="m-window-detail">目前可直接進第一版</small></div>
+        <div class="metric"><span class="metric-label">佔全部 MIDI</span><strong class="metric-value" id="m-percent">13.6%</strong><small class="metric-detail">已可用事件比例</small></div>
+        <div class="metric"><span class="metric-label">人工標記狀態</span><strong class="metric-value" id="m-review">未開始</strong><small class="metric-detail" id="m-review-detail">257 組同時 MIDI 待確認</small></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div><h2>事件分流</h2><p class="section-note">密集區不硬塞成單點；同時 MIDI 要先經影片判斷手別。</p></div></div>
+      <div class="split">
+        <div class="instrument"><div class="instrument-head"><h3>1,820 個 MIDI 事件的去向</h3><small id="distribution-total">100%</small></div><div class="bars" id="distribution-bars"></div><div class="legend"><span><i class="auto"></i>自動高信心</span><span><i class="manual"></i>同時組待人工</span><span><i style="background:#626a70"></i>暫不使用</span></div></div>
+        <div class="instrument"><div class="instrument-head"><h3>訓練判定</h3><small id="training-state">原型可開始</small></div><div class="readiness"><div class="readiness-line"><span>目前已可用事件</span><strong class="good" id="r-ready">247</strong></div><div class="readiness-line"><span>完成 2 點同時組後</span><strong id="r-baseline">635</strong></div><div class="readiness-line"><span>對應固定窗口</span><strong id="r-windows">247</strong></div><div class="readiness-line"><span>仍需補錄的稀有鼓點</span><strong class="warn">高音 Tom／中音 Tom／Crash</strong></div></div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div><h2>七個鼓點 × 左右手</h2><p class="section-note">藍色是左手，紅色是右手；人工 CSV 載入後，綠色計數會即時加入。</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>鼓點</th><th>自動左手</th><th>自動右手</th><th>人工左手</th><th>人工右手</th><th>目前可用</th><th>左右手分布</th></tr></thead><tbody id="zone-body"></tbody></table></div>
+    </section>
+
+    <section>
+      <div class="callout"><div class="mono">NEXT</div><div><strong id="callout-title">現在可以做第一版原型訓練，但不能宣稱七鼓點完整模型已完成。</strong><p id="callout-text">目前先使用 247 個自動高信心單點；接著在第二頁完成 2 點同時 MIDI 的人工手別，最多可擴充到 441 個固定窗口、635 個事件標籤。</p></div></div>
+      <div class="next-steps" style="margin-top:12px"><div class="next-step"><span class="step-index">01 / NOW</span><strong>完成 2 點同時組</strong><p id="next-review">待人工確認 194 組。3／4 點群組留給後續多事件模型。</p></div><div class="next-step"><span class="step-index">02 / DATASET</span><strong>輸出固定 160 ms 窗口</strong><p>每個窗口統一 MIDI 中心點前後 ±80 ms，輸出左右手雙目標。</p></div><div class="next-step"><span class="step-index">03 / CALIBRATION</span><strong>補錄稀有鼓點</strong><p>高音 Tom、中音 Tom、Crash 目前樣本太少，需安排左右手乾淨單打。</p></div></div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const SNAPSHOT = {
+        all: 1820,
+        auto: 247,
+        simultaneousGroups: 257,
+        simultaneousNodes: 586,
+        excludedAmbiguous: 151,
+        excludedNearby: 836,
+        baselineLabels: 635,
+        baselineWindows: 441,
+        zones: [
+          { name: '小鼓', autoL: 31, autoR: 7 },
+          { name: '高音 Tom', autoL: 1, autoR: 1 },
+          { name: '中音 Tom', autoL: 1, autoR: 2 },
+          { name: '落地 Tom', autoL: 0, autoR: 28 },
+          { name: 'Hi-Hat', autoL: 0, autoR: 142 },
+          { name: 'Crash', autoL: 3, autoR: 5 },
+          { name: 'Ride', autoL: 0, autoR: 26 }
+        ],
+        groupSizes: { 2: 194, 3: 54, 4: 9 }
+      };
+      const state = { summary: structuredClone(SNAPSHOT), autoRows: null, groups: null, reviewRows: null, names: {} };
+      const $ = id => document.getElementById(id);
+      const fmt = value => Number(value || 0).toLocaleString('zh-TW');
+      const pct = (value, digits = 1) => Number.isFinite(value) ? `${(value * 100).toFixed(digits)}%` : '0%';
+      const csvCell = value => String(value ?? '').replace(/^\uFEFF/, '');
+      function parseCsv(text) {
+        const rows = [], row = []; let value = ''; let quoted = false;
+        const push = () => { row.push(value); value = ''; };
+        for (let i = 0; i < text.length; i += 1) {
+          const c = text[i];
+          if (c === '"') { if (quoted && text[i + 1] === '"') { value += '"'; i += 1; } else quoted = !quoted; }
+          else if (c === ',' && !quoted) push();
+          else if ((c === '\n' || c === '\r') && !quoted) { if (c === '\r' && text[i + 1] === '\n') i += 1; push(); if (row.some(cell => cell !== '')) rows.push(row.splice(0)); }
+          else value += c;
+        }
+        if (value || row.length) { push(); if (row.some(cell => cell !== '')) rows.push(row); }
+        const [header, ...data] = rows; return (data || []).map(cells => Object.fromEntries((header || []).map((key, index) => [key, cells[index] ?? ''])));
+      }
+      function mapAutoRows(rows) {
+        const zones = new Map(SNAPSHOT.zones.map(zone => [zone.name, { ...zone, autoL: 0, autoR: 0, manualL: 0, manualR: 0, manualSkip: 0 }]));
+        for (const row of rows) { const zone = zones.get(row.zone_name); if (!zone) continue; if (row.assigned_hand === 'L') zone.autoL += 1; else if (row.assigned_hand === 'R') zone.autoR += 1; }
+        return [...zones.values()];
+      }
+      function buildZones() {
+        const zones = state.autoRows ? mapAutoRows(state.autoRows) : SNAPSHOT.zones.map(zone => ({ ...zone, manualL: 0, manualR: 0, manualSkip: 0 }));
+        const byName = new Map(zones.map(zone => [zone.name, zone]));
+        for (const row of state.reviewRows || []) { const zone = byName.get(row.zone_name); if (!zone) continue; if (row.review_hand === 'L') zone.manualL += 1; else if (row.review_hand === 'R') zone.manualR += 1; else if (row.review_hand === 'S') zone.manualSkip += 1; }
+        return zones;
+      }
+      function groupInfo() {
+        if (!state.groups) return { groups: SNAPSHOT.simultaneousGroups, nodes: SNAPSHOT.simultaneousNodes, two: SNAPSHOT.groupSizes[2], readyTwo: 0, reviewedGroups: 0 };
+        const reviews = new Map((state.reviewRows || []).map(row => [String(row.event_id), row.review_hand]));
+        const ready = group => group.events.every(event => reviews.get(String(event.event_id)) === 'L' || reviews.get(String(event.event_id)) === 'R');
+        const reviewed = group => group.events.every(event => reviews.has(String(event.event_id)));
+        return { groups: state.groups.length, nodes: state.groups.reduce((sum, group) => sum + group.events.length, 0), two: state.groups.filter(group => Number(group.event_count) === 2).length, readyTwo: state.groups.filter(group => Number(group.event_count) === 2 && ready(group)).length, reviewedGroups: state.groups.filter(reviewed).length };
+      }
+      function summary() {
+        const source = state.summary.counts ? state.summary : SNAPSHOT;
+        const auto = state.autoRows ? state.autoRows.length : Number(source.auto ?? source.counts?.auto_accepted_single_events ?? SNAPSHOT.auto);
+        const groups = groupInfo(); const reviews = state.reviewRows || []; const assigned = reviews.filter(row => row.review_hand === 'L' || row.review_hand === 'R').length;
+        const skipped = reviews.filter(row => row.review_hand === 'S').length;
+        const ready = auto + assigned;
+        const baselineWindows = auto + groups.readyTwo;
+        const baselineLabels = state.groups ? groups.readyTwo * 2 + auto : SNAPSHOT.baselineLabels;
+        return { all: Number(source.all ?? source.counts?.all_midi_events ?? SNAPSHOT.all), auto, groups, assigned, skipped, ready, baselineWindows, baselineLabels: state.groups ? baselineLabels : SNAPSHOT.baselineLabels, excludedAmbiguous: Number(source.excludedAmbiguous ?? source.counts?.excluded?.excluded_single_hand_ambiguous ?? SNAPSHOT.excludedAmbiguous), excludedNearby: Number(source.excludedNearby ?? source.counts?.excluded?.excluded_nearby_midi ?? SNAPSHOT.excludedNearby) };
+      }
+      function renderZones() {
+        const zones = buildZones(); const max = Math.max(...zones.map(zone => zone.autoL + zone.autoR + zone.manualL + zone.manualR), 1);
+        $('zone-body').innerHTML = zones.map(zone => { const auto = zone.autoL + zone.autoR, manual = zone.manualL + zone.manualR, total = auto + manual; return `<tr><td>${zone.name}</td><td class="number hand-left">${fmt(zone.autoL)}</td><td class="number hand-right">${fmt(zone.autoR)}</td><td class="number hand-left">${fmt(zone.manualL)}</td><td class="number hand-right">${fmt(zone.manualR)}</td><td class="number">${fmt(total)}</td><td><div class="zone-progress" title="左手 ${zone.autoL + zone.manualL}，右手 ${zone.autoR + zone.manualR}"><span class="left" style="width:${((zone.autoL + zone.manualL) / max) * 100}%"></span><span class="right" style="width:${((zone.autoR + zone.manualR) / max) * 100}%"></span></div></td></tr>`; }).join('');
+      }
+      function render() {
+        const data = summary(); const manualReady = data.assigned > 0; $('m-all').textContent = fmt(data.all); $('m-ready').textContent = fmt(data.ready); $('m-ready-detail').textContent = manualReady ? `自動 ${fmt(data.auto)} + 人工 ${fmt(data.assigned)}` : `自動高信心 ${fmt(data.auto)}`; $('m-windows').textContent = fmt(data.baselineWindows); $('m-window-detail').textContent = data.baselineWindows > data.auto ? '已完成的 2 點同時組' : '目前可直接進第一版'; $('m-percent').textContent = pct(data.ready / data.all); $('m-review').textContent = manualReady ? `${fmt(data.groups.reviewedGroups)} 組已處理` : '未開始'; $('m-review-detail').textContent = manualReady ? `左 ${fmt(data.reviewRows?.filter(row => row.review_hand === 'L').length)}／右 ${fmt(data.reviewRows?.filter(row => row.review_hand === 'R').length)}／略過 ${fmt(data.skipped)}` : `${fmt(data.groups.groups)} 組同時 MIDI 待確認`;
+        $('r-ready').textContent = fmt(data.ready); $('r-baseline').textContent = fmt(data.baselineLabels); $('r-windows').textContent = fmt(data.baselineWindows); $('training-state').textContent = data.baselineWindows >= 441 ? '基線可開始' : '先完成標記'; $('next-review').textContent = data.groups.readyTwo >= data.groups.two ? '194 組 2 點同時組已完成，可建立基線資料集。' : `待人工確認 ${fmt(data.groups.two - data.groups.readyTwo)} 組 2 點同時 MIDI。`;
+        const segments = [{ name: '自動高信心單點', count: data.auto, color: 'auto' }, { name: '同時 MIDI 群組節點', count: data.groups.nodes, color: 'manual' }, { name: '暫不使用／密集或手別不明', count: data.excludedAmbiguous + data.excludedNearby, color: 'excluded' }]; $('distribution-total').textContent = `${fmt(data.all)} 個事件`; $('distribution-bars').innerHTML = segments.map(segment => `<div class="bar-row"><span class="bar-name">${segment.name}</span><div class="bar-track"><span class="${segment.color}" style="width:${Math.min(100, segment.count / data.all * 100)}%"></span></div><span class="bar-count">${fmt(segment.count)}<br>${pct(segment.count / data.all)}</span></div>`).join('');
+        renderZones();
+        const summaryLoaded = state.names.summary ? `統計：${state.names.summary}` : '統計：0805 快照'; const autoLoaded = state.names.auto ? `單點：${state.names.auto}` : '單點：0805 快照'; const groupsLoaded = state.names.groups ? `群組：${state.names.groups}` : '群組：0805 快照'; const reviewLoaded = state.names.review ? `手別：${state.names.review}` : '手別：尚未載入'; const externalLoaded = Boolean(state.names.summary || state.names.auto || state.names.groups || state.names.review); $('state-title').textContent = externalLoaded ? '目前顯示：已載入的實際資料' : '目前顯示：0805 資料快照'; $('state-detail').textContent = externalLoaded ? `已可用 ${fmt(data.ready)} 個標籤、${fmt(data.baselineWindows)} 個固定窗口` : '尚未載入外部統計檔'; $('source-status').textContent = `${summaryLoaded}｜${autoLoaded}｜${groupsLoaded}｜${reviewLoaded}`;
+        $('callout-title').textContent = data.baselineWindows >= 441 ? '2 點同時組已完成，第一版基線資料可以建立。' : '目前可以做第一版原型，但還不能宣稱七鼓點完整模型完成。'; $('callout-text').textContent = data.baselineWindows >= 441 ? `目前 ${fmt(data.baselineWindows)} 個固定窗口、${fmt(data.baselineLabels)} 個事件標籤可進入基線訓練；仍須用時間切分驗證。` : `目前先有 ${fmt(data.auto)} 個自動高信心固定窗口；完成 194 組 2 點同時 MIDI 後，預計可達 441 個固定窗口、635 個事件標籤。`;
+      }
+      function loadFile(input, handler) { const file = input.files[0]; if (!file) return; file.text().then(handler).catch(error => { $('source-status').textContent = `讀取 ${file.name} 失敗：${error.message}`; }); }
+      $('summary-file').addEventListener('change', event => loadFile(event.target, text => { const payload = JSON.parse(text); state.summary = payload; state.names.summary = event.target.files[0].name; render(); }));
+      $('auto-file').addEventListener('change', event => loadFile(event.target, text => { state.autoRows = parseCsv(text.replace(/^\uFEFF/, '')); state.names.auto = event.target.files[0].name; render(); }));
+      $('group-file').addEventListener('change', event => loadFile(event.target, text => { const payload = JSON.parse(text); state.groups = payload.groups || []; state.names.groups = event.target.files[0].name; render(); }));
+      $('review-file').addEventListener('change', event => loadFile(event.target, text => { state.reviewRows = parseCsv(text); state.names.review = event.target.files[0].name; render(); }));
+      $('apply-files').addEventListener('click', () => { render(); $('source-status').dataset.kind = 'ok'; $('source-status').textContent += '｜已重新計算'; });
+      $('restore').addEventListener('click', () => { state.summary = structuredClone(SNAPSHOT); state.autoRows = null; state.groups = null; state.reviewRows = null; state.names = {}; render(); $('source-status').dataset.kind = ''; });
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -20,7 +20,9 @@ Data/External/
 Presentations/
 Media/
 Tests/Latency/
-Archive/Legacy_Code/
+Archive/Legacy_Code/*
+!Archive/Legacy_Code/VideoReviewSinglePoint_0807/
+!Archive/Legacy_Code/VideoReviewSinglePoint_0807/**
 Archive/Generated_Cache_*/
 *.mp4
 *.avi

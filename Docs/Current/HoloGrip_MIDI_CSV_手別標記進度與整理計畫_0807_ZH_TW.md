@@ -111,11 +111,11 @@ MIDI 並非最多只會同時 2 點。第一版雙手模型只使用「高信心
 
 ### 自動分流與同時 MIDI 人工審核
 
-啟動：`Apps/Song_Collection_COM/run_hand_label_triage_0807.bat`
+啟動人工審核：`Apps/Song_Collection_COM/run_hand_label_triage_0807.bat`
 
-它會先執行：`Apps/Song_Collection_COM/hand_label_triage_0807.py`
+它會開啟：`Apps/Song_Collection_COM/HoloGrip_同時MIDI影片手別標記_0807_ZH_TW.html`，不會重建既有分流輸出。
 
-接著開啟：`Apps/Song_Collection_COM/simultaneous_midi_hand_review_0807.html`
+只有原始 CSV、MIDI、對齊偏移或篩選規則改變時，才執行：`Apps/Song_Collection_COM/rebuild_hand_label_triage_0807.bat`。它會先執行 `Apps/Song_Collection_COM/hand_label_triage_0807.py`，再開啟人工審核頁。
 
 群組審核頁要載入：
 
@@ -131,6 +131,8 @@ MIDI 並非最多只會同時 2 點。第一版雙手模型只使用「高信心
 | `manual_simultaneous_groups.csv` | 群組總覽 |
 | `excluded_events.csv` | 本輪不使用的事件與原因 |
 | `hand_label_triage_summary.json` | 可供程式讀取的統計 |
+
+第 2 頁完成手別判讀後，按「下載同時 MIDI 手別 CSV」。該下載檔是第 3 頁「第 2 頁下載的人工手別 CSV」欄位要載入的檔案；原本的 `manual_simultaneous_groups.csv` 只是群組總覽，不能取代人工手別 CSV。
 
 ## 8. 整理前資料夾盤點（歷史紀錄）
 

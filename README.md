@@ -9,6 +9,9 @@ HoloGrip 是雙手 IMU 手套的空氣鼓研究專案。目前的主線是以 CO
 | 目前 MIDI/CSV 手別標記進度 | `Docs/Current/HoloGrip_MIDI_CSV_手別標記進度與整理計畫_0807_ZH_TW.md` |
 | COM 收集程式 | `Apps/Song_Collection_COM/run_song_collection_com.bat` |
 | MIDI 與左右手人工審核 | `Apps/Song_Collection_COM/run_hand_label_triage_0807.bat` |
+| MIDI/CSV 對齊展示 | `Apps/Song_Collection_COM/HoloGrip_MIDI_CSV對齊檢查_0807_ZH_TW.html` |
+| 同時 MIDI 影片標記 | `Apps/Song_Collection_COM/HoloGrip_同時MIDI影片手別標記_0807_ZH_TW.html` |
+| 資料集最終進度 | `Apps/Song_Collection_COM/HoloGrip_資料集最終進度總覽_0807_ZH_TW.html` |
 | COM 手套韌體 | `Firmware/COM/Gloves_Firmware_INO_COM.ino` |
 | 目前原始資料 | `Data/Raw/Song_Collection_COM/` |
 | MIDI、影片與音訊來源 | `Data/External/FlowAudio_20260805/` |

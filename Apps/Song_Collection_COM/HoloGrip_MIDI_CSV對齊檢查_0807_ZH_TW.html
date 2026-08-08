@@ -593,4 +593,29 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     </div>`);
 })();
 </script>
+<script>
+(function(){
+  const decision=document.querySelector("[data-quality-decision]");
+  if(!decision||document.querySelector("[data-meeting-brief]"))return;
+  const style=document.createElement("style");
+  style.textContent=`
+    .meeting-brief{margin-top:12px;padding:13px 14px;border:1px solid #c9d9e8;border-left:4px solid var(--primary);border-radius:8px;background:#f7fbff}
+    .meeting-brief h3{margin:0;color:var(--ink);font-size:15px}
+    .meeting-brief p{margin:8px 0 0;color:var(--ink);font-size:13px;line-height:1.65}
+    .meeting-brief strong{color:var(--primary)}
+    .meeting-brief .meeting-script{padding:9px 10px;border-radius:6px;background:#fff;color:var(--ink);font-size:13px;line-height:1.7}
+    .meeting-brief .meeting-order{color:var(--muted);font-size:12px}
+  `;
+  document.head.appendChild(style);
+  decision.insertAdjacentHTML("afterend",`
+    <section class="meeting-brief" data-meeting-brief aria-label="會議版快速說明">
+      <h3>會議版快速說明</h3>
+      <p class="meeting-script"><strong>資料：</strong>這是電子鼓實際演奏產生的原生 MIDI，共 1,820 筆；它能告訴我們「什麼時間打、打哪一個鼓」，但 MIDI 本身沒有左右手資訊。</p>
+      <p><strong>問題：</strong>部分事件太密集，包含同一鼓點 20 ms 內重複，以及一個窗口內出現 3 個以上 MIDI；其中 Hi-Hat 有 153 對、291 筆快速重複事件，需要再用影片與聲音確認是否為真實連擊或模組重複觸發。</p>
+      <p><strong>處理：</strong>先用約 +16,000 ms 將 MIDI 對齊手套 CSV，再以活動度找左右手峰值，排除異常與過度密集區，分類成高信心單手、雙手候選與待人工判讀。</p>
+      <p><strong>目前結果：</strong>以 ±80 ms 為模型第一版窗口，排除同一鼓點 20 ms 內重複，以及窗口內過度密集的事件後，剩下 1,155 筆有效候選；其中 256 筆是高信心單手，86 筆是高信心雙手，共 342 筆，占有效候選 29.6%。這 342 筆仍需影片確認後，才能成為正式訓練真值。</p>
+      <p class="meeting-order"><strong>展示順序：</strong>先看資料設定與結果摘要，再切到局部對齊圖看綠色 ±80 ms 窗口，最後用雙手乾淨區／異常區導覽展示需要人工確認的案例。</p>
+    </section>`);
+})();
+</script>
 </body></html>

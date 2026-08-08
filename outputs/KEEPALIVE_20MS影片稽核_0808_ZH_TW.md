@@ -52,7 +52,7 @@
 
 `C:\Users\Typelin_Station\Desktop\HoloGrip\Apps\Song_Collection_COM\midi_quality_audit_0808_ZH_TW.py`
 
-原始 100 Hz CSV 實際重算結果：Hi-Hat note 46 有 153 對 20 ms 內重複，涉及 291 筆唯一事件；±90 ms 異常 705、有效分母 1,115、高信心合計 100；±80 ms 異常 665、有效分母 1,155、高信心合計 98。正式報告在：
+原始 100 Hz CSV 實際重算結果：Hi-Hat note 46 有 153 對 20 ms 內重複，涉及 291 筆唯一事件；±90 ms 異常 705、有效分母 1,115、高信心合計 325；±80 ms 異常 665、有效分母 1,155、高信心合計 342。先前 100 筆是統計腳本漏加 +16,000 ms 偏移造成的錯誤低估，已修正。正式報告在：
 
 `C:\Users\Typelin_Station\Desktop\HoloGrip\Docs\Current\HoloGrip_有效MIDI與異常分類報告_0808_ZH_TW.md`
 

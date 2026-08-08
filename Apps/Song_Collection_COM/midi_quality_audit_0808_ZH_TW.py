@@ -120,6 +120,7 @@ def audit_radius(
     events: list[dict[str, Any]],
     rows: list[dict[str, float]],
     radius_ms: float,
+    csv_offset_ms: float,
     duplicate_window_ms: float,
     group_tolerance_ms: float,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
@@ -178,8 +179,8 @@ def audit_radius(
         if not anomaly and not multi_label and not overlap_review:
             event = group["events"][0]
             peak = max(
-                [point["l"] for point in window_rows(rows, group["time_ms"], radius_ms)]
-                + [point["r"] for point in window_rows(rows, group["time_ms"], radius_ms)]
+                [point["l"] for point in window_rows(rows, group["time_ms"] + csv_offset_ms, radius_ms)]
+                + [point["r"] for point in window_rows(rows, group["time_ms"] + csv_offset_ms, radius_ms)]
                 + [0.0]
             )
             single_high = (
@@ -211,8 +212,8 @@ def audit_radius(
     for group_index, group in enumerate(groups):
         previous_gap = groups[group_index]["time_ms"] - groups[group_index - 1]["time_ms"] if group_index else math.inf
         next_gap = groups[group_index + 1]["time_ms"] - group["time_ms"] if group_index + 1 < len(groups) else math.inf
-        left = local_peaks(rows, "l", group["time_ms"], radius_ms)
-        right = local_peaks(rows, "r", group["time_ms"], radius_ms)
+        left = local_peaks(rows, "l", group["time_ms"] + csv_offset_ms, radius_ms)
+        right = local_peaks(rows, "r", group["time_ms"] + csv_offset_ms, radius_ms)
         two_points = len(group["events"]) == 2
         different_notes = two_points and group["events"][0]["midi_note"] != group["events"][1]["midi_note"]
         candidate = two_points and different_notes and len(left) == 1 and len(right) == 1 and not info_by_event[group["events"][0]["event_id"]]["anomaly"]
@@ -323,7 +324,20 @@ def main() -> int:
     all_event_rows = []
     duplicate_rows = []
     for radius in sorted({args.window_radius_ms, args.compare_radius_ms}):
-        summary, event_rows, duplicates = audit_radius(events, rows, radius, args.duplicate_window_ms, args.group_tolerance_ms)
+        radius_events = []
+        for event in events:
+            points = window_rows(rows, event["midi_time_ms"] + args.csv_offset_ms, radius)
+            left = max((point["l"] for point in points), default=0.0)
+            right = max((point["r"] for point in points), default=0.0)
+            total = left + right
+            radius_events.append({
+                **event,
+                "hand_candidate": "L" if left > right else "R" if total else "?",
+                "hand_confidence": max(left, right) / total if total else 0.0,
+                "left_peak_g": left,
+                "right_peak_g": right,
+            })
+        summary, event_rows, duplicates = audit_radius(radius_events, rows, radius, args.csv_offset_ms, args.duplicate_window_ms, args.group_tolerance_ms)
         summaries[str(int(radius) if radius.is_integer() else radius)] = summary
         all_event_rows.extend(event_rows)
         if radius == args.window_radius_ms:

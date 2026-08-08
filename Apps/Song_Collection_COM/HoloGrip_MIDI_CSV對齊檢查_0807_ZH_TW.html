@@ -345,4 +345,105 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   render();
 })();
 </script>
+<script>
+(function(){
+  const triadStyle=`
+  .triad-section{border-top:3px solid #288a55}
+  .triad-key{display:flex;flex-wrap:wrap;gap:7px 14px;margin:0 0 13px;color:var(--muted);font-size:13px}
+  .triad-key span{display:inline-flex;align-items:center;gap:6px}.triad-key i{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .triad-file-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:13px}
+  .triad-file{border:1px solid var(--line);border-radius:8px;background:var(--soft);padding:10px 11px;min-width:0}
+  .triad-file label{display:block;font-weight:650;font-size:13px;margin-bottom:6px}.triad-file input[type=file]{display:block;width:100%;font-size:12px;color:var(--ink)}
+  .triad-path{display:block;color:var(--muted);font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;margin-top:6px}
+  .triad-file-name{display:block;color:var(--primary);font-size:12px;overflow-wrap:anywhere;margin-top:4px}
+  .triad-setting-row{display:flex;align-items:end;flex-wrap:wrap;gap:10px 16px;padding:10px 11px;border:1px solid #b9dfc5;border-radius:8px;background:#f2fbf5;margin-bottom:13px}
+  .triad-setting{display:grid;gap:4px;color:var(--muted);font-size:12px}.triad-setting strong{color:var(--ink)}
+  .triad-number{width:106px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);padding:7px 8px;font-variant-numeric:tabular-nums}
+  .triad-formula{flex:1 1 330px;color:var(--muted);font-size:12px;line-height:1.5}
+  .triad-readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 13px}
+  .triad-readout-item{border-left:3px solid var(--primary);background:var(--soft);padding:8px 10px;min-width:0}.triad-readout-item:nth-child(2){border-left-color:var(--blue)}.triad-readout-item:nth-child(3){border-left-color:#288a55}.triad-readout-item:nth-child(4){border-left-color:var(--yellow)}
+  .triad-readout-label{display:block;color:var(--muted);font-size:11px}.triad-readout-value{display:block;color:var(--ink);font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .triad-media-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,.8fr);gap:14px;align-items:start}
+  .triad-video-wrap,.triad-audio-wrap{min-width:0}.triad-media-title{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:7px}.triad-media-title strong{font-size:13px}.triad-media-title span{color:var(--muted);font-size:12px}
+  .triad-video{display:block;width:100%;min-height:180px;max-height:420px;background:#101923;border-radius:8px;object-fit:contain}.triad-video[hidden],.triad-audio[hidden]{display:none}
+  .triad-media-empty{display:grid;place-items:center;min-height:180px;border:1px dashed var(--line);border-radius:8px;background:var(--soft);color:var(--muted);font-size:13px;text-align:center;padding:18px}
+  .triad-audio{display:block;width:100%;margin-top:22px}.triad-audio-empty{color:var(--muted);font-size:13px;padding:20px 0}.triad-audio-empty[hidden]{display:none}
+  .triad-media-meta{display:flex;flex-wrap:wrap;gap:5px 13px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;margin-top:7px}.triad-media-meta strong{color:var(--ink)}
+  .triad-report{margin-top:13px;border:1px solid #e6c887;border-radius:8px;background:#fffaf0;padding:10px 11px;color:var(--muted);font-size:12px;line-height:1.55}.triad-report strong{color:var(--ink)}
+  .triad-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:7px}.triad-report-grid span{display:block}.triad-report-grid b{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
+  .triad-note{margin-top:11px;color:var(--muted);font-size:12px}.triad-note strong{color:var(--ink)}
+  @media(max-width:900px){.triad-media-grid{grid-template-columns:1fr}.triad-readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:640px){.triad-file-grid{grid-template-columns:1fr}.triad-readout{grid-template-columns:1fr}.triad-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.triad-video{min-height:150px}}
+  `;
+  document.head.insertAdjacentHTML("beforeend","<style>"+triadStyle+"</style>");
+  const localSection=document.querySelector("[data-local]")?.closest(".section");
+  if(!localSection)return;
+  const defaultFiles={
+    midi:"C:/Users/Typelin_Station/Desktop/HoloGrip/Data/External/FlowAudio_20260805/Drum Midi_110BPM (0805).mid",
+    csv:"C:/Users/Typelin_Station/Desktop/HoloGrip/Data/Raw/Song_Collection_COM/S20260805_P01_song01_raw_100hz_20260805_161628.csv",
+    video:"C:/Users/Typelin_Station/Desktop/HoloGrip/Data/External/FlowAudio_20260805/IMG_6060.MOV",
+    audio:"C:/Users/Typelin_Station/Desktop/HoloGrip/Data/External/FlowAudio_20260805/Drum Audio_110BPM (0805).wav",
+    report:"C:/Users/Typelin_Station/Desktop/HoloGrip/Data/Derived/Song_Collection_COM/S20260805_P01_song01/audio_alignment_0808/audio_alignment_report_0808.json"
+  };
+  localSection.insertAdjacentHTML("afterend",`<section class="section triad-section" data-triad-section>
+    <div class="section-head"><div><h2>MIDI、CSV、影片、WAV 三位一體對照</h2><div class="help">中央時間游標以 CSV 時間為主；同一個 MIDI 鼓點會換算到 CSV、影片與 WAV 的對應時間。</div></div><span class="view-note" data-triad-status>尚未載入影片與 WAV</span></div>
+    <div class="triad-key" aria-label="三位一體資料角色"><span><i style="background:var(--primary)"></i>MIDI：何時打哪一個鼓</span><span><i style="background:var(--blue)"></i>CSV：左右手活動度</span><span><i style="background:#288a55"></i>影片：確認實際手別與鼓面</span><span><i style="background:var(--yellow)"></i>WAV：確認聲音瞬間與時間偏移</span></div>
+    <div class="triad-file-grid">
+      <div class="triad-file"><label for="triad-video-file">演奏影片（MOV / MP4）</label><input id="triad-video-file" type="file" accept="video/*,.mov,.mp4,.m4v" data-triad-video-file><span class="triad-path">預設位置：${defaultFiles.video}</span><span class="triad-file-name" data-triad-video-name>尚未選取；請按「選擇檔案」載入</span></div>
+      <div class="triad-file"><label for="triad-audio-file">鼓組 WAV（音訊對齊證據）</label><input id="triad-audio-file" type="file" accept="audio/*,.wav" data-triad-audio-file><span class="triad-path">預設位置：${defaultFiles.audio}</span><span class="triad-file-name" data-triad-audio-name>尚未選取；請按「選擇檔案」載入</span></div>
+      <div class="triad-file"><label for="triad-report-file">WAV 分析報告（JSON，可選）</label><input id="triad-report-file" type="file" accept="application/json,.json" data-triad-report-file><span class="triad-path">預設位置：${defaultFiles.report}</span><span class="triad-file-name" data-triad-report-name>頁面已顯示目前分析摘要；可選取 JSON 更新</span></div>
+      <div class="triad-file"><label>本次 MIDI／CSV 來源</label><span class="triad-path">MIDI：${defaultFiles.midi}</span><span class="triad-path">CSV：${defaultFiles.csv}</span></div>
+    </div>
+    <div class="triad-setting-row">
+      <label class="triad-setting" for="triad-video-offset"><span>MIDI → 影片偏移（ms）</span><input id="triad-video-offset" class="triad-number" type="number" step="1" value="14500" inputmode="numeric"></label>
+      <label class="triad-setting" for="triad-audio-offset"><span>MIDI → WAV 偏移（ms）</span><input id="triad-audio-offset" class="triad-number" type="number" step="1" value="0" inputmode="numeric"></label>
+      <label class="triad-setting" for="triad-speed"><span>三位一體播放速度</span><select id="triad-speed" class="triad-number"><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="4">4x</option><option value="12">12x</option></select></label>
+      <span class="triad-formula">MIDI 時間 = CSV 時間 − ${Number(S.offset||16000).toLocaleString()} ms；影片時間 = MIDI + 影片偏移；WAV 時間 = MIDI + WAV 偏移。偏移是可調候選值。</span>
+    </div>
+    <div class="triad-readout" aria-live="polite">
+      <div class="triad-readout-item"><span class="triad-readout-label">目前 MIDI 游標</span><strong class="triad-readout-value" data-triad-midi>—</strong></div>
+      <div class="triad-readout-item"><span class="triad-readout-label">對應 CSV 時間</span><strong class="triad-readout-value" data-triad-csv>—</strong></div>
+      <div class="triad-readout-item"><span class="triad-readout-label">影片時間</span><strong class="triad-readout-value" data-triad-video-time>—</strong></div>
+      <div class="triad-readout-item"><span class="triad-readout-label">WAV 時間</span><strong class="triad-readout-value" data-triad-audio-time>—</strong></div>
+    </div>
+    <div class="toolbar" style="margin-bottom:12px"><button type="button" class="button button-primary" data-triad-play>播放目前 ±<span data-triad-play-radius>90</span> ms 窗口</button><button type="button" class="button button-small" data-triad-jump>跳到目前 MIDI 鼓點</button><button type="button" class="button button-small" data-triad-minus>目前位置 −1 ms</button><button type="button" class="button button-small" data-triad-plus>目前位置 ＋1 ms</button><label class="pill"><input type="checkbox" data-triad-video-sound> 開啟影片聲音</label><span class="pill" data-triad-window-label>窗口：—</span></div>
+    <div class="triad-media-grid">
+      <div class="triad-video-wrap"><div class="triad-media-title"><strong>影片畫面：確認實際擊打與左右手</strong><span data-triad-video-duration>長度：—</span></div><div class="triad-media-empty" data-triad-video-empty>請選取上方 IMG_6060.MOV；載入後會跳到目前 MIDI 的影片候選時間。</div><video class="triad-video" data-triad-video controls preload="metadata" hidden></video><div class="triad-media-meta"><span data-triad-video-state>影片尚未載入</span><span>預設影片偏移 <strong data-triad-video-offset-text>+14,500 ms</strong></span></div></div>
+      <div class="triad-audio-wrap"><div class="triad-media-title"><strong>WAV 波形聲音：確認聲音瞬間</strong><span data-triad-audio-duration>長度：—</span></div><div class="triad-audio-empty" data-triad-audio-empty>請選取上方 Drum Audio WAV。</div><audio class="triad-audio" data-triad-audio controls preload="metadata" hidden></audio><div class="triad-media-meta"><span data-triad-audio-state>WAV 尚未載入</span><span>分析候選偏移 <strong data-triad-audio-offset-text>+0 ms</strong></span></div></div>
+    </div>
+    <div class="triad-report" data-triad-report-summary><strong>目前 WAV 分析摘要：</strong><div class="triad-report-grid"><span>最佳偏移<br><b data-report-offset>+0 ms</b></span><span>音訊 onset<br><b data-report-onsets>2,754 個</b></span><span>MIDI 命中<br><b data-report-match>1,632 / 1,820（89.7%）</b></span><span>同音 &lt;20 ms<br><b data-report-dense>77 / 148 對有兩個 onset</b></span></div><div data-report-note>容許誤差 ±35 ms；快速 onset 稽核顯示 148 對同一 note 在 20 ms 內，其中 77 對有兩個音訊 onset 候選，仍需影片確認。</div></div>
+    <div class="triad-note"><strong>檔案安全提示：</strong>瀏覽器不能由 HTML 自動開啟上面顯示的 Windows 路徑；你需要按各自的「選擇檔案」。檔案只在本機播放，不會上傳。</div>
+  </section>`);
+  const $triad=q=>document.querySelector(q),video=$triad("[data-triad-video]"),audio=$triad("[data-triad-audio]"),videoFile=$triad("[data-triad-video-file]"),audioFile=$triad("[data-triad-audio-file]"),reportFile=$triad("[data-triad-report-file]"),videoOffsetInput=$triad("#triad-video-offset"),audioOffsetInput=$triad("#triad-audio-offset"),speedInput=$triad("#triad-speed");
+  const triad={videoUrl:"",audioUrl:"",playing:false,followCore:false,start:0,end:0,wall:0,lastRender:0,raf:0};
+  const safeHtml=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
+  const triadClock=ms=>{const total=Math.max(0,Number(ms)||0),minutes=Math.floor(total/60000),seconds=Math.floor(total/1000)%60,millis=Math.round(total%1000);return minutes+":"+String(seconds).padStart(2,"0")+"."+String(millis).padStart(3,"0")};
+  const triadNum=(node,fallback)=>{const value=Number(node?.value);return Number.isFinite(value)?value:fallback};
+  const currentCsvMs=()=>Math.max(0,Number(S.time)||0),currentMidiMs=()=>currentCsvMs()-(Number(S.offset)||0),videoOffset=()=>triadNum(videoOffsetInput,14500),audioOffset=()=>triadNum(audioOffsetInput,0),triadRadius=()=>Math.max(10,Math.min(2500,triadNum(document.querySelector("#sample-window-ms"),90))),durationMs=()=>Number(S.data.duration)||currentCsvMs();
+  const mediaTarget=(media,ms)=>{if(!media||!media.src||media.readyState<1)return;const max=Number.isFinite(media.duration)?media.duration*1000:Math.max(0,ms);media.currentTime=Math.max(0,Math.min(max,ms))/1000};
+  const updateTriadUi=()=>{const midi=currentMidiMs(),csv=currentCsvMs(),videoMs=midi+videoOffset(),audioMs=midi+audioOffset(),set=(query,value)=>{const node=$triad(query);if(node)node.textContent=value};set("[data-triad-midi]",triadClock(midi));set("[data-triad-csv]",triadClock(csv));set("[data-triad-video-time]",triadClock(videoMs));set("[data-triad-audio-time]",triadClock(audioMs));set("[data-triad-video-offset-text]",(videoOffset()>=0?"+":"")+Math.round(videoOffset()).toLocaleString()+" ms");set("[data-triad-audio-offset-text]",(audioOffset()>=0?"+":"")+Math.round(audioOffset()).toLocaleString()+" ms");set("[data-triad-window-label]","窗口："+triadClock(Math.max(0,csv-triadRadius()))+" ～ "+triadClock(Math.min(durationMs(),csv+triadRadius()))+"（±"+triadRadius()+" ms）");const status=$triad("[data-triad-status]");if(status)status.textContent=triad.playing?"正在同步播放目前窗口":(video?.src||audio?.src)?"媒體已載入；可跳轉或播放窗口":"尚未載入影片與 WAV"};
+  const syncMediaToTimeline=(force=false)=>{const midi=currentMidiMs();const videoMs=midi+videoOffset(),audioMs=midi+audioOffset();if(force||triad.playing||triad.followCore){if(video?.src&&(force||Math.abs(video.currentTime-videoMs/1000)>.025))mediaTarget(video,videoMs);if(audio?.src&&(force||Math.abs(audio.currentTime-audioMs/1000)>.025))mediaTarget(audio,audioMs)}updateTriadUi()};
+  const setMediaRate=()=>{const rate=Math.max(.25,Math.min(16,triadNum(speedInput,12)));if(video)video.playbackRate=rate;if(audio)audio.playbackRate=rate};
+  const mediaPlay=()=>{setMediaRate();const attempts=[];for(const media of [video,audio])if(media?.src)attempts.push(media.play());Promise.allSettled(attempts).then(results=>{if(results.some(item=>item.status==="rejected")){const node=$triad("[data-triad-status]");if(node)node.textContent="瀏覽器阻擋自動播放；請在影片或 WAV 控制列按播放"}})};
+  const mediaPause=()=>{video?.pause();audio?.pause()};
+  const renderTriadFrame=now=>{if(!triad.playing)return;const elapsed=(now-triad.wall)*Math.max(.25,Math.min(16,triadNum(speedInput,12))),next=Math.min(triad.end,triad.start+elapsed);S.time=next;S.index=nearest(S.time);syncMediaToTimeline(false);if(now-triad.lastRender>=50){triad.lastRender=now;render()}if(next>=triad.end){triad.playing=false;mediaPause();render();return}triad.raf=requestAnimationFrame(renderTriadFrame)};
+  const stopTriad=()=>{triad.playing=false;cancelAnimationFrame(triad.raf);mediaPause();updateTriadUi()};
+  const playTriad=()=>{if(triad.playing){stopTriad();return}if(S.playing){S.playing=false;cancelAnimationFrame(S.raf);if(E.play){E.play.textContent="播放事件時間線";E.play.setAttribute("aria-pressed","false")}}const center=currentCsvMs(),radius=triadRadius();triad.start=Math.max(0,center-radius);triad.end=Math.min(durationMs(),center+radius);triad.wall=performance.now();triad.lastRender=0;triad.playing=true;S.time=triad.start;S.index=nearest(S.time);render();syncMediaToTimeline(true);mediaPlay();requestAnimationFrame(renderTriadFrame)};
+  const jumpTriad=()=>{stopTriad();S.time=at(sel());render();syncMediaToTimeline(true)};
+  const stepTriad=delta=>{stopTriad();S.time=Math.max(0,Math.min(durationMs(),currentCsvMs()+delta));S.index=nearest(S.time);render();syncMediaToTimeline(true)};
+  const originalRender=render;render=()=>{originalRender();updateTriadUi();if(triad.followCore)syncMediaToTimeline(false);else if(!triad.playing)syncMediaToTimeline(false)};
+  const originalSelect=select;select=index=>{originalSelect(index);if(!triad.playing)syncMediaToTimeline(true)};
+  const originalCorePlay=E.play.onclick;E.play.onclick=event=>{if(triad.playing)stopTriad();originalCorePlay?.(event);triad.followCore=Boolean(S.playing);if(triad.followCore){syncMediaToTimeline(true);mediaPlay()}else mediaPause();updateTriadUi()};
+  video?.addEventListener("loadedmetadata",()=>{$triad("[data-triad-video-duration]").textContent="長度："+triadClock(video.duration*1000);$triad("[data-triad-video-state]").textContent="影片已載入";syncMediaToTimeline(true)});
+  audio?.addEventListener("loadedmetadata",()=>{$triad("[data-triad-audio-duration]").textContent="長度："+triadClock(audio.duration*1000);$triad("[data-triad-audio-state]").textContent="WAV 已載入";syncMediaToTimeline(true)});
+  const loadMedia=(file,media,key,nameQuery,emptyQuery)=>{if(!file||!media)return;if(triad[key])URL.revokeObjectURL(triad[key]);triad[key]=URL.createObjectURL(file);media.src=triad[key];media.hidden=false;media.load();$triad(nameQuery).textContent="已載入："+file.name;$triad(emptyQuery).hidden=true;syncMediaToTimeline(true)};
+  videoFile?.addEventListener("change",()=>loadMedia(videoFile.files[0],video,"videoUrl","[data-triad-video-name]","[data-triad-video-empty]"));audioFile?.addEventListener("change",()=>loadMedia(audioFile.files[0],audio,"audioUrl","[data-triad-audio-name]","[data-triad-audio-empty]"));
+  reportFile?.addEventListener("change",async()=>{const file=reportFile.files[0];if(!file)return;try{const report=JSON.parse(await file.text()),best=report?.alignment?.best_score,onsets=report?.audio?.detected_onset_count;if(best&&Number.isFinite(Number(best.offset_ms))){audioOffsetInput.value=String(best.offset_ms)}$triad("[data-report-offset]").textContent=(Number(best?.offset_ms||0)>=0?"+":"")+Number(best?.offset_ms||0).toLocaleString()+" ms";$triad("[data-report-onsets]").textContent=Number(onsets||0).toLocaleString()+" 個";$triad("[data-report-match]").textContent=Number(best?.matched_events||0).toLocaleString()+" / "+Number(report?.midi?.event_count||0).toLocaleString()+"（"+(Number(best?.match_rate||0)*100).toFixed(1)+"%）"; $triad("[data-report-note]").textContent="已載入報告：容許誤差 ±"+Number(report?.alignment?.tolerance_ms||35)+" ms；最佳偏移已填入 WAV 偏移欄。";$triad("[data-triad-report-name]").textContent="已載入："+file.name;render()}catch(error){$triad("[data-report-note]").textContent="分析報告讀取失敗："+(error.message||"JSON 格式錯誤")}});
+  reportFile?.addEventListener("change",async()=>{const file=reportFile.files[0];if(!file)return;try{const report=JSON.parse(await file.text()),dense=report?.same_note_under_20ms,node=$triad("[data-report-dense]");if(node&&dense)node.textContent=Number(dense.audio_supported_pair_count||0).toLocaleString()+" / "+Number(dense.pair_count||0).toLocaleString()+" 對有兩個 onset"}catch{}});
+  $triad("[data-triad-play]")?.addEventListener("click",playTriad);$triad("[data-triad-jump]")?.addEventListener("click",jumpTriad);$triad("[data-triad-minus]")?.addEventListener("click",()=>stepTriad(-1));$triad("[data-triad-plus]")?.addEventListener("click",()=>stepTriad(1));$triad("[data-triad-video-sound]")?.addEventListener("change",event=>{if(video)video.muted=!event.target.checked});videoOffsetInput?.addEventListener("input",()=>{if(!triad.playing)syncMediaToTimeline(true);updateTriadUi()});audioOffsetInput?.addEventListener("input",()=>{if(!triad.playing)syncMediaToTimeline(true);updateTriadUi()});speedInput?.addEventListener("change",setMediaRate);
+  document.querySelector("#sample-window-ms")?.addEventListener("input",()=>{const node=$triad("[data-triad-play-radius]");if(node)node.textContent=String(triadRadius());updateTriadUi()});
+  video.muted=true;
+  render();
+})();
+</script>
 </body></html>

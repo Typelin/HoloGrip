@@ -31,6 +31,8 @@ triage rules have changed; it rebuilds the reviewable derived files under
 2. `HoloGrip_同時MIDI影片手別標記_0807_ZH_TW.html`：播放同時 MIDI 的影片窗口，逐一標記左手、右手或略過。
 3. `HoloGrip_資料集最終進度總覽_0807_ZH_TW.html`：載入統計與人工 CSV，查看目前可訓練事件、固定窗口與七鼓點分布。
 
+第 1 頁另有「MIDI、CSV、影片、WAV 三位一體對照」區塊。影片與 WAV 由使用者在頁面選取；WAV 分析腳本為 `Tools/Audio/analyze_drum_audio_0808.py`，分析報告與 onset 時間序列寫入 `Data/Derived/Song_Collection_COM/S20260805_P01_song01/audio_alignment_0808/`。
+
 操作順序：先在第 1 頁確認 MIDI -> CSV 的候選偏移與採樣窗口；接著在第 2 頁載入 `manual_simultaneous_groups.json` 與演奏影片，完成後下載人工手別 CSV；最後在第 3 頁依序載入 `hand_label_triage_summary.json`、`auto_accepted_single_events.csv`、`manual_simultaneous_groups.json` 與第 2 頁下載的人工手別 CSV，查看可用訓練資料量。
 
 舊版單點影片複核工具已移到 `Archive/Legacy_Code/VideoReviewSinglePoint_0807/`，不列入目前主流程。

@@ -45,3 +45,15 @@
 - MIDI 事件檔本身無法精確證明左手或右手；`hand_candidate` 只作為候選資訊。
 - 是否真的在 20 ms 內連打，要以影片中鼓棒與鼓面接觸畫面確認。
 - `+16,000 ms` 與 `+14,500 ms` 是目前對齊候選值，正式標記前仍需用可辨識擊打確認。
+
+## 0808 最新分類進度
+
+主頁異常導覽已改成只使用異常區索引，不會跳到雙手乾淨區；同一 note 的 20 ms 判斷也改為完整檢查任意配對。新增可重跑統計腳本：
+
+`C:\Users\Typelin_Station\Desktop\HoloGrip\Apps\Song_Collection_COM\midi_quality_audit_0808_ZH_TW.py`
+
+原始 100 Hz CSV 實際重算結果：Hi-Hat note 46 有 153 對 20 ms 內重複，涉及 291 筆唯一事件；±90 ms 異常 705、有效分母 1,115、高信心合計 100；±80 ms 異常 665、有效分母 1,155、高信心合計 98。正式報告在：
+
+`C:\Users\Typelin_Station\Desktop\HoloGrip\Docs\Current\HoloGrip_有效MIDI與異常分類報告_0808_ZH_TW.md`
+
+目前仍需影片／WAV 確認 Hi-Hat 快速重複是否為真連擊或電子鼓重複觸發，以及雙手候選的兩筆 MIDI 左右手分配。

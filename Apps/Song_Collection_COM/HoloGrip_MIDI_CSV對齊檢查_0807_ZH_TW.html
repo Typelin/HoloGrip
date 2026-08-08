@@ -257,8 +257,10 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     .chart .dense-marker-single{fill:#3a9b73}
     .chart .dense-marker-overlap{fill:#d88b22}
     .chart .dense-marker-multi{fill:#d6535d}
-    .chart .dense-marker-multi-overlap{fill:#a54254}
-    .chart .dense-marker-dual-clean{fill:#246b43}
+     .chart .dense-marker-multi-overlap{fill:#a54254}
+     .chart .dense-marker-dual-clean{fill:#246b43}
+     .chart .dense-marker-anomaly{fill:#a54254}
+     .chart .dense-marker-pending{fill:#d88b22}
     .chart .safe-window{fill:#d6535d;opacity:.08;pointer-events:none}
     .chart .dense-label{fill:#84343d;font-size:11px;font-weight:650}
     @media(max-width:640px){.dense-review-bar{grid-template-columns:1fr}.dense-review-summary,.dense-review-current,.dense-review-rule{grid-column:1}}
@@ -268,58 +270,87 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     <label class="dense-review-field" for="dense-filter">局部圖顯示
       <select id="dense-filter" class="dense-review-select" data-dense-filter>
         <option value="all">全部事件</option>
-        <option value="single">只看可單獨標記</option>
-        <option value="review">只看需要複核</option>
+        <option value="single">只看高信心單手</option>
+        <option value="dual">只看高信心雙手</option>
+        <option value="anomaly">只看異常事件</option>
+        <option value="review">只看待人工判讀</option>
       </select>
     </label>
     <div class="toolbar"><button type="button" class="button button-small dual-review-button" data-dual-prev>上一個雙手乾淨區</button><button type="button" class="button button-small dual-review-button" data-dual-next>下一個雙手乾淨區</button><button type="button" class="button button-small" data-dense-prev>上一個異常區</button><button type="button" class="button button-small" data-dense-next>下一個異常區</button></div>
     <div class="dual-review-summary" data-dual-summary></div>
     <div class="dual-review-current" data-dual-current></div>
     <div class="dense-review-summary" data-dense-summary></div>
+    <div class="dual-review-summary" data-quality-summary></div>
     <div class="dense-review-current" data-dense-current></div>
-     <div class="dense-review-rule">綠色＝雙手乾淨候選：同一群組正好 2 個 MIDI 點，窗口內左、右各 1 個局部活動峰；前後群組也不進窗口。紅色／橘色＝密集或窗口重疊，需要複核。MIDI 本身不含左、右手別，兩個 MIDI 點的手別仍要用影片確認。</div>
+     <div class="dense-review-rule">分類規則：單手乾淨＝一筆 MIDI、主手信心至少 90%、主手活動峰至少 1.0g；雙手乾淨＝同一窗口正好兩個不同 MIDI、左右各一個活動峰；異常＝同一鼓點 20 ms 內重複，或一個採樣窗口內出現 3 個以上 MIDI。其他兩點區域列為待人工判讀，不會被異常區按鈕誤帶入。</div>
   </div>`);
-  const filterSelect=document.querySelector("[data-dense-filter]"),summary=document.querySelector("[data-dense-summary]"),current=document.querySelector("[data-dense-current]"),dualSummary=document.querySelector("[data-dual-summary]"),dualCurrent=document.querySelector("[data-dual-current]"),densePrev=document.querySelector("[data-dense-prev]"),denseNext=document.querySelector("[data-dense-next]"),dualPrev=document.querySelector("[data-dual-prev]"),dualNext=document.querySelector("[data-dual-next]"),hoverInfo=document.querySelector(".midi-hover-info");
-  let denseModel={groups:[],byIndex:new Map(),reviewIndices:[]},dualModel={candidates:[],clean:[],byGroup:new Map()};
+  const filterSelect=document.querySelector("[data-dense-filter]"),summary=document.querySelector("[data-dense-summary]"),qualitySummary=document.querySelector("[data-quality-summary]"),current=document.querySelector("[data-dense-current]"),dualSummary=document.querySelector("[data-dual-summary]"),dualCurrent=document.querySelector("[data-dual-current]"),densePrev=document.querySelector("[data-dense-prev]"),denseNext=document.querySelector("[data-dense-next]"),dualPrev=document.querySelector("[data-dual-prev]"),dualNext=document.querySelector("[data-dual-next]"),hoverInfo=document.querySelector(".midi-hover-info");
+  let denseModel={groups:[],byIndex:new Map(),reviewIndices:[],anomalyGroupIndices:[],anomalyAreaIndices:[],anomalyEventIds:new Set()},dualModel={candidates:[],clean:[],byGroup:new Map()};
   const denseEscape=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
   const denseWindowRadius=()=>{const raw=Number(document.querySelector("#sample-window-ms")?.value);return Math.max(10,Math.min(2500,Number.isFinite(raw)?raw:90))};
-   const DUAL_ACTIVITY_THRESHOLD=1.0,DUAL_PEAK_SEPARATION_MS=40;
+   const DUAL_ACTIVITY_THRESHOLD=1.0,DUAL_PEAK_SEPARATION_MS=40,DENSE_DUPLICATE_WINDOW_MS=20;
    const dualLowerBound=(rows,t)=>{let lo=0,hi=rows.length;while(lo<hi){const mid=(lo+hi)>>1;if(+rows[mid].t<t)lo=mid+1;else hi=mid}return lo};
    const dualUpperBound=(rows,t)=>{let lo=0,hi=rows.length;while(lo<hi){const mid=(lo+hi)>>1;if(+rows[mid].t<=t)lo=mid+1;else hi=mid}return lo};
    const energyPointsBetween=(center,radius)=>{const rows=S.data.energy||[],start=Math.max(0,center-radius),end=Math.min(Number(S.data.duration)||Infinity,center+radius);return rows.slice(dualLowerBound(rows,start),dualUpperBound(rows,end))};
    const dualPeakList=(hand,center,radius)=>{const points=energyPointsBetween(center,radius),candidates=points.map((point,index)=>({time:+point.t,value:Number(point[hand])||0,index})).filter(point=>{if(point.value<DUAL_ACTIVITY_THRESHOLD)return false;const previous=points[point.index-1],next=points[point.index+1],previousValue=previous?Number(previous[hand])||0:-Infinity,nextValue=next?Number(next[hand])||0:-Infinity;return point.value>=previousValue&&point.value>=nextValue}).sort((a,b)=>b.value-a.value||a.time-b.time),selected=[];for(const point of candidates)if(selected.every(item=>Math.abs(item.time-point.time)>=DUAL_PEAK_SEPARATION_MS))selected.push(point);return selected.sort((a,b)=>a.time-b.time)};
   const densePercent=value=>Number.isFinite(value)?(value*100).toFixed(1)+"%":"—";
   const denseGap=value=>Number.isFinite(value)?value.toFixed(1)+" ms":"歌曲邊界";
-  const denseStatusText=info=>info.multiLabel?(info.overlapReview?"同時多鼓點＋窗口重疊":"同時多鼓點"):info.overlapReview?"窗口重疊，需複核":"可單獨標記";
-  const denseStatusClass=info=>info.multiLabel?(info.overlapReview?"multi-overlap":"multi"):info.overlapReview?"overlap":"single";
+  const denseStatusText=info=>{const dual=info?dualModel.byGroup.get(info.groupIndex):null;if(info?.anomaly)return "異常："+info.anomalyReasons.join("＋");if(dual?.clean)return "雙手乾淨候選";if(info?.singleHigh)return "單手乾淨候選";if(dual?.candidate)return "雙手候選，待人工手別判讀";return info?.multiLabel?"兩點待人工判讀":info?.overlapReview?"窗口重疊，待人工判讀":"單點待人工判讀"};
+  const denseStatusClass=info=>info?.anomaly?"anomaly":info?.singleHigh?"single":info?.multiLabel?"multi":info?.overlapReview?"overlap":"pending";
   const denseGroupNotes=rows=>{const seen=new Set(),names=[];for(const row of rows){const event=row.event,m=map(event.note)||{name:event.name||"未知"},label=event.note+" "+m.name;if(!seen.has(label)){seen.add(label);names.push(label)}}return names.join("、")};
   function buildDenseModel(radius){
+    const ordered=eventRows();
     const groups=[];
-    for(const row of eventRows()){
+    for(const row of ordered){
       let group=groups[groups.length-1];
       if(!group||row.time-group.time>DENSE_ONSET_TOLERANCE_MS){group={time:row.time,rows:[]};groups.push(group)}
       group.rows.push(row);
     }
+    const groupByEventIndex=new Map();groups.forEach((group,groupIndex)=>group.rows.forEach(row=>groupByEventIndex.set(row.index,groupIndex)));
+    const sameNoteEventIds=new Set(),sameNoteGroupIndices=new Set();let sameNotePairCount=0;
+    const tripleAffectedGroupIndices=new Set();
+    for(let currentIndex=0;currentIndex<ordered.length;currentIndex++){
+      const current=ordered[currentIndex];
+      for(let previousIndex=currentIndex-1;previousIndex>=0&&current.time-ordered[previousIndex].time<=DENSE_DUPLICATE_WINDOW_MS;previousIndex--){
+        const previous=ordered[previousIndex];
+        if(current.event.note===previous.event.note){sameNotePairCount++;sameNoteEventIds.add(previous.index);sameNoteEventIds.add(current.index);sameNoteGroupIndices.add(groupByEventIndex.get(previous.index));sameNoteGroupIndices.add(groupByEventIndex.get(current.index))}
+      }
+    }
+    const anomalyEventIds=new Set(sameNoteEventIds);
+    for(const group of groups){
+      const inWindow=ordered.filter(row=>Math.abs(row.time-group.time)<=radius);
+      if(inWindow.length<3)continue;
+      for(const row of inWindow){anomalyEventIds.add(row.index);tripleAffectedGroupIndices.add(groupByEventIndex.get(row.index))}
+    }
+    const anomalyGroupIndices=[...new Set([...sameNoteGroupIndices,...tripleAffectedGroupIndices])].filter(Number.isFinite).sort((a,b)=>a-b),anomalyAreaIndices=[];
+    for(const groupIndex of anomalyGroupIndices){const previous=anomalyAreaIndices[anomalyAreaIndices.length-1];if(previous===undefined||groups[groupIndex].time-groups[previous].time>Math.max(DENSE_DUPLICATE_WINDOW_MS,radius*2))anomalyAreaIndices.push(groupIndex)}
     const byIndex=new Map();
     groups.forEach((group,groupIndex)=>{
-      const prevGap=groupIndex?group.time-groups[groupIndex-1].time:Infinity,nextGap=groupIndex<groups.length-1?groups[groupIndex+1].time-group.time:Infinity,nearestGap=Math.min(prevGap,nextGap),multiLabel=group.rows.length>1,overlapReview=Number.isFinite(nearestGap)&&nearestGap<radius*2;
-      for(const row of group.rows){const info={...row,group,groupIndex,prevGap,nextGap,nearestGap,multiLabel,overlapReview,needsReview:multiLabel||overlapReview,safeHalfMs:Number.isFinite(nearestGap)?Math.min(radius,nearestGap/2):radius,groupNotes:denseGroupNotes(group.rows)};byIndex.set(row.index,info)}
+      const prevGap=groupIndex?group.time-groups[groupIndex-1].time:Infinity,nextGap=groupIndex<groups.length-1?groups[groupIndex+1].time-group.time:Infinity,nearestGap=Math.min(prevGap,nextGap),multiLabel=group.rows.length>1,overlapReview=Number.isFinite(nearestGap)&&nearestGap<radius*2,anomaly=sameNoteGroupIndices.has(groupIndex)||tripleAffectedGroupIndices.has(groupIndex),anomalyReasons=[];
+      if(sameNoteGroupIndices.has(groupIndex))anomalyReasons.push("同一鼓點 20 ms 內重複");
+      if(tripleAffectedGroupIndices.has(groupIndex))anomalyReasons.push("窗口內至少 3 個 MIDI");
+      let singleHigh=false;
+      if(!anomaly&&!multiLabel&&!overlapReview){const event=group.rows[0].event,points=energyPointsBetween(group.time,radius),peak=points.reduce((max,point)=>Math.max(max,Number(point.l)||0,Number(point.r)||0),0);singleHigh=(event.hand==="L"||event.hand==="R")&&Number(event.conf)>=.9&&peak>=DUAL_ACTIVITY_THRESHOLD}
+      const needsReview=anomaly||multiLabel||overlapReview||!singleHigh;
+      for(const row of group.rows){const info={...row,group,groupIndex,prevGap,nextGap,nearestGap,multiLabel,overlapReview,anomaly,anomalyReasons,windowEventCount:ordered.filter(item=>Math.abs(item.time-group.time)<=radius).length,singleHigh,needsReview,safeHalfMs:Number.isFinite(nearestGap)?Math.min(radius,nearestGap/2):radius,groupNotes:denseGroupNotes(group.rows)};byIndex.set(row.index,info)}
     });
     const reviewIndices=[...byIndex.values()].filter(info=>info.needsReview).sort((a,b)=>a.time-b.time||a.index-b.index).map(info=>info.index);
     const reviewGroupIndices=groups.map((group,groupIndex)=>({group,groupIndex})).filter(({group})=>group.rows.some(row=>byIndex.get(row.index)?.needsReview)).map(item=>item.groupIndex);
-    return {groups,byIndex,reviewIndices,reviewGroupIndices};
+    return {groups,byIndex,reviewIndices,reviewGroupIndices,anomalyGroupIndices,anomalyAreaIndices,anomalyEventIds,sameNoteEventIds,sameNotePairCount};
   }
   const denseInfo=index=>denseModel.byIndex.get(index);
-  function buildDualModel(radius){const candidates=[],clean=[],byGroup=new Map();denseModel.groups.forEach((group,groupIndex)=>{const previousGap=groupIndex?group.time-denseModel.groups[groupIndex-1].time:Infinity,nextGap=groupIndex<denseModel.groups.length-1?denseModel.groups[groupIndex+1].time-group.time:Infinity,left=dualPeakList("l",group.time,radius),right=dualPeakList("r",group.time,radius),oneEach=left.length===1&&right.length===1,twoPoint=group.rows.length===2,item={group,groupIndex,previousGap,nextGap,left,right,oneEach,twoPoint,candidate:twoPoint&&oneEach,clean:twoPoint&&oneEach&&Math.min(previousGap,nextGap)>=radius*2};byGroup.set(groupIndex,item);if(item.candidate)candidates.push(item);if(item.clean)clean.push(item)});return {candidates,clean,byGroup}}
+  function buildDualModel(radius){const candidates=[],clean=[],byGroup=new Map();denseModel.groups.forEach((group,groupIndex)=>{const previousGap=groupIndex?group.time-denseModel.groups[groupIndex-1].time:Infinity,nextGap=groupIndex<denseModel.groups.length-1?denseModel.groups[groupIndex+1].time-group.time:Infinity,left=dualPeakList("l",group.time,radius),right=dualPeakList("r",group.time,radius),oneEach=left.length===1&&right.length===1,twoPoint=group.rows.length===2,differentNotes=twoPoint&&group.rows[0].event.note!==group.rows[1].event.note,anomaly=denseInfo(group.rows[0].index)?.anomaly===true,item={group,groupIndex,previousGap,nextGap,left,right,oneEach,twoPoint,differentNotes,anomaly,candidate:twoPoint&&differentNotes&&oneEach&&!anomaly,clean:twoPoint&&differentNotes&&oneEach&&!anomaly&&Math.min(previousGap,nextGap)>=radius*2};byGroup.set(groupIndex,item);if(item.candidate)candidates.push(item);if(item.clean)clean.push(item)});return {candidates,clean,byGroup}}
   const dualInfo=index=>{const info=denseInfo(index);return info?dualModel.byGroup.get(info.groupIndex):null};
   const dualStatusText=item=>item.clean?"雙手乾淨候選":item.candidate?"雙手候選，但前後窗口重疊":"不是雙手雙點候選";
-  const denseFilterAllows=info=>denseFilter==="review"?info?.needsReview:denseFilter==="single"?!info?.needsReview:true;
+  const denseFilterAllows=info=>{if(!info)return false;const dual=dualModel.byGroup.get(info.groupIndex);if(denseFilter==="single")return info.singleHigh;if(denseFilter==="dual")return dual?.clean===true;if(denseFilter==="anomaly")return info.anomaly===true;if(denseFilter==="review")return info.needsReview&&!info.anomaly&&!info.singleHigh&&!dual?.clean;return true};
   function renderDenseUi(){
-    const radius=denseWindowRadius();denseModel=buildDenseModel(radius);dualModel=buildDualModel(radius);const selected=denseInfo(S.index),selectedDual=dualInfo(S.index),reviewCount=denseModel.reviewIndices.length,total=S.data.events.length,denseGroupCount=denseModel.reviewGroupIndices.filter(groupIndex=>!dualModel.byGroup.get(groupIndex)?.clean).length,candidateNodes=dualModel.candidates.reduce((sum,item)=>sum+item.group.rows.length,0),cleanNodes=dualModel.clean.reduce((sum,item)=>sum+item.group.rows.length,0);
+    const radius=denseWindowRadius();denseModel=buildDenseModel(radius);dualModel=buildDualModel(radius);const selected=denseInfo(S.index),selectedDual=dualInfo(S.index),reviewCount=denseModel.reviewIndices.length,total=S.data.events.length,anomalyEvents=denseModel.anomalyEventIds.size,effectiveEvents=Math.max(0,total-anomalyEvents),denseGroupCount=denseModel.anomalyAreaIndices.length,candidateNodes=dualModel.candidates.reduce((sum,item)=>sum+item.group.rows.length,0),cleanNodes=dualModel.clean.reduce((sum,item)=>sum+item.group.rows.length,0),singleHighNodes=denseModel.groups.filter(group=>denseInfo(group.rows[0].index)?.singleHigh).length,highConfidenceNodes=singleHighNodes+cleanNodes,highConfidenceRate=effectiveEvents?highConfidenceNodes/effectiveEvents:0;
     if(filterSelect)filterSelect.value=denseFilter;
-    if(summary)summary.textContent="目前窗口 ±"+radius+" ms（總長度 "+(radius*2)+" ms）："+reviewCount.toLocaleString()+" / "+total.toLocaleString()+" 筆事件需要複核｜可導覽的異常／密集資料區 "+denseGroupCount.toLocaleString()+" 區。";
+    if(summary)summary.textContent="目前窗口 ±"+radius+" ms（總長度 "+(radius*2)+" ms）：異常候選 "+anomalyEvents.toLocaleString()+" / "+total.toLocaleString()+" 筆 MIDI｜異常區 "+denseGroupCount.toLocaleString()+" 區｜其餘待判讀或可分類 "+(total-anomalyEvents).toLocaleString()+" 筆。";
+    const hiHatDuplicateEvents=[...denseModel.sameNoteEventIds].filter(index=>S.data.events[index]?.note===46).length;
+    if(qualitySummary)qualitySummary.textContent="有效 MIDI 分母（排除異常候選）："+effectiveEvents.toLocaleString()+" 筆｜高信心單手："+singleHighNodes.toLocaleString()+" 筆｜高信心雙手："+cleanNodes.toLocaleString()+" 筆｜高信心合計："+highConfidenceNodes.toLocaleString()+" 筆，占有效分母 "+(highConfidenceRate*100).toFixed(1)+"%｜Hi-Hat 20 ms 內重複："+denseModel.sameNotePairCount.toLocaleString()+" 對／"+hiHatDuplicateEvents.toLocaleString()+" 筆事件。";
     if(current)current.textContent=selected?"目前第 "+(selected.index+1)+" 筆："+denseStatusText(selected)+"｜群組："+selected.groupNotes+"｜前一群組 "+denseGap(selected.prevGap)+"｜下一群組 "+denseGap(selected.nextGap)+"｜不碰鄰近群組的最大半徑約 ±"+selected.safeHalfMs.toFixed(1)+" ms":"目前沒有選取事件";
-     if(dualSummary)dualSummary.textContent="雙手候選："+dualModel.candidates.length.toLocaleString()+" 組／"+candidateNodes.toLocaleString()+" 筆 MIDI；雙手乾淨："+dualModel.clean.length.toLocaleString()+" 組／"+cleanNodes.toLocaleString()+" 筆 MIDI。判定＝同組正好 2 點、左右各 1 個局部活動峰（≥"+DUAL_ACTIVITY_THRESHOLD.toFixed(1)+"g，同手 40 ms 內合併），且鄰近群組不進窗口。";
+     if(dualSummary)dualSummary.textContent="雙手候選："+dualModel.candidates.length.toLocaleString()+" 組／"+candidateNodes.toLocaleString()+" 筆 MIDI；雙手乾淨："+dualModel.clean.length.toLocaleString()+" 組／"+cleanNodes.toLocaleString()+" 筆 MIDI。判定＝同一窗口正好 2 個不同 MIDI、左右各 1 個局部活動峰（≥"+DUAL_ACTIVITY_THRESHOLD.toFixed(1)+"g，同手 40 ms 內合併），且不屬於異常窗口。";
     if(dualCurrent){if(selectedDual){const peakText=selectedDual.candidate?"左手峰值 "+selectedDual.left[0].value.toFixed(2)+"g｜右手峰值 "+selectedDual.right[0].value.toFixed(2)+"g":"左側活動峰 "+selectedDual.left.length+" 個｜右側活動峰 "+selectedDual.right.length+" 個";dualCurrent.innerHTML="目前事件：<strong>"+dualStatusText(selectedDual)+"</strong>｜"+peakText+"｜前後間隔 "+denseGap(Math.min(selectedDual.previousGap,selectedDual.nextGap))+(selectedDual.candidate?"｜兩個 MIDI 點的左／右手別仍需影片確認":"")}else dualCurrent.textContent="目前沒有可分析的 MIDI 群組。"}
     if(densePrev)densePrev.disabled=!denseGroupCount;if(denseNext)denseNext.disabled=!denseGroupCount;if(dualPrev)dualPrev.disabled=!dualModel.clean.length;if(dualNext)dualNext.disabled=!dualModel.clean.length;
     E.details.querySelectorAll("[data-dense-detail-row],[data-dual-detail-row]").forEach(node=>node.remove());
@@ -328,7 +359,7 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   }
   function renderDenseLayer(){
     const chart=E.local.querySelector("svg");if(!chart)return;chart.querySelectorAll("[data-dense-layer]").forEach(node=>node.remove());const view=localViewport(),{W,l,r,t,b,pw,c,min,max}=view;if(max<=min)return;const radius=denseWindowRadius(),layer=svg("g",{"data-dense-layer":"true"}),trackY=25,cursorX=sx(c,l,pw,min,max);layer.append(svg("line",{x1:l,y1:trackY,x2:l+pw,y2:trackY,class:"dense-track"}),svg("line",{x1:cursorX,y1:12,x2:cursorX,y2:92,class:"dense-cursor"}),svg("text",{x:l,y:trackY-7,class:"muted"},"事件判定"),svg("text",{x:Math.min(W-r,Math.max(l+4,cursorX+6)),y:11,class:"muted"},"目前時間 "+clock(c)));
-    for(const group of denseModel.groups){if(group.time<min||group.time>max)continue;const first=denseInfo(group.rows[0].index),dual=dualModel.byGroup.get(first.groupIndex),x=sx(group.time,l,pw,min,max),markerWidth=14,markerClass=dual?.clean?"dual-clean":denseStatusClass(first),className="dense-marker dense-marker-"+markerClass,marker=svg("rect",{x:x-markerWidth/2,y:trackY-8,width:markerWidth,height:16,rx:3,class:className,"data-dense-group":String(first.groupIndex),"data-dense-time-ms":group.time.toFixed(3),"data-dense-size":String(group.rows.length)});marker.append(svg("title",{},"事件群組｜"+group.rows.length+" 筆 MIDI｜"+clock(group.time)));layer.append(marker,svg("line",{x1:x,y1:trackY+8,x2:x,y2:92,class:"dense-connector"}))}
+    for(const group of denseModel.groups){if(group.time<min||group.time>max)continue;const first=denseInfo(group.rows[0].index),dual=dualModel.byGroup.get(first.groupIndex),x=sx(group.time,l,pw,min,max),markerWidth=14,markerClass=dual?.clean?"dual-clean":denseStatusClass(first),className="dense-marker dense-marker-"+markerClass,marker=svg("rect",{x:x-markerWidth/2,y:trackY-8,width:markerWidth,height:16,rx:3,class:className,"data-dense-group":String(first.groupIndex),"data-dense-time-ms":group.time.toFixed(3),"data-dense-size":String(group.rows.length)});marker.append(svg("title",{},denseStatusText(first)+"｜"+first.groupNotes+"｜"+group.rows.length+" 筆 MIDI｜"+clock(group.time)));layer.append(marker,svg("line",{x1:x,y1:trackY+8,x2:x,y2:92,class:"dense-connector"}))}
     const selected=denseInfo(S.index);if(selected){const safeHalf=selected.safeHalfMs,safeStart=Math.max(min,c-safeHalf),safeEnd=Math.min(max,c+safeHalf),x0=sx(safeStart,l,pw,min,max),x1=sx(safeEnd,l,pw,min,max);if(safeHalf<radius){layer.append(svg("rect",{x:x0,y:95,width:Math.max(1,x1-x0),height:b-95,class:"safe-window","data-safe-window":"true"}),svg("text",{x:Math.min(W-r-8,Math.max(l+4,x0+4)),y:110,class:"dense-label"},"可分離約 ±"+safeHalf.toFixed(1)+" ms"))}const labelText=denseStatusText(selected)+"｜"+selected.groupNotes;layer.append(svg("text",{x:Math.min(W-r-8,Math.max(l+4,sx(c,l,pw,min,max)+7)),y:38,class:"dense-label","data-dense-selected-label":"true"},labelText))}
     chart.append(layer);
   }
@@ -342,7 +373,7 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     for(const host of [E.overview,E.local])for(const dot of host.querySelectorAll("circle[data-midi-index]")){const index=Number(dot.dataset.midiIndex);dot.onpointerenter=event=>showDenseTooltip(event,index);dot.onpointermove=event=>showDenseTooltip(event,index);dot.onpointerleave=()=>{if(hoverInfo)hoverInfo.hidden=true};dot.onclick=event=>{event.stopPropagation();select(index)}}
   }
   function renderDense(){renderDenseUi();renderDenseLayer();applyDenseFilter();bindDenseTooltips()}
-  function jumpReview(direction){const list=denseModel.reviewGroupIndices.filter(groupIndex=>!dualModel.byGroup.get(groupIndex)?.clean);if(!list.length)return;const currentGroup=denseInfo(S.index)?.groupIndex;let position=list.indexOf(currentGroup);if(position<0)position=direction>0?-1:list.length;select(denseModel.groups[list[(position+direction+list.length)%list.length]].rows[0].index)}
+  function jumpReview(direction){const list=denseModel.anomalyAreaIndices;if(!list.length)return;const currentGroup=denseInfo(S.index)?.groupIndex;let position=list.indexOf(currentGroup);if(position<0){const currentTime=currentGroup===undefined?(direction>0?-Infinity:Infinity):denseModel.groups[currentGroup].time;if(direction>0){const next=list.findIndex(groupIndex=>denseModel.groups[groupIndex].time>currentTime);position=next<0?list.length-1:next-1}else{let previous=-1;for(let index=list.length-1;index>=0;index--)if(denseModel.groups[list[index]].time<currentTime){previous=index;break}position=previous<0?0:previous+1}}select(denseModel.groups[list[(position+direction+list.length)%list.length]].rows[0].index)}
   function jumpDual(direction){const list=dualModel.clean;if(!list.length)return;const currentGroup=denseInfo(S.index)?.groupIndex;let position=list.findIndex(item=>item.groupIndex===currentGroup);if(position<0)position=direction>0?-1:list.length;select(list[(position+direction+list.length)%list.length].group.rows[0].index)}
   densePrev?.addEventListener("click",()=>jumpReview(-1));denseNext?.addEventListener("click",()=>jumpReview(1));dualPrev?.addEventListener("click",()=>jumpDual(-1));dualNext?.addEventListener("click",()=>jumpDual(1));filterSelect?.addEventListener("change",()=>{denseFilter=filterSelect.value;render()});
   const baseRender=render;render=()=>{baseRender();renderDense()};

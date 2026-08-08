@@ -554,4 +554,43 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   document.head.appendChild(style);
 })();
 </script>
+<script>
+(function(){
+  const input=document.querySelector("#sample-window-ms");
+  if(input){
+    input.value="80";
+    input.dispatchEvent(new Event("input",{bubbles:true}));
+  }
+  const style=document.createElement("style");
+  style.textContent=`
+    .quality-decision{margin-top:12px;padding:13px 14px;border:1px solid #b9dfc5;border-left:4px solid #2f9857;border-radius:8px;background:#f4fbf6}
+    .quality-decision-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .quality-decision-title{font-size:15px;font-weight:700;color:var(--ink)}
+    .quality-decision-subtitle{display:block;margin-top:3px;color:var(--muted);font-size:12px}
+    .quality-decision-badge{padding:5px 9px;border-radius:999px;background:#d9f0df;color:#246b43;font-size:12px;font-weight:700;white-space:nowrap}
+    .quality-decision-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:11px}
+    .quality-decision-option{border:1px solid var(--line);border-radius:7px;background:#fff;padding:10px 11px}
+    .quality-decision-option.recommended{border-color:#72b989;box-shadow:inset 0 2px 0 #2f9857}
+    .quality-decision-option strong{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+    .quality-decision-option span{display:block;margin-top:3px;font-size:12px;color:var(--muted);line-height:1.5}
+    .quality-decision-note{margin:10px 0 0;color:var(--ink);font-size:12px;line-height:1.55}
+    .quality-decision-note strong{color:#246b43}
+    @media(max-width:640px){.quality-decision-grid{grid-template-columns:1fr}}
+  `;
+  document.head.appendChild(style);
+  const sampleRow=document.querySelector(".sample-window-row");
+  if(sampleRow&&!document.querySelector("[data-quality-decision]"))sampleRow.insertAdjacentHTML("afterend",`
+    <div class="quality-decision" data-quality-decision aria-label="採樣窗口品質決策">
+      <div class="quality-decision-head">
+        <div><div class="quality-decision-title">目前窗口品質決策</div><span class="quality-decision-subtitle">依 0805 實際 MIDI 1,820 筆與 Raw CSV 稽核結果</span></div>
+        <span class="quality-decision-badge">模型第一版推薦：±80 ms</span>
+      </div>
+      <div class="quality-decision-grid">
+        <div class="quality-decision-option recommended"><strong>±80 ms｜342 筆</strong><span>有效候選 1,155｜高信心占有效分母 29.6%｜單手 256、雙手 86（43 組）</span></div>
+        <div class="quality-decision-option"><strong>±90 ms｜325 筆</strong><span>有效候選 1,115｜高信心占有效分母 29.1%｜單手 241、雙手 84（42 組）</span></div>
+      </div>
+      <p class="quality-decision-note"><strong>怎麼使用：</strong>模型固定切 ±80 ms（總長 160 ms），降低前後鼓點動作混入；±90 ms保留作稽核與邊界抽查。以上是高信心候選，不是影片確認完成的最終真值；雙手 MIDI 還要人工確認左、右手。</p>
+    </div>`);
+})();
+</script>
 </body></html>

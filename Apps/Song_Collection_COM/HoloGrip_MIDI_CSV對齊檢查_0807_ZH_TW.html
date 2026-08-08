@@ -239,8 +239,9 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     .dense-review-title{font-weight:700;color:#8b5a12}
     .dense-review-field{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
     .dense-review-select{border:1px solid #d7b56d;border-radius:6px;background:#fff;color:var(--ink);padding:6px 8px;font:inherit}
-    .dense-review-summary,.dense-review-current,.dense-review-rule{grid-column:1/-1;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
-    .dense-review-current{color:var(--ink);font-weight:650}
+    .dense-review-summary,.dense-review-current,.dense-review-rule,.dual-review-summary,.dual-review-current{grid-column:1/-1;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+    .dense-review-current,.dual-review-current{color:var(--ink);font-weight:650}
+    .dual-review-summary{color:#246b43}.dual-review-current strong{color:#246b43}.dual-review-button{border-color:#9bc9a9;background:#f2fbf5}.dual-review-button:hover{border-color:#2f9857;background:#e6f6eb}
     .dense-review-rule{line-height:1.5}
     .dense-review-bar .button{padding:6px 9px;font-size:12px}
     .chart .dense-track{stroke:#d7b56d;stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
@@ -250,6 +251,7 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     .chart .dense-marker-overlap{fill:#d88b22}
     .chart .dense-marker-multi{fill:#d6535d}
     .chart .dense-marker-multi-overlap{fill:#a54254}
+    .chart .dense-marker-dual-clean{fill:#246b43}
     .chart .safe-window{fill:#d6535d;opacity:.08;pointer-events:none}
     .chart .dense-label{fill:#84343d;font-size:11px;font-weight:650}
     @media(max-width:640px){.dense-review-bar{grid-template-columns:1fr}.dense-review-summary,.dense-review-current,.dense-review-rule{grid-column:1}}
@@ -263,15 +265,19 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
         <option value="review">只看需要複核</option>
       </select>
     </label>
-    <div class="toolbar"><button type="button" class="button button-small" data-dense-prev>上一個需複核事件</button><button type="button" class="button button-small" data-dense-next>下一個需複核事件</button></div>
+    <div class="toolbar"><button type="button" class="button button-small dual-review-button" data-dual-prev>上一個雙手乾淨資料區</button><button type="button" class="button button-small dual-review-button" data-dual-next>下一個雙手乾淨資料區</button><button type="button" class="button button-small" data-dense-prev>上一個密集資料區</button><button type="button" class="button button-small" data-dense-next>下一個密集資料區</button></div>
+    <div class="dual-review-summary" data-dual-summary></div>
+    <div class="dual-review-current" data-dual-current></div>
     <div class="dense-review-summary" data-dense-summary></div>
     <div class="dense-review-current" data-dense-current></div>
-    <div class="dense-review-rule">判定規則：同一個 12 ms 內的 MIDI 合併為同時事件群組；若前後鼓點間隔小於目前窗口總長度（±窗口半徑的兩倍），就不能當成單一鼓點訓練資料。</div>
+    <div class="dense-review-rule">綠色＝雙手乾淨候選：同一群組正好 2 個 MIDI 點，窗口內左、右各 1 個活動峰；前後群組也不進窗口。紅色／橘色＝密集或窗口重疊，需要複核。MIDI 本身不含左、右手別，兩個 MIDI 點的手別仍要用影片確認。</div>
   </div>`);
-  const filterSelect=document.querySelector("[data-dense-filter]"),summary=document.querySelector("[data-dense-summary]"),current=document.querySelector("[data-dense-current]"),densePrev=document.querySelector("[data-dense-prev]"),denseNext=document.querySelector("[data-dense-next]"),hoverInfo=document.querySelector(".midi-hover-info");
-  let denseModel={groups:[],byIndex:new Map(),reviewIndices:[]};
+  const filterSelect=document.querySelector("[data-dense-filter]"),summary=document.querySelector("[data-dense-summary]"),current=document.querySelector("[data-dense-current]"),dualSummary=document.querySelector("[data-dual-summary]"),dualCurrent=document.querySelector("[data-dual-current]"),densePrev=document.querySelector("[data-dense-prev]"),denseNext=document.querySelector("[data-dense-next]"),dualPrev=document.querySelector("[data-dual-prev]"),dualNext=document.querySelector("[data-dual-next]"),hoverInfo=document.querySelector(".midi-hover-info");
+  let denseModel={groups:[],byIndex:new Map(),reviewIndices:[]},dualModel={candidates:[],clean:[],byGroup:new Map()};
   const denseEscape=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
   const denseWindowRadius=()=>{const raw=Number(document.querySelector("#sample-window-ms")?.value);return Math.max(10,Math.min(2500,Number.isFinite(raw)?raw:90))};
+  const DUAL_ACTIVITY_THRESHOLD=1.0,DUAL_PEAK_SEPARATION_MS=40;
+  const dualPeakList=(hand,center,radius)=>{const candidates=energyPointsBetween(center,radius).map(point=>({time:+point.t,value:Number(point[hand])||0})).filter(point=>point.value>=DUAL_ACTIVITY_THRESHOLD).sort((a,b)=>b.value-a.value||a.time-b.time),selected=[];for(const point of candidates)if(selected.every(item=>Math.abs(item.time-point.time)>=DUAL_PEAK_SEPARATION_MS))selected.push(point);return selected.sort((a,b)=>a.time-b.time)};
   const densePercent=value=>Number.isFinite(value)?(value*100).toFixed(1)+"%":"—";
   const denseGap=value=>Number.isFinite(value)?value.toFixed(1)+" ms":"歌曲邊界";
   const denseStatusText=info=>info.multiLabel?(info.overlapReview?"同時多鼓點＋窗口重疊":"同時多鼓點"):info.overlapReview?"窗口重疊，需複核":"可單獨標記";
@@ -290,21 +296,29 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
       for(const row of group.rows){const info={...row,group,groupIndex,prevGap,nextGap,nearestGap,multiLabel,overlapReview,needsReview:multiLabel||overlapReview,safeHalfMs:Number.isFinite(nearestGap)?Math.min(radius,nearestGap/2):radius,groupNotes:denseGroupNotes(group.rows)};byIndex.set(row.index,info)}
     });
     const reviewIndices=[...byIndex.values()].filter(info=>info.needsReview).sort((a,b)=>a.time-b.time||a.index-b.index).map(info=>info.index);
-    return {groups,byIndex,reviewIndices};
+    const reviewGroupIndices=groups.map((group,groupIndex)=>({group,groupIndex})).filter(({group})=>group.rows.some(row=>byIndex.get(row.index)?.needsReview)).map(item=>item.groupIndex);
+    return {groups,byIndex,reviewIndices,reviewGroupIndices};
   }
   const denseInfo=index=>denseModel.byIndex.get(index);
+  function buildDualModel(radius){const candidates=[],clean=[],byGroup=new Map();denseModel.groups.forEach((group,groupIndex)=>{const previousGap=groupIndex?group.time-denseModel.groups[groupIndex-1].time:Infinity,nextGap=groupIndex<denseModel.groups.length-1?denseModel.groups[groupIndex+1].time-group.time:Infinity,left=dualPeakList("l",group.time,radius),right=dualPeakList("r",group.time,radius),oneEach=left.length===1&&right.length===1,twoPoint=group.rows.length===2,item={group,groupIndex,previousGap,nextGap,left,right,oneEach,twoPoint,candidate:twoPoint&&oneEach,clean:twoPoint&&oneEach&&Math.min(previousGap,nextGap)>=radius*2};byGroup.set(groupIndex,item);if(item.candidate)candidates.push(item);if(item.clean)clean.push(item)});return {candidates,clean,byGroup}}
+  const dualInfo=index=>{const info=denseInfo(index);return info?dualModel.byGroup.get(info.groupIndex):null};
+  const dualStatusText=item=>item.clean?"雙手乾淨候選":item.candidate?"雙手候選，但前後窗口重疊":"不是雙手雙點候選";
   const denseFilterAllows=info=>denseFilter==="review"?info?.needsReview:denseFilter==="single"?!info?.needsReview:true;
   function renderDenseUi(){
-    const radius=denseWindowRadius();denseModel=buildDenseModel(radius);const selected=denseInfo(S.index),reviewCount=denseModel.reviewIndices.length,total=S.data.events.length;
+    const radius=denseWindowRadius();denseModel=buildDenseModel(radius);dualModel=buildDualModel(radius);const selected=denseInfo(S.index),selectedDual=dualInfo(S.index),reviewCount=denseModel.reviewIndices.length,total=S.data.events.length,denseGroupCount=denseModel.reviewGroupIndices.filter(groupIndex=>!dualModel.byGroup.get(groupIndex)?.clean).length,candidateNodes=dualModel.candidates.reduce((sum,item)=>sum+item.group.rows.length,0),cleanNodes=dualModel.clean.reduce((sum,item)=>sum+item.group.rows.length,0);
     if(filterSelect)filterSelect.value=denseFilter;
-    if(summary)summary.textContent="目前窗口 ±"+radius+" ms（總長度 "+(radius*2)+" ms）："+reviewCount.toLocaleString()+" / "+total.toLocaleString()+" 筆事件需要複核。";
+    if(summary)summary.textContent="目前窗口 ±"+radius+" ms（總長度 "+(radius*2)+" ms）："+reviewCount.toLocaleString()+" / "+total.toLocaleString()+" 筆事件需要複核｜可導覽的密集資料區 "+denseGroupCount.toLocaleString()+" 區。";
     if(current)current.textContent=selected?"目前第 "+(selected.index+1)+" 筆："+denseStatusText(selected)+"｜群組："+selected.groupNotes+"｜前一群組 "+denseGap(selected.prevGap)+"｜下一群組 "+denseGap(selected.nextGap)+"｜不碰鄰近群組的最大半徑約 ±"+selected.safeHalfMs.toFixed(1)+" ms":"目前沒有選取事件";
-    E.details.querySelectorAll("[data-dense-detail-row]").forEach(node=>node.remove());
+    if(dualSummary)dualSummary.textContent="雙手候選："+dualModel.candidates.length.toLocaleString()+" 組／"+candidateNodes.toLocaleString()+" 筆 MIDI；雙手乾淨："+dualModel.clean.length.toLocaleString()+" 組／"+cleanNodes.toLocaleString()+" 筆 MIDI。判定＝同組正好 2 點、左右各 1 個活動峰（≥"+DUAL_ACTIVITY_THRESHOLD.toFixed(1)+"g，同手 40 ms 內合併），且鄰近群組不進窗口。";
+    if(dualCurrent){if(selectedDual){const peakText=selectedDual.candidate?"左手峰值 "+selectedDual.left[0].value.toFixed(2)+"g｜右手峰值 "+selectedDual.right[0].value.toFixed(2)+"g":"左側活動峰 "+selectedDual.left.length+" 個｜右側活動峰 "+selectedDual.right.length+" 個";dualCurrent.innerHTML="目前事件：<strong>"+dualStatusText(selectedDual)+"</strong>｜"+peakText+"｜前後間隔 "+denseGap(Math.min(selectedDual.previousGap,selectedDual.nextGap))+(selectedDual.candidate?"｜兩個 MIDI 點的左／右手別仍需影片確認":"")}else dualCurrent.textContent="目前沒有可分析的 MIDI 群組。"}
+    if(densePrev)densePrev.disabled=!denseGroupCount;if(denseNext)denseNext.disabled=!denseGroupCount;if(dualPrev)dualPrev.disabled=!dualModel.clean.length;if(dualNext)dualNext.disabled=!dualModel.clean.length;
+    E.details.querySelectorAll("[data-dense-detail-row],[data-dual-detail-row]").forEach(node=>node.remove());
     if(selected){E.details.insertAdjacentHTML("beforeend",'<dt data-dense-detail-row>密集事件判定</dt><dd data-dense-detail-row>'+denseEscape(denseStatusText(selected))+'</dd><dt data-dense-detail-row>同一事件群組</dt><dd data-dense-detail-row>'+denseEscape(selected.groupNotes)+'</dd><dt data-dense-detail-row>可分離最大半徑</dt><dd data-dense-detail-row>±'+selected.safeHalfMs.toFixed(1)+' ms</dd>')}
+    if(selectedDual){const peakDetail=selectedDual.candidate?"左 "+selectedDual.left[0].value.toFixed(2)+"g／右 "+selectedDual.right[0].value.toFixed(2)+"g｜兩個 MIDI 點的手別需影片確認":"左側 "+selectedDual.left.length+" 個活動峰／右側 "+selectedDual.right.length+" 個活動峰";E.details.insertAdjacentHTML("beforeend",'<dt data-dual-detail-row>雙手資料判定</dt><dd data-dual-detail-row>'+denseEscape(dualStatusText(selectedDual))+'｜'+denseEscape(peakDetail)+'</dd>')}
   }
   function renderDenseLayer(){
     const chart=E.local.querySelector("svg");if(!chart)return;chart.querySelectorAll("[data-dense-layer]").forEach(node=>node.remove());const W=Math.max(360,E.local.clientWidth||900),H=270,l=W<550?56:82,r=18,t=42,b=220,pw=W-l-r,e=sel(),c=e?at(e):0,half=2500,min=Math.max(0,Math.min(S.data.duration-half*2,c-half)),max=Math.min(S.data.duration,min+half);if(max<=min)return;const radius=denseWindowRadius(),layer=svg("g",{"data-dense-layer":"true"}),trackY=25;layer.append(svg("line",{x1:l,y1:trackY,x2:l+pw,y2:trackY,class:"dense-track"}),svg("text",{x:l,y:trackY-7,class:"muted"},"事件判定"));
-    for(const group of denseModel.groups){if(group.time<min||group.time>max)continue;const first=denseInfo(group.rows[0].index),x=sx(group.time,l,pw,min,max),markerWidth=Math.max(8,Math.min(20,group.rows.length*6)),className="dense-marker dense-marker-"+denseStatusClass(first);layer.append(svg("rect",{x:x-markerWidth/2,y:trackY-8,width:markerWidth,height:16,rx:3,class:className,"data-dense-group":String(first.groupIndex)}),svg("line",{x1:x,y1:trackY+8,x2:x,y2:92,class:"dense-connector"}))}
+    for(const group of denseModel.groups){if(group.time<min||group.time>max)continue;const first=denseInfo(group.rows[0].index),dual=dualModel.byGroup.get(first.groupIndex),x=sx(group.time,l,pw,min,max),markerWidth=Math.max(8,Math.min(20,group.rows.length*6)),markerClass=dual?.clean?"dual-clean":denseStatusClass(first),className="dense-marker dense-marker-"+markerClass;layer.append(svg("rect",{x:x-markerWidth/2,y:trackY-8,width:markerWidth,height:16,rx:3,class:className,"data-dense-group":String(first.groupIndex)}),svg("line",{x1:x,y1:trackY+8,x2:x,y2:92,class:"dense-connector"}))}
     const selected=denseInfo(S.index);if(selected){const safeHalf=selected.safeHalfMs,safeStart=Math.max(min,c-safeHalf),safeEnd=Math.min(max,c+safeHalf),x0=sx(safeStart,l,pw,min,max),x1=sx(safeEnd,l,pw,min,max);if(safeHalf<radius){layer.append(svg("rect",{x:x0,y:95,width:Math.max(1,x1-x0),height:b-95,class:"safe-window","data-safe-window":"true"}),svg("text",{x:Math.min(W-r-8,Math.max(l+4,x0+4)),y:110,class:"dense-label"},"可分離約 ±"+safeHalf.toFixed(1)+" ms"))}const labelText=denseStatusText(selected)+"｜"+selected.groupNotes;layer.append(svg("text",{x:Math.min(W-r-8,Math.max(l+4,sx(c,l,pw,min,max)+7)),y:38,class:"dense-label","data-dense-selected-label":"true"},labelText))}
     chart.append(layer);
   }
@@ -318,8 +332,9 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     for(const host of [E.overview,E.local])for(const dot of host.querySelectorAll("circle[data-midi-index]")){const index=Number(dot.dataset.midiIndex);dot.onpointerenter=event=>showDenseTooltip(event,index);dot.onpointermove=event=>showDenseTooltip(event,index);dot.onpointerleave=()=>{if(hoverInfo)hoverInfo.hidden=true};dot.onclick=event=>{event.stopPropagation();select(index)}}
   }
   function renderDense(){renderDenseUi();renderDenseLayer();applyDenseFilter();bindDenseTooltips()}
-  function jumpReview(direction){const list=denseModel.reviewIndices;if(!list.length)return;let position=list.indexOf(S.index);if(position<0)position=direction>0?-1:list.length;select(list[(position+direction+list.length)%list.length])}
-  densePrev?.addEventListener("click",()=>jumpReview(-1));denseNext?.addEventListener("click",()=>jumpReview(1));filterSelect?.addEventListener("change",()=>{denseFilter=filterSelect.value;render()});
+  function jumpReview(direction){const list=denseModel.reviewGroupIndices.filter(groupIndex=>!dualModel.byGroup.get(groupIndex)?.clean);if(!list.length)return;const currentGroup=denseInfo(S.index)?.groupIndex;let position=list.indexOf(currentGroup);if(position<0)position=direction>0?-1:list.length;select(denseModel.groups[list[(position+direction+list.length)%list.length]].rows[0].index)}
+  function jumpDual(direction){const list=dualModel.clean;if(!list.length)return;const currentGroup=denseInfo(S.index)?.groupIndex;let position=list.findIndex(item=>item.groupIndex===currentGroup);if(position<0)position=direction>0?-1:list.length;select(list[(position+direction+list.length)%list.length].group.rows[0].index)}
+  densePrev?.addEventListener("click",()=>jumpReview(-1));denseNext?.addEventListener("click",()=>jumpReview(1));dualPrev?.addEventListener("click",()=>jumpDual(-1));dualNext?.addEventListener("click",()=>jumpDual(1));filterSelect?.addEventListener("change",()=>{denseFilter=filterSelect.value;render()});
   const baseRender=render;render=()=>{baseRender();renderDense()};
   new ResizeObserver(()=>{renderDenseLayer();applyDenseFilter();bindDenseTooltips()}).observe(E.local);
   E.download.onclick=()=>{const header=["event_id","midi_time_ms","aligned_csv_time_ms","midi_note","zone_id","zone_name","velocity","hand_candidate","hand_confidence","onset_group_id","group_notes","previous_onset_gap_ms","next_onset_gap_ms","multi_label","overlap_review","single_label_eligible","safe_half_window_ms","label_status"],cell=value=>{const text=String(value??"");return '"'+text.replace(/"/g,'""')+'"'},rows=[header.join(",")];for(const event of S.data.events){const info=denseInfo(event.id-1);rows.push([event.id,event.mt.toFixed(3),at(event).toFixed(3),event.note,event.zone,event.name,event.vel,event.hand,event.conf,info?.groupIndex===undefined?"":info.groupIndex+1,info?.groupNotes||"",info?.prevGap===undefined?"":info.prevGap.toFixed(3),info?.nextGap===undefined?"":info.nextGap.toFixed(3),info?.multiLabel?"true":"false",info?.overlapReview?"true":"false",info&&!info.needsReview?"true":"false",info?.safeHalfMs===undefined?"":info.safeHalfMs.toFixed(3),"pending_manual_alignment_review"].map(cell).join(","))}const link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+rows.join("\n")],{type:"text/csv;charset=utf-8"}));link.download="candidate_midi_csv_density_review_"+Math.round(S.offset)+"ms.csv";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),0)};

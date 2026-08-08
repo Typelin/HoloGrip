@@ -234,6 +234,7 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
   let denseFilter="all";
   const localSection=E.local?.closest(".section");
   if(!localSection)return;
+  const eventRows=()=>S.data.events.map((event,index)=>({event,index,time:at(event)})).sort((a,b)=>a.time-b.time||a.index-b.index);
   document.head.insertAdjacentHTML("beforeend",`<style>
     .dense-review-bar{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px 14px;align-items:center;margin:0 0 10px;padding:10px 12px;border:1px solid #e6c887;border-radius:8px;background:#fffaf0;color:var(--ink);font-size:13px}
     .dense-review-title{font-weight:700;color:#8b5a12}
@@ -270,14 +271,17 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     <div class="dual-review-current" data-dual-current></div>
     <div class="dense-review-summary" data-dense-summary></div>
     <div class="dense-review-current" data-dense-current></div>
-    <div class="dense-review-rule">綠色＝雙手乾淨候選：同一群組正好 2 個 MIDI 點，窗口內左、右各 1 個活動峰；前後群組也不進窗口。紅色／橘色＝密集或窗口重疊，需要複核。MIDI 本身不含左、右手別，兩個 MIDI 點的手別仍要用影片確認。</div>
+     <div class="dense-review-rule">綠色＝雙手乾淨候選：同一群組正好 2 個 MIDI 點，窗口內左、右各 1 個局部活動峰；前後群組也不進窗口。紅色／橘色＝密集或窗口重疊，需要複核。MIDI 本身不含左、右手別，兩個 MIDI 點的手別仍要用影片確認。</div>
   </div>`);
   const filterSelect=document.querySelector("[data-dense-filter]"),summary=document.querySelector("[data-dense-summary]"),current=document.querySelector("[data-dense-current]"),dualSummary=document.querySelector("[data-dual-summary]"),dualCurrent=document.querySelector("[data-dual-current]"),densePrev=document.querySelector("[data-dense-prev]"),denseNext=document.querySelector("[data-dense-next]"),dualPrev=document.querySelector("[data-dual-prev]"),dualNext=document.querySelector("[data-dual-next]"),hoverInfo=document.querySelector(".midi-hover-info");
   let denseModel={groups:[],byIndex:new Map(),reviewIndices:[]},dualModel={candidates:[],clean:[],byGroup:new Map()};
   const denseEscape=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
   const denseWindowRadius=()=>{const raw=Number(document.querySelector("#sample-window-ms")?.value);return Math.max(10,Math.min(2500,Number.isFinite(raw)?raw:90))};
-  const DUAL_ACTIVITY_THRESHOLD=1.0,DUAL_PEAK_SEPARATION_MS=40;
-  const dualPeakList=(hand,center,radius)=>{const candidates=energyPointsBetween(center,radius).map(point=>({time:+point.t,value:Number(point[hand])||0})).filter(point=>point.value>=DUAL_ACTIVITY_THRESHOLD).sort((a,b)=>b.value-a.value||a.time-b.time),selected=[];for(const point of candidates)if(selected.every(item=>Math.abs(item.time-point.time)>=DUAL_PEAK_SEPARATION_MS))selected.push(point);return selected.sort((a,b)=>a.time-b.time)};
+   const DUAL_ACTIVITY_THRESHOLD=1.0,DUAL_PEAK_SEPARATION_MS=40;
+   const dualLowerBound=(rows,t)=>{let lo=0,hi=rows.length;while(lo<hi){const mid=(lo+hi)>>1;if(+rows[mid].t<t)lo=mid+1;else hi=mid}return lo};
+   const dualUpperBound=(rows,t)=>{let lo=0,hi=rows.length;while(lo<hi){const mid=(lo+hi)>>1;if(+rows[mid].t<=t)lo=mid+1;else hi=mid}return lo};
+   const energyPointsBetween=(center,radius)=>{const rows=S.data.energy||[],start=Math.max(0,center-radius),end=Math.min(Number(S.data.duration)||Infinity,center+radius);return rows.slice(dualLowerBound(rows,start),dualUpperBound(rows,end))};
+   const dualPeakList=(hand,center,radius)=>{const points=energyPointsBetween(center,radius),candidates=points.map((point,index)=>({time:+point.t,value:Number(point[hand])||0,index})).filter(point=>{if(point.value<DUAL_ACTIVITY_THRESHOLD)return false;const previous=points[point.index-1],next=points[point.index+1],previousValue=previous?Number(previous[hand])||0:-Infinity,nextValue=next?Number(next[hand])||0:-Infinity;return point.value>=previousValue&&point.value>=nextValue}).sort((a,b)=>b.value-a.value||a.time-b.time),selected=[];for(const point of candidates)if(selected.every(item=>Math.abs(item.time-point.time)>=DUAL_PEAK_SEPARATION_MS))selected.push(point);return selected.sort((a,b)=>a.time-b.time)};
   const densePercent=value=>Number.isFinite(value)?(value*100).toFixed(1)+"%":"—";
   const denseGap=value=>Number.isFinite(value)?value.toFixed(1)+" ms":"歌曲邊界";
   const denseStatusText=info=>info.multiLabel?(info.overlapReview?"同時多鼓點＋窗口重疊":"同時多鼓點"):info.overlapReview?"窗口重疊，需複核":"可單獨標記";
@@ -309,7 +313,7 @@ E.prev.onclick=()=>select(S.index-1);E.next.onclick=()=>select(S.index+1);E.play
     if(filterSelect)filterSelect.value=denseFilter;
     if(summary)summary.textContent="目前窗口 ±"+radius+" ms（總長度 "+(radius*2)+" ms）："+reviewCount.toLocaleString()+" / "+total.toLocaleString()+" 筆事件需要複核｜可導覽的密集資料區 "+denseGroupCount.toLocaleString()+" 區。";
     if(current)current.textContent=selected?"目前第 "+(selected.index+1)+" 筆："+denseStatusText(selected)+"｜群組："+selected.groupNotes+"｜前一群組 "+denseGap(selected.prevGap)+"｜下一群組 "+denseGap(selected.nextGap)+"｜不碰鄰近群組的最大半徑約 ±"+selected.safeHalfMs.toFixed(1)+" ms":"目前沒有選取事件";
-    if(dualSummary)dualSummary.textContent="雙手候選："+dualModel.candidates.length.toLocaleString()+" 組／"+candidateNodes.toLocaleString()+" 筆 MIDI；雙手乾淨："+dualModel.clean.length.toLocaleString()+" 組／"+cleanNodes.toLocaleString()+" 筆 MIDI。判定＝同組正好 2 點、左右各 1 個活動峰（≥"+DUAL_ACTIVITY_THRESHOLD.toFixed(1)+"g，同手 40 ms 內合併），且鄰近群組不進窗口。";
+     if(dualSummary)dualSummary.textContent="雙手候選："+dualModel.candidates.length.toLocaleString()+" 組／"+candidateNodes.toLocaleString()+" 筆 MIDI；雙手乾淨："+dualModel.clean.length.toLocaleString()+" 組／"+cleanNodes.toLocaleString()+" 筆 MIDI。判定＝同組正好 2 點、左右各 1 個局部活動峰（≥"+DUAL_ACTIVITY_THRESHOLD.toFixed(1)+"g，同手 40 ms 內合併），且鄰近群組不進窗口。";
     if(dualCurrent){if(selectedDual){const peakText=selectedDual.candidate?"左手峰值 "+selectedDual.left[0].value.toFixed(2)+"g｜右手峰值 "+selectedDual.right[0].value.toFixed(2)+"g":"左側活動峰 "+selectedDual.left.length+" 個｜右側活動峰 "+selectedDual.right.length+" 個";dualCurrent.innerHTML="目前事件：<strong>"+dualStatusText(selectedDual)+"</strong>｜"+peakText+"｜前後間隔 "+denseGap(Math.min(selectedDual.previousGap,selectedDual.nextGap))+(selectedDual.candidate?"｜兩個 MIDI 點的左／右手別仍需影片確認":"")}else dualCurrent.textContent="目前沒有可分析的 MIDI 群組。"}
     if(densePrev)densePrev.disabled=!denseGroupCount;if(denseNext)denseNext.disabled=!denseGroupCount;if(dualPrev)dualPrev.disabled=!dualModel.clean.length;if(dualNext)dualNext.disabled=!dualModel.clean.length;
     E.details.querySelectorAll("[data-dense-detail-row],[data-dual-detail-row]").forEach(node=>node.remove());

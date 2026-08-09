@@ -44,8 +44,16 @@ DEFAULT_OUTPUT = (
 
 def energy_rows(samples: list[pipeline.RawSample], duration_ms: float) -> list[dict[str, float]]:
     arrays = pipeline._build_energy(samples, duration_ms)
+    sensor_origin_ms = min((sample.sensor_time_ms for sample in samples), default=0)
     present_buckets = {
-        int(math.floor(max(0.0, sample.song_time_ms) / pipeline.BIN_MS + 0.5)) * pipeline.BIN_MS
+        int(
+            math.floor(
+                max(0.0, pipeline.sample_timeline_ms(sample, sensor_origin_ms))
+                / pipeline.BIN_MS
+                + 0.5
+            )
+        )
+        * pipeline.BIN_MS
         for sample in samples
     }
     return [

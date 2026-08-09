@@ -73,7 +73,11 @@ def build_frontend_data(
 ) -> dict[str, Any]:
     """Build the DATA object expected by the existing frontend page."""
     samples, raw_info = pipeline.read_raw_csv(raw_csv)
-    arrays = pipeline._build_energy(samples, raw_info["duration_ms"])
+    arrays = pipeline._build_energy(
+        samples,
+        raw_info["duration_ms"],
+        raw_info["sensor_origin_ms"],
+    )
     energy = [
         {"t": index * pipeline.BIN_MS, "l": arrays["L"][index], "r": arrays["R"][index]}
         for index in range(len(arrays["L"]))
@@ -118,6 +122,10 @@ def build_frontend_data(
         "csvSource": raw_csv.name,
         "energyBinMs": pipeline.BIN_MS,
         "displayEnergyBinMs": DISPLAY_BIN_MS,
+        "timeBase": raw_info["time_base"],
+        "timeBaseDescription": raw_info["time_base_description"],
+        "sensorOriginMs": raw_info["sensor_origin_ms"],
+        "songDurationMs": raw_info["song_duration_ms"],
     }
 
 
@@ -157,6 +165,13 @@ def render_frontend_html(
             "預設會嘗試載入 Drum Audio WAV；若被安全政策擋下，請在資料設定選取檔案。",
             "現場第一階段不自動載入 WAV；需要聲音核對時，請在資料設定手動選取檔案。",
         )
+    existing_bridge_marker = "GUI 已載入候選偏移"
+    existing_bridge_position = rendered.find(existing_bridge_marker)
+    if existing_bridge_position >= 0:
+        existing_bridge_start = rendered.rfind("<script", 0, existing_bridge_position)
+        existing_bridge_end = rendered.find("</script>", existing_bridge_position)
+        if existing_bridge_start >= 0 and existing_bridge_end >= 0:
+            rendered = rendered[:existing_bridge_start] + rendered[existing_bridge_end + len("</script>"):]
     auto_play_js = "true" if auto_play else "false"
     bridge = f"""
 <script>
@@ -177,7 +192,7 @@ def render_frontend_html(
   const displayBin = Number(DATA.displayEnergyBinMs) || 100;
   const rawBin = Number(DATA.energyBinMs) || 10;
   const method = document.querySelector('[data-window-method]');
-  if (method) method.textContent += ' 局部折線與窗口命中保留約 ' + rawBin + ' ms 原始資料；約 ' + displayBin + ' ms 僅作整首歌概覽。';
+   if (method) method.textContent += ' 10 ms＝每格原始資料的左右手最大 activity；20/50/100 ms＝10 ms 格的算術平均，只影響畫面，不參與對齊。對齊使用感測器時間軸的 10 ms 基底值。';
   const sampleRow = document.querySelector('.sample-window-row');
   if (sampleRow && !document.querySelector('#plot-bin-ms')) {{
     const field = document.createElement('label');
@@ -523,7 +538,7 @@ def create_root() -> tk.Misc:
 def self_test() -> None:
     midi = PROJECT_ROOT / "Data" / "External" / "FlowAudio_20260805" / "Drum Midi_110BPM (0805).mid"
     csv_path = PROJECT_ROOT / "Data" / "Raw" / "Song_Collection_COM" / "S20260805_P01_song01_raw_100hz_20260805_161628.csv"
-    data = build_frontend_data(csv_path, midi, DEFAULT_BPM, 16_000)
+    data = build_frontend_data(csv_path, midi, DEFAULT_BPM, 16_030)
     if len(data["events"]) != 1_820:
         raise AssertionError(f"unexpected event count: {len(data['events'])}")
     if not data["energy"] or data["duration"] <= 0:
@@ -531,7 +546,7 @@ def self_test() -> None:
     if len(data["displayEnergy"]) >= len(data["energy"]):
         raise AssertionError("display energy was not downsampled")
     rendered = render_frontend_html(FRONTEND_TEMPLATE.read_text(encoding="utf-8"), data, True)
-    if "const DATA=" not in rendered or "16000" not in rendered:
+    if "const DATA=" not in rendered or "16030" not in rendered:
         raise AssertionError("frontend session bridge was not rendered")
     if 'data-default-src="../../Data/External/' in rendered:
         raise AssertionError("field frontend still has stale media defaults")

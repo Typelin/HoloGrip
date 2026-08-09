@@ -27,6 +27,7 @@ DEFAULT_BPM = 110.0
 DEFAULT_PRE_MS = 90
 DEFAULT_POST_MS = 90
 ONSET_GROUP_TOLERANCE_MS = 12.0
+TIME_BASE = "sensor_time_ms_relative"
 
 # Stable mapping for this SONG dataset. 37 and 38 are intentionally merged.
 ZONE_BY_NOTE: dict[int, tuple[int, str]] = {
@@ -280,11 +281,21 @@ def read_raw_csv(path: Path) -> tuple[list[RawSample], dict[str, Any]]:
             )
             samples.append(sample)
             sessions[sample.session_id] += 1
-    samples.sort(key=lambda sample: (sample.song_time_ms, sample.hand, sample.sample_index))
+    samples.sort(key=lambda sample: (sample.sensor_time_ms, sample.hand, sample.sample_index))
+    sensor_origin_ms = min((sample.sensor_time_ms for sample in samples), default=0)
+    song_duration_ms = max((sample.song_time_ms for sample in samples), default=0.0)
+    sensor_duration_ms = max(
+        (sample.sensor_time_ms - sensor_origin_ms for sample in samples),
+        default=0,
+    )
     return samples, {
         "row_count": len(samples),
         "session_counts": dict(sessions),
-        "duration_ms": max((sample.song_time_ms for sample in samples), default=0.0),
+        "duration_ms": float(sensor_duration_ms),
+        "song_duration_ms": song_duration_ms,
+        "sensor_origin_ms": sensor_origin_ms,
+        "time_base": TIME_BASE,
+        "time_base_description": "sensor_time_ms - first sensor_time_ms",
         "hand_counts": dict(Counter(sample.hand for sample in samples)),
     }
 
@@ -294,11 +305,29 @@ def _motion_energy(sample: RawSample) -> float:
     return abs(sample.accel_magnitude_g - 1.0)
 
 
-def _build_energy(samples: Iterable[RawSample], duration_ms: float) -> dict[str, list[float]]:
+def sample_timeline_ms(sample: RawSample, sensor_origin_ms: int | None = None) -> float:
+    """Return the stable 100 Hz sensor-clock time used for alignment."""
+    if sensor_origin_ms is None:
+        return float(sample.sensor_time_ms)
+    return float(sample.sensor_time_ms - sensor_origin_ms)
+
+
+def _build_energy(
+    samples: Iterable[RawSample],
+    duration_ms: float,
+    sensor_origin_ms: int | None = None,
+) -> dict[str, list[float]]:
+    """Bin raw motion on the sensor clock; each 10 ms bin keeps its max signal."""
+    sample_list = list(samples)
+    if sensor_origin_ms is None:
+        sensor_origin_ms = min((sample.sensor_time_ms for sample in sample_list), default=0)
     size = max(1, int(math.ceil(duration_ms / BIN_MS)) + 1)
     result = {"R": [0.0] * size, "L": [0.0] * size}
-    for sample in samples:
-        index = max(0, min(size - 1, int(round(sample.song_time_ms / BIN_MS))))
+    for sample in sample_list:
+        index = max(
+            0,
+            min(size - 1, int(round(sample_timeline_ms(sample, sensor_origin_ms) / BIN_MS))),
+        )
         result[sample.hand][index] = max(result[sample.hand][index], _motion_energy(sample))
     return result
 
@@ -453,9 +482,8 @@ def build_outputs(
     if not events:
         raise ValueError("MIDI contains no mapped 7-zone events")
 
-    energy = _build_energy(samples, raw_info["duration_ms"])
-    smoothed = {hand: _local_max(values, 4) for hand, values in energy.items()}
-    combined = [max(smoothed["R"][i], smoothed["L"][i]) for i in range(len(smoothed["R"]))]
+    energy = _build_energy(samples, raw_info["duration_ms"], raw_info["sensor_origin_ms"])
+    combined = [max(energy["R"][i], energy["L"][i]) for i in range(len(energy["R"]))]
     midi_duration_ms = float(midi_info["track_end_ms"])
     if offset_ms is None:
         search_max = max_offset_ms
@@ -478,8 +506,8 @@ def build_outputs(
     for event in events:
         density_row = density[event.event_id]
         aligned_ms = event.time_ms + selected_offset_ms
-        r_score = _score_at(smoothed["R"], aligned_ms)
-        l_score = _score_at(smoothed["L"], aligned_ms)
+        r_score = _score_at(energy["R"], aligned_ms)
+        l_score = _score_at(energy["L"], aligned_ms)
         total = r_score + l_score
         hand_candidate = "R" if r_score >= l_score else "L"
         hand_confidence = abs(r_score - l_score) / total if total > 0 else 0.0
@@ -498,6 +526,7 @@ def build_outputs(
             "hand_score_r": f"{r_score:.6f}",
             "hand_score_l": f"{l_score:.6f}",
             "hand_confidence": f"{hand_confidence:.6f}",
+            "alignment_signal": "raw_10ms_sensor_bin_max",
             "onset_group_id": density_row["onset_group_id"],
             "group_event_count": density_row["group_event_count"],
             "group_notes": density_row["group_notes"],
@@ -551,7 +580,10 @@ def build_outputs(
     samples_by_hand = {hand: [] for hand in ("R", "L")}
     for sample in samples:
         samples_by_hand[sample.hand].append(sample)
-    times_by_hand = {hand: [sample.song_time_ms for sample in hand_samples] for hand, hand_samples in samples_by_hand.items()}
+    times_by_hand = {
+        hand: [sample_timeline_ms(sample, raw_info["sensor_origin_ms"]) for sample in hand_samples]
+        for hand, hand_samples in samples_by_hand.items()
+    }
     sample_rows = []
     for row in event_rows:
         aligned = float(row["aligned_time_ms"])
@@ -567,7 +599,9 @@ def build_outputs(
                     "zone_name": row["zone_name"],
                     "midi_note": row["midi_note"],
                     "aligned_event_time_ms": row["aligned_time_ms"],
-                    "sample_relative_ms": _format_ms(sample.song_time_ms - aligned),
+                    "sample_relative_ms": _format_ms(
+                        sample_timeline_ms(sample, raw_info["sensor_origin_ms"]) - aligned
+                    ),
                     "event_hand_candidate": row["hand_candidate"],
                     "event_hand_confidence": row["hand_confidence"],
                     "onset_group_id": row["onset_group_id"],
@@ -578,6 +612,9 @@ def build_outputs(
                     "hand": sample.hand,
                     "sample_index": sample.sample_index,
                     "song_time_ms": _format_ms(sample.song_time_ms),
+                    "sensor_timeline_ms": _format_ms(
+                        sample_timeline_ms(sample, raw_info["sensor_origin_ms"])
+                    ),
                     "sensor_time_ms": sample.sensor_time_ms,
                     "packet_id": sample.packet_id,
                     "ax_g": sample.ax_g,
@@ -605,6 +642,10 @@ def build_outputs(
             "search_max_ms": max_offset_ms,
             "pre_window_ms": pre_ms,
             "post_window_ms": post_ms,
+            "time_base": TIME_BASE,
+            "time_base_description": "sensor_time_ms - first sensor_time_ms",
+            "score_signal": "max(abs(accel_magnitude_g - 1.0)) at the exact 10 ms sensor bin",
+            "uses_local_max_smoothing": False,
             "onset_group_tolerance_ms": ONSET_GROUP_TOLERANCE_MS,
             "window_overlap_span_ms": pre_ms + post_ms,
             "density_event_counts": dict(Counter(row["density_status"] for row in event_rows)),

@@ -123,7 +123,11 @@ def build_outputs(args: argparse.Namespace) -> dict[str, Any]:
     samples, raw_info = pipeline.read_raw_csv(args.raw_csv)
     midi_info = pipeline.parse_midi(args.midi, args.bpm)
     events = midi_info["events"]
-    energy = pipeline._build_energy(samples, raw_info["duration_ms"])
+    energy = pipeline._build_energy(
+        samples,
+        raw_info["duration_ms"],
+        raw_info["sensor_origin_ms"],
+    )
     groups = midi_groups(events, args.group_tolerance_ms)
 
     auto_rows: list[dict[str, Any]] = []

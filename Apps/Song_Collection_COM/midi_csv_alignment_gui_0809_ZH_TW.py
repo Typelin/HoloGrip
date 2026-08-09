@@ -28,6 +28,7 @@ FRONTEND_TEMPLATE = APP_DIR / "HoloGrip_MIDI_CSV對齊檢查_0807_ZH_TW.html"
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "Data" / "Derived" / "Song_Collection_COM"
 DEFAULT_BPM = 110.0
 DEFAULT_WINDOW_MS = 80
+DISPLAY_BIN_MS = 100
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -77,6 +78,18 @@ def build_frontend_data(
         {"t": index * pipeline.BIN_MS, "l": arrays["L"][index], "r": arrays["R"][index]}
         for index in range(len(arrays["L"]))
     ]
+    display_buckets: dict[int, list[float]] = {}
+    for point in energy:
+        start = (int(point["t"]) // DISPLAY_BIN_MS) * DISPLAY_BIN_MS
+        bucket = display_buckets.setdefault(start, [0.0, 0.0, 0.0])
+        bucket[0] += float(point["l"])
+        bucket[1] += float(point["r"])
+        bucket[2] += 1.0
+    display_energy = [
+        {"t": start, "l": round(values[0] / values[2], 4), "r": round(values[1] / values[2], 4)}
+        for start, values in sorted(display_buckets.items())
+        if values[2]
+    ]
     parsed = pipeline.parse_midi(midi_path, bpm)
     hints = read_event_hints(event_csv) if event_csv else {}
     events = []
@@ -95,11 +108,16 @@ def build_frontend_data(
     return {
         "events": events,
         "energy": energy,
+        "displayEnergy": display_energy,
         "duration": raw_info["duration_ms"],
         "bpm": bpm,
         "offset": offset_ms,
         "status": "pending_manual_alignment_review",
         "source": raw_csv.stem,
+        "midiSource": midi_path.name,
+        "csvSource": raw_csv.name,
+        "energyBinMs": pipeline.BIN_MS,
+        "displayEnergyBinMs": DISPLAY_BIN_MS,
     }
 
 
@@ -108,6 +126,7 @@ def render_frontend_html(
     data: dict[str, Any],
     auto_play: bool,
     window_radius_ms: int = DEFAULT_WINDOW_MS,
+    media_defaults: bool = False,
 ) -> str:
     marker = "const DATA="
     data_start = template_text.find(marker)
@@ -121,6 +140,23 @@ def render_frontend_html(
         raise ValueError("前端模板找不到 MAPPING 資料區")
     compact_data = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     rendered = template_text[:data_start] + compact_data + template_text[data_end:]
+    if not media_defaults:
+        rendered = rendered.replace(
+            'data-default-src="../../Data/External/FlowAudio_20260805/IMG_6060.MOV"',
+            'data-default-src=""',
+        )
+        rendered = rendered.replace(
+            'data-default-src="../../Data/External/FlowAudio_20260805/Drum Audio_110BPM (0805).wav"',
+            'data-default-src=""',
+        )
+        rendered = rendered.replace(
+            "預設會嘗試載入 IMG_6060.MOV；若被 file:// 安全政策擋下，請在資料設定選取檔案。",
+            "現場第一階段只驗證 MIDI＋CSV；需要影片時，請在資料設定手動選取檔案。",
+        )
+        rendered = rendered.replace(
+            "預設會嘗試載入 Drum Audio WAV；若被安全政策擋下，請在資料設定選取檔案。",
+            "現場第一階段不自動載入 WAV；需要聲音核對時，請在資料設定手動選取檔案。",
+        )
     auto_play_js = "true" if auto_play else "false"
     bridge = f"""
 <script>
@@ -138,6 +174,59 @@ def render_frontend_html(
   }}
   const status = document.querySelector('[data-loader-status]');
   if (status) status.textContent = 'GUI 已載入候選偏移 ' + offset.toLocaleString() + ' ms；請用圖表確認。';
+  const displayBin = Number(DATA.displayEnergyBinMs) || 100;
+  const rawBin = Number(DATA.energyBinMs) || 10;
+  const method = document.querySelector('[data-window-method]');
+  if (method) method.textContent += ' 局部折線與窗口命中保留約 ' + rawBin + ' ms 原始資料；約 ' + displayBin + ' ms 僅作整首歌概覽。';
+  const sampleRow = document.querySelector('.sample-window-row');
+  if (sampleRow && !document.querySelector('#plot-bin-ms')) {{
+    const field = document.createElement('label');
+    field.className = 'sample-window-field';
+    field.textContent = '折線預覽解析度（只影響畫面）';
+    const select = document.createElement('select');
+    select.id = 'plot-bin-ms';
+    select.setAttribute('aria-label', '折線預覽解析度');
+    [10, 20, 50, 100].forEach(bin => {{
+      const option = document.createElement('option');
+      option.value = String(bin);
+      option.textContent = bin + ' ms';
+      select.appendChild(option);
+    }});
+    select.value = '10';
+    select.addEventListener('change', () => {{ if (typeof render === 'function') render(); }});
+    field.appendChild(select);
+    sampleRow.appendChild(field);
+  }}
+  window.__holoPlotBinMs = () => Math.max(10, Number(document.querySelector('#plot-bin-ms')?.value) || 10);
+  window.__holoPlotEnergy = data => {{
+    const binMs = window.__holoPlotBinMs();
+    const raw = Array.isArray(data?.energy) ? data.energy : [];
+    if (binMs === 10) return raw;
+    if (binMs === 100 && Array.isArray(data?.displayEnergy)) return data.displayEnergy;
+    const buckets = new Map();
+    for (const point of raw) {{
+      const start = Math.floor((Number(point.t) || 0) / binMs) * binMs;
+      const slot = buckets.get(start) || {{t: start, l: 0, r: 0, n: 0}};
+      slot.l += Number(point.l) || 0;
+      slot.r += Number(point.r) || 0;
+      slot.n += 1;
+      buckets.set(start, slot);
+    }}
+    return [...buckets.values()].map(slot => ({{
+      t: slot.t,
+      l: +(slot.l / Math.max(1, slot.n)).toFixed(4),
+      r: +(slot.r / Math.max(1, slot.n)).toFixed(4),
+    }}));
+  }};
+  const sourceNodes = document.querySelectorAll('[data-triad-video-file] ~ [data-default-path], [data-triad-audio-file] ~ [data-default-path], [data-triad-report-file] ~ [data-default-path]');
+  sourceNodes.forEach(node => {{ node.textContent = '現場第一階段不自動載入；需要時請手動選取檔案。'; }});
+  const sourceText = document.querySelector('[data-triad-video-file]')?.closest('.triad-file')?.parentElement?.querySelector('.triad-file:last-child');
+  if (sourceText && DATA.midiSource && DATA.csvSource) sourceText.innerHTML = '<span class="triad-path">MIDI：' + DATA.midiSource + '</span><span class="triad-path">CSV：' + DATA.csvSource + '</span>';
+  if (!{str(media_defaults).lower()}) {{
+    const triadStatus = document.querySelector('[data-triad-status]');
+    if (triadStatus) triadStatus.textContent = '目前為 MIDI＋CSV 第一階段；影片／WAV 尚未載入';
+  }}
+  if (typeof render === 'function') render();
   if ({auto_play_js}) window.setTimeout(() => document.querySelector('[data-play]')?.click(), 900);
 }})();
 </script>
@@ -349,7 +438,7 @@ class AlignmentGui:
                     int(report["alignment"]["offset_ms"]),
                     output_dir / "midi_events.csv",
                 )
-                frontend_text = render_frontend_html(FRONTEND_TEMPLATE.read_text(encoding="utf-8"), data, auto_play, window)
+                frontend_text = render_frontend_html(FRONTEND_TEMPLATE.read_text(encoding="utf-8"), data, auto_play, window, media_defaults=False)
                 frontend_path = output_dir / "HoloGrip_MIDI_CSV對齊現場檢查_0809_ZH_TW.html"
                 frontend_path.write_text(frontend_text, encoding="utf-8")
                 manifest = {
@@ -439,9 +528,15 @@ def self_test() -> None:
         raise AssertionError(f"unexpected event count: {len(data['events'])}")
     if not data["energy"] or data["duration"] <= 0:
         raise AssertionError("frontend energy data is empty")
+    if len(data["displayEnergy"]) >= len(data["energy"]):
+        raise AssertionError("display energy was not downsampled")
     rendered = render_frontend_html(FRONTEND_TEMPLATE.read_text(encoding="utf-8"), data, True)
     if "const DATA=" not in rendered or "16000" not in rendered:
         raise AssertionError("frontend session bridge was not rendered")
+    if 'data-default-src="../../Data/External/' in rendered:
+        raise AssertionError("field frontend still has stale media defaults")
+    if "displayEnergy" not in rendered:
+        raise AssertionError("display energy was not embedded")
     print("midi_csv_alignment_gui self-test: OK")
 
 

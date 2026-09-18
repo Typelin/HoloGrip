@@ -128,12 +128,24 @@ def parse_sensor_line(
 class HitDetector:
     """The existing local-peak, motion-filter and dynamic debounce detector."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        mag_min: float = 1.7,
+        debounce_heavy_s: float = 0.15,
+        debounce_light_s: float = 0.25,
+        reject_backoff_s: float = 0.10,
+        motion_bypass_mag: float = 99.0,
+    ) -> None:
         self.yaw_offset = 0.0
         self.pitch_offset = 0.0
         self.buffer: deque[tuple[float, ...]] = deque(maxlen=80)
         self.last_hit_monotonic = 0.0
-        self.debounce_seconds = 0.15
+        self.mag_min = mag_min
+        self.debounce_heavy_s = debounce_heavy_s
+        self.debounce_light_s = debounce_light_s
+        self.reject_backoff_s = reject_backoff_s
+        self.motion_bypass_mag = motion_bypass_mag
+        self.debounce_seconds = debounce_heavy_s
         self.gx, self.gy, self.gz = 0.0, 0.0, 1.0
 
     def calibrate(self, packet: SensorPacket) -> None:
@@ -144,7 +156,7 @@ class HitDetector:
         """Start a fresh song timeline without changing the calibration offsets."""
         self.buffer.clear()
         self.last_hit_monotonic = 0.0
-        self.debounce_seconds = 0.15
+        self.debounce_seconds = self.debounce_heavy_s
 
     def calibrated(self, packet: SensorPacket) -> tuple[float, float]:
         cal_yaw = (packet.yaw - self.yaw_offset + 180.0) % 360.0 - 180.0
@@ -191,7 +203,7 @@ class HitDetector:
         target = self.buffer[-4]
         peak_magnitude = self._magnitude(target)
         now = packet.received_monotonic
-        if peak_magnitude <= 1.7 or now - self.last_hit_monotonic <= self.debounce_seconds:
+        if peak_magnitude <= self.mag_min or now - self.last_hit_monotonic <= self.debounce_seconds:
             return None
 
         nearby = [self._magnitude(self.buffer[index]) for index in range(-6, 0)]
@@ -228,12 +240,12 @@ class HitDetector:
             not is_heavy and ((v_score_long > -1.5 and pitch_diff < -0.5) or pitch_diff < -4.0)
         )
         is_horizontal = vertical_ratio < 0.32 or ((v_score >= -8.0) and vertical_ratio < 0.45)
-        if is_raise or is_horizontal:
+        if (is_raise or is_horizontal) and peak_magnitude < self.motion_bypass_mag:
             # Preserve the old detector's short retry delay after a rejected movement.
-            self.last_hit_monotonic = max(0.0, now - 0.10)
+            self.last_hit_monotonic = max(0.0, now - self.reject_backoff_s)
             return None
 
-        self.debounce_seconds = 0.15 if is_heavy else 0.25
+        self.debounce_seconds = self.debounce_heavy_s if is_heavy else self.debounce_light_s
         self.last_hit_monotonic = now
 
         # Keep the historical feature sample (10 ms before the peak) so the

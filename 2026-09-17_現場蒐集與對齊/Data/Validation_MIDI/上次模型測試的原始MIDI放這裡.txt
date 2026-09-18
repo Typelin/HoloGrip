@@ -1,0 +1,2 @@
+只放「測上次 frozen model」那一次演奏的原始 MIDI。
+不要放本次新資料收集的 MIDI。

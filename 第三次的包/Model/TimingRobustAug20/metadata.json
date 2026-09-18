@@ -1,0 +1,21 @@
+{
+  "source_raw": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collection_COM\\S20260812_P01_song02_raw_100hz_20260812_112101.csv",
+  "source_gt": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Derived\\Song_Collection_COM\\S20260812_P01_song02_T1127_cleaned\\Song2_ground_truth_labels_final_0821.csv",
+  "offsets_ms": [
+    -20,
+    0,
+    20
+  ],
+  "hands": {
+    "L": {
+      "events": 141,
+      "train_windows": 423,
+      "model_path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\HoloGrip_SpatialLab_0918\\vnext_timing_robust_aug20\\hologrip_timing_robust_L.joblib"
+    },
+    "R": {
+      "events": 166,
+      "train_windows": 498,
+      "model_path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\HoloGrip_SpatialLab_0918\\vnext_timing_robust_aug20\\hologrip_timing_robust_R.joblib"
+    }
+  }
+}

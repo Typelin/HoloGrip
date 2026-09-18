@@ -1,0 +1,8 @@
+dur 0.5 method component CROSS acc/bal/f1 0.9312 0.8253 0.7778 CV 0.9577 0.948 0.9474
+dur 0.5 method rotmean CROSS acc/bal/f1 0.9312 0.8253 0.7778 CV 0.9577 0.948 0.9474
+dur 1.0 method component CROSS acc/bal/f1 0.9271 0.8078 0.7568 CV 0.9609 0.9522 0.9512
+dur 1.0 method rotmean CROSS acc/bal/f1 0.9271 0.8078 0.7568 CV 0.9609 0.9522 0.9512
+dur 2.0 method component CROSS acc/bal/f1 0.919 0.7995 0.7447 CV 0.9609 0.9522 0.9512
+dur 2.0 method rotmean CROSS acc/bal/f1 0.8704 0.6663 0.6208 CV 0.9609 0.9522 0.9512
+dur 3.0 method component CROSS acc/bal/f1 0.6599 0.6082 0.437 CV 0.9642 0.9555 0.9563
+dur 3.0 method rotmean CROSS acc/bal/f1 0.6478 0.6051 0.4461 CV 0.9609 0.9522 0.9524

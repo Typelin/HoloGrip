@@ -1,0 +1,38 @@
+{
+  "source": "8/12 Song2 only",
+  "labels": {
+    "0": "LEFT",
+    "1": "RIGHT"
+  },
+  "feature_indices": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "feature_kind": "mean_r6",
+  "drums": {
+    "LEFT": [
+      "Crash",
+      "Hi-Hat"
+    ],
+    "RIGHT": [
+      "Ride",
+      "落地 Tom"
+    ]
+  },
+  "hands": {
+    "L": {
+      "n": 82,
+      "left": 44,
+      "right": 38
+    },
+    "R": {
+      "n": 114,
+      "left": 79,
+      "right": 35
+    }
+  }
+}

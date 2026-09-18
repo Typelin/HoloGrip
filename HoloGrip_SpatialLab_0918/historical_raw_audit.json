@@ -1,0 +1,632 @@
+{
+  "0802_song1": {
+    "rows": 1729,
+    "header": [
+      "session_id",
+      "sample_index",
+      "hand",
+      "song_time_ms",
+      "received_time_ms",
+      "sensor_time_ms",
+      "packet_id",
+      "ax_g",
+      "ay_g",
+      "az_g",
+      "accel_magnitude_g",
+      "yaw_deg",
+      "pitch_deg",
+      "roll_deg",
+      "cal_yaw_deg",
+      "cal_pitch_deg"
+    ],
+    "L": {
+      "n": 865,
+      "duration_s": 8.656,
+      "row_hz": 99.93068391866912,
+      "yaw_p01_p50_p99": [
+        7.6564000000000005,
+        29.59,
+        56.7616
+      ],
+      "pitch_p01_p50_p99": [
+        -49.7248,
+        -6.94,
+        29.92120000000001
+      ],
+      "roll_p01_p50_p99": [
+        -104.25840000000001,
+        -16.83,
+        -16.78
+      ],
+      "mag_p01_p50_p99": [
+        0.53084996,
+        0.999921,
+        4.737205
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.0,
+        2.887499999999982,
+        4.727400000000003
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.0,
+        7.216999999999998,
+        9.7333
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 76.18497109826589,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 22,
+      "stationary_yaw_p05_p50_p95": [
+        29.55004000000001,
+        29.5672,
+        45.099010000000014
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -27.63435,
+        -6.935700000000001,
+        -6.93004
+      ]
+    },
+    "R": {
+      "n": 864,
+      "duration_s": 8.64,
+      "row_hz": 100.0,
+      "yaw_p01_p50_p99": [
+        -76.76480000000001,
+        -66.655,
+        -22.784999999999997
+      ],
+      "pitch_p01_p50_p99": [
+        -37.8169,
+        -5.535,
+        18.2755
+      ],
+      "roll_p01_p50_p99": [
+        -2.5,
+        1.5,
+        78.40820000000001
+      ],
+      "mag_p01_p50_p99": [
+        0.504163,
+        1.0078445,
+        5.266362
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.030000000000001137,
+        3.246,
+        6.1227999999999945
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.02999999999999936,
+        5.484999999999998,
+        7.635199999999998
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 75.23148148148148,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 22,
+      "stationary_yaw_p05_p50_p95": [
+        -69.40777,
+        -67.9083,
+        -59.84597000000001
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -13.31347,
+        -5.5828,
+        -1.5992399999999996
+      ]
+    },
+    "path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collections\\S20260802_P01_song01_raw_100hz_20260802_131714.csv"
+  },
+  "0805_song1": {
+    "rows": 74592,
+    "header": [
+      "session_id",
+      "sample_index",
+      "hand",
+      "song_time_ms",
+      "received_time_ms",
+      "sensor_time_ms",
+      "packet_id",
+      "ax_g",
+      "ay_g",
+      "az_g",
+      "accel_magnitude_g",
+      "yaw_deg",
+      "pitch_deg",
+      "roll_deg",
+      "cal_yaw_deg",
+      "cal_pitch_deg"
+    ],
+    "L": {
+      "n": 37296,
+      "duration_s": 373.125,
+      "row_hz": 99.95577889447236,
+      "yaw_p01_p50_p99": [
+        -82.53450000000001,
+        -1.94,
+        34.8
+      ],
+      "pitch_p01_p50_p99": [
+        -26.47,
+        12.51,
+        35.05050000000003
+      ],
+      "roll_p01_p50_p99": [
+        -75.55199999999999,
+        37.06,
+        60.531000000000056
+      ],
+      "mag_p01_p50_p99": [
+        0.22009684999999998,
+        1.003133,
+        7.038801
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.4099999999999966,
+        3.389999999999995,
+        6.75
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.3100000000000023,
+        2.8599999999999994,
+        5.340599999999976
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 29.563492063492063,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 94,
+      "stationary_yaw_p05_p50_p95": [
+        -44.863059999999955,
+        20.749200000000002,
+        39.19162999999997
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -26.753809999999998,
+        11.6274,
+        14.97857
+      ]
+    },
+    "R": {
+      "n": 37296,
+      "duration_s": 373.125,
+      "row_hz": 99.95577889447236,
+      "yaw_p01_p50_p99": [
+        -96.34,
+        15.62,
+        97.16
+      ],
+      "pitch_p01_p50_p99": [
+        -13.31,
+        19.25,
+        39.66100000000006
+      ],
+      "roll_p01_p50_p99": [
+        -49.06,
+        5.94,
+        77.13100000000006
+      ],
+      "mag_p01_p50_p99": [
+        0.24535384999999998,
+        0.9262405,
+        7.600901200000034
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        1.3600000000000136,
+        6.650000000000006,
+        10.160599999999972
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.5,
+        2.280000000000001,
+        3.600599999999978
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 20.026276276276274,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 48,
+      "stationary_yaw_p05_p50_p95": [
+        -11.408460000000007,
+        25.8202,
+        39.63288
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        7.430240000000001,
+        30.301499999999997,
+        39.00065
+      ]
+    },
+    "path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collection_COM\\S20260805_P01_song01_raw_100hz_20260805_161628.csv"
+  },
+  "0812_song1_a": {
+    "rows": 561,
+    "header": [
+      "session_id",
+      "sample_index",
+      "hand",
+      "song_time_ms",
+      "received_time_ms",
+      "sensor_time_ms",
+      "packet_id",
+      "ax_g",
+      "ay_g",
+      "az_g",
+      "accel_magnitude_g",
+      "yaw_deg",
+      "pitch_deg",
+      "roll_deg",
+      "cal_yaw_deg",
+      "cal_pitch_deg"
+    ],
+    "R": {
+      "n": 281,
+      "duration_s": 2.797,
+      "row_hz": 100.46478369681802,
+      "yaw_p01_p50_p99": [
+        5.038,
+        5.92,
+        10.011999999999999
+      ],
+      "pitch_p01_p50_p99": [
+        -3.932,
+        -3.26,
+        -0.42400000000000315
+      ],
+      "roll_p01_p50_p99": [
+        -64.824,
+        -62.97,
+        -61.148
+      ],
+      "mag_p01_p50_p99": [
+        0.967693,
+        1.003325,
+        1.295639
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.030000000000001137,
+        0.11000000000001364,
+        0.24420000000000486
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.010000000000000231,
+        0.08050000000000017,
+        0.4099999999999999
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 95.37366548042705,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 9,
+      "stationary_yaw_p05_p50_p95": [
+        5.238879999999995,
+        5.7479999999999905,
+        8.225079999999997
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -3.5890400000000002,
+        -3.1896,
+        -3.0352799999999998
+      ]
+    },
+    "L": {
+      "n": 280,
+      "duration_s": 2.797,
+      "row_hz": 100.10725777618877,
+      "yaw_p01_p50_p99": [
+        -9.66,
+        -7.94,
+        -5.11
+      ],
+      "pitch_p01_p50_p99": [
+        -8.39,
+        -7.82,
+        -0.8060000000000082
+      ],
+      "roll_p01_p50_p99": [
+        35.4758,
+        38.14,
+        38.9721
+      ],
+      "mag_p01_p50_p99": [
+        0.977434,
+        1.004156,
+        1.238392
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.030000000000001137,
+        0.09999999999999432,
+        0.30099999999999305
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.019999999999999574,
+        0.2749999999999979,
+        0.6243999999999991
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 97.5,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 10,
+      "stationary_yaw_p05_p50_p95": [
+        -8.64067,
+        -8.046300000000002,
+        -5.533100000000004
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -8.16722,
+        -7.7241,
+        -6.832100000000001
+      ]
+    },
+    "path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collection_COM\\S20260812_P01_song01_raw_100hz_20260812_111808.csv"
+  },
+  "0812_song1_b": {
+    "rows": 28086,
+    "header": [
+      "session_id",
+      "sample_index",
+      "hand",
+      "song_time_ms",
+      "received_time_ms",
+      "sensor_time_ms",
+      "packet_id",
+      "ax_g",
+      "ay_g",
+      "az_g",
+      "accel_magnitude_g",
+      "yaw_deg",
+      "pitch_deg",
+      "roll_deg",
+      "cal_yaw_deg",
+      "cal_pitch_deg"
+    ],
+    "L": {
+      "n": 14043,
+      "duration_s": 140.485,
+      "row_hz": 99.96084991280208,
+      "yaw_p01_p50_p99": [
+        -120.2974,
+        -18.75,
+        147.8674
+      ],
+      "pitch_p01_p50_p99": [
+        -18.16,
+        19.54,
+        47.92
+      ],
+      "roll_p01_p50_p99": [
+        -122.85,
+        36.01,
+        93.88179999999998
+      ],
+      "mag_p01_p50_p99": [
+        0.237264,
+        1.011681,
+        8.80601336
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.7199999999999989,
+        5.488999999999987,
+        8.923600000000008
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.5300000000000011,
+        2.99,
+        4.885900000000001
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 30.022075055187635,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 66,
+      "stationary_yaw_p05_p50_p95": [
+        -117.6507,
+        12.928200000000004,
+        22.147949999999994
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -18.40885,
+        7.9675,
+        23.48545
+      ]
+    },
+    "R": {
+      "n": 14043,
+      "duration_s": 140.485,
+      "row_hz": 99.96084991280208,
+      "yaw_p01_p50_p99": [
+        -78.0574,
+        22.55,
+        161.8812
+      ],
+      "pitch_p01_p50_p99": [
+        -21.1144,
+        17.31,
+        45.023199999999996
+      ],
+      "roll_p01_p50_p99": [
+        -85.2816,
+        -22.3,
+        97.15879999999997
+      ],
+      "mag_p01_p50_p99": [
+        0.22563584,
+        1.016757,
+        9.852981439999997
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        1.5300000000000011,
+        8.199999999999989,
+        13.360000000000014
+      ],
+      "raw_wrap_crossings": 8,
+      "pitch_step_abs_p50_p95_p99": [
+        0.75,
+        3.7799999999999994,
+        5.505900000000002
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 23.207291889197464,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 27,
+      "stationary_yaw_p05_p50_p95": [
+        -17.06718,
+        11.190200000000004,
+        25.03916
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -0.33766000000000007,
+        10.4206,
+        28.350519999999992
+      ]
+    },
+    "path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collection_COM\\S20260812_P01_song01_raw_100hz_20260812_111817.csv"
+  },
+  "0812_song2": {
+    "rows": 16039,
+    "header": [
+      "session_id",
+      "sample_index",
+      "hand",
+      "song_time_ms",
+      "received_time_ms",
+      "sensor_time_ms",
+      "packet_id",
+      "ax_g",
+      "ay_g",
+      "az_g",
+      "accel_magnitude_g",
+      "yaw_deg",
+      "pitch_deg",
+      "roll_deg",
+      "cal_yaw_deg",
+      "cal_pitch_deg"
+    ],
+    "R": {
+      "n": 8020,
+      "duration_s": 80.219,
+      "row_hz": 99.97631483813062,
+      "yaw_p01_p50_p99": [
+        -92.99860000000001,
+        20.265,
+        144.98109999999983
+      ],
+      "pitch_p01_p50_p99": [
+        -8.4472,
+        27.27,
+        50.960499999999975
+      ],
+      "roll_p01_p50_p99": [
+        -75.8815,
+        -13.42,
+        77.6762
+      ],
+      "mag_p01_p50_p99": [
+        0.240911,
+        1.023864,
+        10.158102
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        1.4499999999999886,
+        8.681999999999993,
+        13.838200000000002
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.5899999999999999,
+        3.41,
+        5.362799999999987
+      ],
+      "pitch_abs_gt70_pct": 0.0,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 24.463840399002493,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 23,
+      "stationary_yaw_p05_p50_p95": [
+        -5.4590599999999965,
+        -2.366199999999992,
+        13.07091999999999
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        0.9058200000000001,
+        4.2352,
+        37.6205
+      ]
+    },
+    "L": {
+      "n": 8019,
+      "duration_s": 80.219,
+      "row_hz": 99.96384896346252,
+      "yaw_p01_p50_p99": [
+        -128.7946,
+        -15.0,
+        32.737999999999886
+      ],
+      "pitch_p01_p50_p99": [
+        -5.4346000000000005,
+        36.44,
+        64.60739999999998
+      ],
+      "roll_p01_p50_p99": [
+        -91.0438,
+        24.55,
+        96.72979999999988
+      ],
+      "mag_p01_p50_p99": [
+        0.248294,
+        1.021263,
+        8.719476
+      ],
+      "yaw_step_abs_p50_p95_p99": [
+        0.6800000000000068,
+        4.801500000000006,
+        8.426600000000004
+      ],
+      "raw_wrap_crossings": 0,
+      "pitch_step_abs_p50_p95_p99": [
+        0.490000000000002,
+        3.4299999999999997,
+        5.328099999999992
+      ],
+      "pitch_abs_gt70_pct": 0.18705574261129815,
+      "pitch_abs_gt80_pct": 0.0,
+      "near_1g_pct": 28.208005985783764,
+      "packet_gap_gt1": 0,
+      "packet_backwards": 0,
+      "stationary_windows": 27,
+      "stationary_yaw_p05_p50_p95": [
+        -2.9784400000000004,
+        11.777600000000007,
+        28.8429
+      ],
+      "stationary_pitch_p05_p50_p95": [
+        -3.2915200000000002,
+        2.0028,
+        31.731820000000003
+      ]
+    },
+    "path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collection_COM\\S20260812_P01_song02_raw_100hz_20260812_112101.csv"
+  }
+}

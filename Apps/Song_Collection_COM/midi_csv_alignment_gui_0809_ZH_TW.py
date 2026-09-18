@@ -76,7 +76,6 @@ def build_frontend_data(
     arrays = pipeline._build_energy(
         samples,
         raw_info["duration_ms"],
-        raw_info["sensor_origin_ms"],
     )
     energy = [
         {"t": index * pipeline.BIN_MS, "l": arrays["L"][index], "r": arrays["R"][index]}
@@ -125,6 +124,8 @@ def build_frontend_data(
         "timeBase": raw_info["time_base"],
         "timeBaseDescription": raw_info["time_base_description"],
         "sensorOriginMs": raw_info["sensor_origin_ms"],
+        "sensorOriginsByHandMs": raw_info["sensor_origins_by_hand_ms"],
+        "sensorOriginGapMs": raw_info["sensor_origin_gap_ms"],
         "songDurationMs": raw_info["song_duration_ms"],
     }
 
@@ -192,7 +193,7 @@ def render_frontend_html(
   const displayBin = Number(DATA.displayEnergyBinMs) || 100;
   const rawBin = Number(DATA.energyBinMs) || 10;
   const method = document.querySelector('[data-window-method]');
-   if (method) method.textContent += ' 10 ms＝每格原始資料的左右手最大 activity；20/50/100 ms＝10 ms 格的算術平均，只影響畫面，不參與對齊。對齊使用感測器時間軸的 10 ms 基底值。';
+   if (method) method.textContent += ' 10 ms＝以共同 song_time_ms 建立的左右手原始最大 activity；20/50/100 ms＝10 ms 格的算術平均，只影響畫面，不參與對齊。';
   const sampleRow = document.querySelector('.sample-window-row');
   if (sampleRow && !document.querySelector('#plot-bin-ms')) {{
     const field = document.createElement('label');

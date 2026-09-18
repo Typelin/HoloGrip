@@ -1,0 +1,102 @@
+{
+  "version": "vNext-relative-rotation-0918",
+  "trained_from": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Raw\\Song_Collection_COM\\S20260812_P01_song02_raw_100hz_20260812_112101.csv",
+  "ground_truth": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\Data\\Derived\\Song_Collection_COM\\S20260812_P01_song02_T1127_cleaned\\Song2_ground_truth_labels_final_0821.csv",
+  "feature_names": [
+    "max_mag",
+    "mean_mag",
+    "std_mag",
+    "energy",
+    "jerk_max",
+    "max_local_ax",
+    "max_local_ay",
+    "max_local_az",
+    "mean_local_ax",
+    "mean_local_ay",
+    "mean_local_az",
+    "rot_angle_std",
+    "rot_angle_range",
+    "center_r6_0",
+    "center_r6_1",
+    "center_r6_2",
+    "center_r6_3",
+    "center_r6_4",
+    "center_r6_5",
+    "mean_r6_0",
+    "mean_r6_1",
+    "mean_r6_2",
+    "mean_r6_3",
+    "mean_r6_4",
+    "mean_r6_5",
+    "std_r6_0",
+    "std_r6_1",
+    "std_r6_2",
+    "std_r6_3",
+    "std_r6_4",
+    "std_r6_5"
+  ],
+  "feature_count": 31,
+  "zone_names": [
+    "小鼓",
+    "高音 Tom",
+    "中音 Tom",
+    "落地 Tom",
+    "Hi-Hat",
+    "Crash",
+    "Ride"
+  ],
+  "training_zero_euler": {
+    "L": [
+      -172.34169997635385,
+      9.79,
+      22.478599968908227
+    ],
+    "R": [
+      1.1062998966060482,
+      30.47,
+      -42.662300027112984
+    ]
+  },
+  "per_hand_cv": {
+    "L": {
+      "n": 141,
+      "accuracy": 0.9361702127659575,
+      "balanced_accuracy": 0.9266269841269841,
+      "macro_f1": 0.9257789631877562,
+      "counts": {
+        "小鼓": 25,
+        "高音 Tom": 18,
+        "中音 Tom": 16,
+        "落地 Tom": 18,
+        "Hi-Hat": 24,
+        "Crash": 20,
+        "Ride": 20
+      }
+    },
+    "R": {
+      "n": 166,
+      "accuracy": 0.9819277108433735,
+      "balanced_accuracy": 0.9751984126984128,
+      "macro_f1": 0.9758102080290529,
+      "counts": {
+        "小鼓": 18,
+        "高音 Tom": 16,
+        "中音 Tom": 18,
+        "落地 Tom": 14,
+        "Hi-Hat": 56,
+        "Crash": 23,
+        "Ride": 21
+      }
+    }
+  },
+  "combined_cv": {
+    "n": 307,
+    "accuracy": 0.9609120521172638,
+    "balanced_accuracy": 0.9522180965409419,
+    "macro_f1": 0.9512489632921527
+  },
+  "model_sha256": {
+    "L": "b18d05e1982ecb777bd8a48a01f233d116e8d0178f0ab77ec5d65518e37e5539",
+    "R": "df1812c6414867a59c9a15ef8785f9f6938e7e4897339514fa859b29de7eb49c"
+  }
+}

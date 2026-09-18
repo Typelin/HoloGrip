@@ -27,3 +27,18 @@ Archive/Generated_Cache_*/
 *.mp4
 *.avi
 *.mov
+
+# Experiment session data (regenerable, large raw CSV)
+*_sessions/
+第三次的包/Data/
+HoloGrip_SpatialLab_0918/video_frames/
+HoloGrip_SpatialLab_0918/video_references/
+outputs/
+
+# Agent / build scratch
+.tmp/
+.codex-build/
+.codex-finalizer/
+
+# Build artifacts
+*.zip

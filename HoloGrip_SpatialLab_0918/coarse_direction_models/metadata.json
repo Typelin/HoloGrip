@@ -1,0 +1,45 @@
+{
+  "coarse_names": [
+    "LEFT",
+    "CENTER",
+    "RIGHT"
+  ],
+  "stage_to_coarse": {
+    "2": 0,
+    "4": 1,
+    "6": 2,
+    "8": 0,
+    "10": 2,
+    "12": 2
+  },
+  "hands": {
+    "L": {
+      "n": 94,
+      "counts": {
+        "LEFT": 30,
+        "CENTER": 4,
+        "RIGHT": 60
+      },
+      "chronological_acc": 1.0,
+      "chronological_bal": 1.0,
+      "chronological_f1": 1.0,
+      "opposite_side_errors": 0,
+      "opposite_side_denominator": 36,
+      "model_path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\HoloGrip_SpatialLab_0918\\coarse_direction_models\\coarse_L.joblib"
+    },
+    "R": {
+      "n": 97,
+      "counts": {
+        "LEFT": 28,
+        "CENTER": 8,
+        "RIGHT": 61
+      },
+      "chronological_acc": 1.0,
+      "chronological_bal": 1.0,
+      "chronological_f1": 1.0,
+      "opposite_side_errors": 0,
+      "opposite_side_denominator": 36,
+      "model_path": "C:\\Users\\Typelin_Station\\Desktop\\HoloGrip\\HoloGrip_SpatialLab_0918\\coarse_direction_models\\coarse_R.joblib"
+    }
+  }
+}

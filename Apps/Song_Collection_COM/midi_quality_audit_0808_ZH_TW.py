@@ -48,7 +48,7 @@ def energy_rows(samples: list[pipeline.RawSample], duration_ms: float) -> list[d
     present_buckets = {
         int(
             math.floor(
-                max(0.0, pipeline.sample_timeline_ms(sample, sensor_origin_ms))
+            max(0.0, pipeline.sample_timeline_ms(sample))
                 / pipeline.BIN_MS
                 + 0.5
             )

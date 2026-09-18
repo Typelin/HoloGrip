@@ -1,0 +1,2 @@
+正式驗證場次會由 01_FORMAL_VALIDATE_FROZEN_MODEL.bat 自動建立在此資料夾。
+正式分數使用場次內 raw_100hz.csv 離線重跑 Frozen model，全部 prediction 固定後才讀 MIDI 對答案。

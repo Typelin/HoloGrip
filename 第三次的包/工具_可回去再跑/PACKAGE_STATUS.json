@@ -1,0 +1,26 @@
+{
+  "package_name": "第三次的包",
+  "generated_at": "2026-09-18T21:48:57.4397356+08:00",
+  "frozen_model": "8/12 GT + [-20,0,+20]ms temporal augmentation",
+  "model_architecture": "per-hand 31D -> MLP(64,32) -> 7",
+  "evidence": {
+    "cross_date_0812_to_0805_accuracy": 0.951417004048583,
+    "opposite_side_errors": "0/204"
+  },
+  "detector": "160ms pending peak resolver; weak <=3.5g can be replaced by later >=1.4x and +0.5g",
+  "firmware_candidate": "I2C read failure never emits normal D packet; retry + I2C reinit",
+  "firmware_compile": "PASS both XIAO ESP32-C6",
+  "python_smoke": "PASS root BATs + pipeline self-test + key py_compile",
+  "gui_startup": "PASS without XIAO; actual window Responding=True",
+  "current_hardware_verification": "NOT RUN: at final package check Windows showed no VID_303A&PID_1001 devices",
+  "sha256": {
+    "V_L.joblib": "E9FFF1E127316512CCEC72797227E094EC324E543EF0FB8E9C1AC4453B0E615A",
+    "H_R.joblib": "B4962EBAF0E1BD57039198DEF48146F458DAA727736E7595586C2EB079E445F1",
+    "hologrip_timing_robust_L.joblib": "2906C4F2F96BFD7C6D1A74822FF8E14A773434AA7A2B074FD3FB9F40914AD672",
+    "Gloves_Right_R.ino": "FB93759C5EB82775473A2407AA698BD647A39D70735F276F95F67BBF0D128C43",
+    "Gloves_Left_L.ino": "210EA44CE4602BA3DEA2E8D374A72B74D97DFC98D14B73E13A75B9AB797520F0",
+    "hologrip_timing_robust_R.joblib": "5ECC2A2BD68D198B617AD3A63EF23F4AB5BD007223DF72C0DB5618EDCB34BFFF",
+    "H_L.joblib": "21B1A62350E14205ABFF19E7E0E0E56C686DDAE4B0C9006C782F716470844F40",
+    "V_R.joblib": "CA18B8F82AB5BE8F9F16D49B3C40305ED151175314B890A940492B72877826BA"
+  }
+}

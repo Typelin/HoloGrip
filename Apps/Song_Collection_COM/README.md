@@ -2,7 +2,14 @@
 
 This is the dedicated wired collection entry for the music-session workflow.
 
-Launch `run_song_collection_com.bat`.
+Launch `run_song_collection_com.bat`, or open the project-root
+`HoloGrip資料蒐集.bat`.  A fresh launch defaults to `raw_100hz` and does not
+load the seven-drum model.
+
+Live model validation is a separate entry:
+`HoloGrip即時模型驗證.bat` -> `run_live_hit_and_zone_0821_ZH_TW.py`.
+Do not open collection and validation at the same time because both processes
+need exclusive access to the two COM ports.
 
 New raw CSV files are written to `Data/Raw/Song_Collection_COM/`.
 

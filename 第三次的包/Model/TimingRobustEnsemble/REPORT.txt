@@ -1,0 +1,26 @@
+==============================================================================
+  HoloGrip — consolidated honest evaluation
+==============================================================================
+  8/12 events: 307   removed as suspect: 11
+
+------------------------------------------------------------------------------
+  A) WITHIN-SESSION  (8/12, per-hand, 5-fold time-block GroupKFold)
+------------------------------------------------------------------------------
+  all labels   n=307  acc= 94.79%  balanced= 93.77%  macroF1= 93.70%
+  cleaned      n=296  acc= 95.27%  balanced= 94.37%  macroF1= 94.31%
+      小鼓         n= 38  recall=  97.4%
+      高音 Tom     n= 34  recall=  85.3%
+      中音 Tom     n= 34  recall=  85.3%
+      落地 Tom     n= 32  recall= 100.0%
+      Hi-Hat     n= 77  recall= 100.0%
+      Crash      n= 41  recall=  95.1%
+      Ride       n= 40  recall=  97.5%
+
+------------------------------------------------------------------------------
+  B) CROSS-SESSION  (train 8/12 -> test 8/5, same performer P01)
+------------------------------------------------------------------------------
+  all labels   n=247  acc= 87.85%  balanced= 63.46%  macroF1= 60.99%  opposite-side=0/204
+  cleaned      n=247  acc= 87.85%  balanced= 63.46%  macroF1= 60.99%  opposite-side=0/204
+
+  note: the 8/5 test set is auto-filtered and heavily imbalanced
+        (Hi-Hat 142/247 = 57.5% of events, Crash only 8 events)

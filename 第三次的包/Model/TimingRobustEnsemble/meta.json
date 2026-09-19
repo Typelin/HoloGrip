@@ -1,0 +1,35 @@
+{
+  "description": "HoloGrip per-hand ensemble, cleaned labels",
+  "feature": "vnext_core 31-dim relative-rotation",
+  "augmentation_ms": [
+    -20,
+    0,
+    20
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "hands": {
+    "L": {
+      "train_windows": 402,
+      "n_models": 12,
+      "path": "D:\\Antigravity_proj\\_inbox\\hologrip_final\\hologrip_ens_L.joblib"
+    },
+    "R": {
+      "train_windows": 486,
+      "n_models": 12,
+      "path": "D:\\Antigravity_proj\\_inbox\\hologrip_final\\hologrip_ens_R.joblib"
+    }
+  }
+}

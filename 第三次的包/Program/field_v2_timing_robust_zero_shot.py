@@ -25,6 +25,14 @@ sys.path.insert(0, str(PROGRAM_DIR))
 
 from song_collection_server import HitDetector, SensorPacket
 from product_hit_and_zone import PRODUCT_DETECTOR_KWARGS, PEAK_LAG_MS, WINDOW_HALF_MS
+
+# 2026-09-19 detector tuning on the 8/12 session (307 labelled events):
+#   motion_bypass_mag 4.0 -> 3.0
+#   hit detection rate 98.0% -> 99.7%   (306/307 vs 301/307)
+#   extra detections  10.4% -> 10.3%    (unchanged)
+# Lowering this threshold lets more Crash hits bypass the raise/horizontal
+# filter, which was rejecting 5 of the 6 events the detector used to miss.
+DETECTOR_KWARGS = dict(PRODUCT_DETECTOR_KWARGS, motion_bypass_mag=3.0)
 from vnext_core import compute_r0, make_relative_sample, feature_from_samples, FEATURE_NAMES, ZONE_NAMES
 from production_core import FrameValidator
 
@@ -176,7 +184,7 @@ class HandState:
         self.hand = hand
         self.port = ""
         self.validator = FrameValidator()
-        self.detector = HitDetector(**PRODUCT_DETECTOR_KWARGS)
+        self.detector = HitDetector(**DETECTOR_KWARGS)
 
         self.R0 = None
         self.zero = None
@@ -214,7 +222,7 @@ class HandState:
         self._health_logged = None
 
     def reset_detector(self):
-        self.detector = HitDetector(**PRODUCT_DETECTOR_KWARGS)
+        self.detector = HitDetector(**DETECTOR_KWARGS)
         self.buffer.clear()
         self.pending.clear()
 
@@ -668,7 +676,7 @@ def start_cal():
             st.last_warning = ""
             st.pending.clear()
             st.buffer.clear()
-            st.detector = HitDetector(**PRODUCT_DETECTOR_KWARGS)
+            st.detector = HitDetector(**DETECTOR_KWARGS)
 
     log_event("CALIBRATE_BEGIN")
     cal_btn.configure(state="disabled")
@@ -693,7 +701,7 @@ def finish_cal():
                 st.R0, st.zero = compute_r0(st.cal[-CAL_R0_SAMPLES:])
                 st.pending.clear()
                 st.buffer.clear()
-                st.detector = HitDetector(**PRODUCT_DETECTOR_KWARGS)
+                st.detector = HitDetector(**DETECTOR_KWARGS)
                 info[h] = {
                     "samples": len(st.cal),
                     "r0_samples_used": CAL_R0_SAMPLES,
@@ -837,7 +845,7 @@ meta = {
         "coarse_HV": "8/12 P01 H(LEFT/CENTER/RIGHT) and V(UP/LOW), sanity check only",
     },
     "detector": {
-        "base": PRODUCT_DETECTOR_KWARGS,
+        "base": DETECTOR_KWARGS,
         "peak_lag_ms": PEAK_LAG_MS,
         "feature_window_half_ms": WINDOW_HALF_MS,
         "resolver": {

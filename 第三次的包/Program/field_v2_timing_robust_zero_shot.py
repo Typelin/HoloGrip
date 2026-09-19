@@ -236,6 +236,16 @@ class HandState:
 
 states = {h: HandState(h) for h in ("L", "R")}
 
+# Hands that have actually produced at least one packet this session.
+# A single glove is a supported configuration: everything below operates on
+# connected_hands rather than assuming both gloves are present.
+connected_hands: set[str] = set()
+
+
+def active_hands():
+    """Hands currently connected, in a stable order."""
+    return [h for h in ("L", "R") if h in connected_hands]
+
 
 def _angle_between_unit(a: np.ndarray, b: np.ndarray) -> float:
     a = np.asarray(a, float); b = np.asarray(b, float)
@@ -476,6 +486,7 @@ def worker(port: str, conn: serial.Serial):
 
             h = p["hand"]
             st = states[h]
+            connected_hands.add(h)
             now = time.monotonic()
             now_ms = now * 1000.0
             wall = wall_iso()
@@ -582,8 +593,8 @@ def worker(port: str, conn: serial.Serial):
 def connect_all():
     ports = xiao_ports()
     log_event("PORT_SCAN", ports=ports)
-    if len(ports) < 2:
-        uiq.put(("status", f"只找到 {len(ports)} 顆 XIAO：{ports}"))
+    if len(ports) < 1:
+        uiq.put(("status", "找不到 XIAO（VID 303A:1001）。插上手套後按『重新連線』。"))
         return
 
     opened = []
@@ -601,7 +612,7 @@ def connect_all():
             t.start()
             threads.append(t)
         log_event("CONNECTED", ports=[p for p, _ in opened])
-        uiq.put(("status", f"已連線 {', '.join(p for p, _ in opened)}。請先做 200-frame R0 歸零。"))
+        uiq.put(("status", f"已連線 {', '.join(p for p, _ in opened)}。請按『R0 歸零』。"))
     except Exception as e:
         for _, s in opened:
             try:
@@ -614,10 +625,13 @@ def connect_all():
 
 def start_cal():
     global mode, cal_finish_queued, test_running, test_completed, test_t0, formal_sample_index
-    if len(serials) < 2:
-        status_var.set("尚未連好兩個 COM。")
+    if len(serials) < 1:
+        status_var.set("尚未連上任何 COM。")
         return
-    not_ok = [h for h, st in states.items() if st.health != "OK"]
+    not_ok = [h for h in active_hands() if states[h].health != "OK"]
+    if not not_ok and not active_hands():
+        status_var.set("還沒有收到任何手套資料，請確認 USB 與線材。")
+        return
     if not_ok:
         status_var.set("先等資料鏈穩定到 HEALTH=OK，再做 R0：" + ", ".join(not_ok))
         return
@@ -666,7 +680,8 @@ def finish_cal():
     info = {}
     ok = True
     with lock:
-        for h, st in states.items():
+        for h in active_hands():
+            st = states[h]
             try:
                 st.R0, st.zero = compute_r0(st.cal[-CAL_R0_SAMPLES:])
                 st.pending.clear()
@@ -711,7 +726,7 @@ def start_formal_test():
     if test_completed:
         status_var.set("這個程式場次已完成一次正式測試；要再測一次請關閉後重新開 01。")
         return
-    bad=[h for h,st in states.items() if st.health != "OK"]
+    bad=[h for h in active_hands() if states[h].health != "OK"]
     if bad:
         status_var.set("不能開始：資料鏈不是 OK：" + ", ".join(bad))
         return
@@ -762,13 +777,6 @@ def stop_formal_test():
     title_var.set("正式測試完成｜請保存同一次 MIDI")
     status_var.set("已保存 raw_100hz_formal.csv + resolved_hits.csv。現在可以關閉 01，再進入 02 收第三次新資料。")
     log_event("FORMAL_TEST_STOP", manifest=manifest)
-
-
-def set_marker():
-    global current_marker
-    current_marker = marker_combo.get() or "自由演奏"
-    marker_now_var.set(f"目前標記：{current_marker}")
-    log_event("MARKER", marker=current_marker)
 
 
 def close():
@@ -869,27 +877,13 @@ style.configure("Health.TLabel", font=("Microsoft JhengHei UI", 14, "bold"))
 style.configure("Warn.TLabel", font=("Microsoft JhengHei UI", 12, "bold"))
 style.configure("Btn.TButton", font=("Microsoft JhengHei UI", 12, "bold"), padding=9)
 
-ttk.Label(root, text="HoloGrip Field v2｜Timing-Robust 真七鼓", style="Title.TLabel", anchor="center").pack(fill="x", pady=(14, 4))
+ttk.Label(root, text="HoloGrip｜現場測試", style="Title.TLabel", anchor="center").pack(fill="x", pady=(14, 4))
 
-title_var = tk.StringVar(value="等待 200-frame R0 歸零")
+title_var = tk.StringVar(value="等待連線")
 ttk.Label(root, textvariable=title_var, style="Title.TLabel", anchor="center").pack(fill="x", pady=4)
 
-status_var = tk.StringVar(value="正在連線 COM4 / COM5…")
+status_var = tk.StringVar(value="正在連線手套…")
 ttk.Label(root, textvariable=status_var, style="Mid.TLabel", anchor="center", justify="center", wraplength=1180).pack(fill="x", padx=18, pady=5)
-
-marker_frame = ttk.Frame(root)
-marker_frame.pack(fill="x", padx=20, pady=5)
-ttk.Label(marker_frame, text="測試標記（只寫進 log，不影響模型）：").pack(side="left")
-marker_combo = ttk.Combobox(
-    marker_frame,
-    values=["自由演奏", "七鼓逐顆測試", "Hi-Hat", "Crash", "小鼓", "高音 Tom", "中音 Tom", "Ride", "落地 Tom"],
-    state="readonly", width=22,
-)
-marker_combo.set("自由演奏")
-marker_combo.pack(side="left", padx=5)
-ttk.Button(marker_frame, text="套用標記", command=set_marker).pack(side="left", padx=5)
-marker_now_var = tk.StringVar(value="目前標記：自由演奏")
-ttk.Label(marker_frame, textvariable=marker_now_var).pack(side="left", padx=12)
 
 frm = ttk.Frame(root)
 frm.pack(fill="both", expand=True, padx=18, pady=8)
@@ -898,46 +892,42 @@ frm.columnconfigure(1, weight=1)
 frm.rowconfigure(0, weight=1)
 
 ui = {}
+boxes = {}
 for col, h in enumerate(("L", "R")):
     box = ttk.LabelFrame(frm, text=("左手 L" if h == "L" else "右手 R"), padding=14)
     box.grid(row=0, column=col, sticky="nsew", padx=8)
+    boxes[h] = box
 
     health = tk.StringVar(value="HEALTH：WARMUP")
     drum = tk.StringVar(value="—")
-    raw = tk.StringVar(value="主模型：—")
-    coarse = tk.StringVar(value="H —｜V —")
-    ang = tk.StringVar(value="相對角：Yaw —｜Pitch —｜Roll —")
+    raw = tk.StringVar(value="")
+    coarse = tk.StringVar(value="")
+    ang = tk.StringVar(value="")
     warn = tk.StringVar(value="")
     info = tk.StringVar(value="等待資料")
 
-    ttk.Label(box, textvariable=health, style="Health.TLabel", anchor="center").pack(fill="x", pady=(8, 4))
-    ttk.Label(box, textvariable=drum, style="Drum.TLabel", anchor="center").pack(fill="x", pady=(10, 8))
-    ttk.Label(box, textvariable=raw, style="Mid.TLabel", anchor="center").pack(fill="x", pady=4)
-    ttk.Label(box, textvariable=coarse, style="Mid.TLabel", anchor="center").pack(fill="x", pady=4)
-    ttk.Label(box, textvariable=ang, anchor="center").pack(fill="x", pady=4)
+    ttk.Label(box, textvariable=health, style="Health.TLabel", anchor="center").pack(fill="x", pady=(10, 6))
+    ttk.Label(box, textvariable=drum, style="Drum.TLabel", anchor="center").pack(fill="x", pady=(18, 14))
+    ttk.Label(box, textvariable=raw, style="Mid.TLabel", anchor="center").pack(fill="x", pady=3)
+    ttk.Label(box, textvariable=coarse, style="Mid.TLabel", anchor="center").pack(fill="x", pady=3)
+    ttk.Label(box, textvariable=ang, anchor="center").pack(fill="x", pady=3)
     ttk.Label(box, textvariable=warn, style="Warn.TLabel", anchor="center", justify="center", wraplength=520).pack(fill="x", pady=8)
     ttk.Label(box, textvariable=info, anchor="center", justify="center").pack(fill="x", pady=8)
 
     ui[h] = (health, drum, raw, coarse, ang, warn, info)
 
 btn = ttk.Frame(root)
-btn.pack(pady=12)
-cal_btn = ttk.Button(btn, text="穩定 R0 歸零", style="Btn.TButton", command=start_cal)
+btn.pack(pady=14)
+cal_btn = ttk.Button(btn, text="R0 歸零", style="Btn.TButton", command=start_cal)
 cal_btn.pack(side="left", padx=7)
-start_test_btn = ttk.Button(btn, text="開始正式測試", style="Btn.TButton", command=start_formal_test, state="disabled")
+start_test_btn = ttk.Button(btn, text="開始測試", style="Btn.TButton", command=start_formal_test, state="disabled")
 start_test_btn.pack(side="left", padx=7)
-stop_test_btn = ttk.Button(btn, text="結束正式測試", style="Btn.TButton", command=stop_formal_test, state="disabled")
+stop_test_btn = ttk.Button(btn, text="結束測試", style="Btn.TButton", command=stop_formal_test, state="disabled")
 stop_test_btn.pack(side="left", padx=7)
 ttk.Button(btn, text="關閉並保存", style="Btn.TButton", command=close).pack(side="left", padx=7)
 
-test_state_var = tk.StringVar(value="正式測試：尚未開始")
-ttk.Label(root, textvariable=test_state_var, style="Warn.TLabel", anchor="center").pack(fill="x", pady=(0, 6))
-
-ttk.Label(
-    root,
-    text="主模型：8/12 真鼓 GT + ±20ms temporal augmentation｜Peak resolver：弱前峰最多等待160ms｜不重訓",
-    anchor="center",
-).pack(fill="x", pady=(0, 10))
+test_state_var = tk.StringVar(value="測試：尚未開始")
+ttk.Label(root, textvariable=test_state_var, style="Warn.TLabel", anchor="center").pack(fill="x", pady=(0, 12))
 
 
 def ui_update():
@@ -958,7 +948,18 @@ def ui_update():
             )
 
     with lock:
-        for h, st in states.items():
+        # Only show a panel for a hand that is actually sending data.
+        # Before anything connects, show both so the window is not empty.
+        act = active_hands()
+        shown = act if act else ["L", "R"]
+        for h in ("L", "R"):
+            if h in shown:
+                boxes[h].grid()
+            else:
+                boxes[h].grid_remove()
+
+        for h in shown:
+            st = states[h]
             health, drum, raw, coarse, ang, warn, info = ui[h]
 
             health.set(f"HEALTH：{st.health}")

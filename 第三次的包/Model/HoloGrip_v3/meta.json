@@ -1,0 +1,24 @@
+{
+  "description": "HoloGrip v3 per-hand ensemble; ambiguous hand labels removed",
+  "feature": "vnext_core 31-dim relative-rotation",
+  "augmentation_ms": [
+    -20,
+    0,
+    20
+  ],
+  "ambiguity_threshold": 1.35,
+  "n_seeds": 12,
+  "train_events": 287,
+  "hands": {
+    "L": {
+      "train_windows": 390,
+      "n_models": 12,
+      "path": "D:\\Antigravity_proj\\_inbox\\hologrip_v3\\hologrip_v3_L.joblib"
+    },
+    "R": {
+      "train_windows": 471,
+      "n_models": 12,
+      "path": "D:\\Antigravity_proj\\_inbox\\hologrip_v3\\hologrip_v3_R.joblib"
+    }
+  }
+}

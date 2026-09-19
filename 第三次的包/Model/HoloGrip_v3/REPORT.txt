@@ -1,0 +1,32 @@
+================================================================================
+  HoloGrip v3 — final build
+================================================================================
+  8/12 events total      : 307
+  dropped as ambiguous   : 20  (labelled hand's peak < 1.35x other)
+  training events        : 287
+
+  training windows       : L=390  R=471
+
+--------------------------------------------------------------------------------
+  A) WITHIN-SESSION (8/12, per-hand, 5-fold time-block GroupKFold)
+--------------------------------------------------------------------------------
+  n=287   acc=95.47%   balanced=94.65%   macroF1=94.55%
+      小鼓         n= 35  recall=  97.1%
+      高音 Tom     n= 33  recall=  84.8%
+      中音 Tom     n= 34  recall=  85.3%
+      落地 Tom     n= 32  recall= 100.0%
+      Hi-Hat     n= 69  recall= 100.0%
+      Crash      n= 43  recall=  97.7%
+      Ride       n= 41  recall=  97.6%
+
+--------------------------------------------------------------------------------
+  B) CROSS-SESSION (train 8/12 -> test 8/5, same performer)
+--------------------------------------------------------------------------------
+  n=247   acc=87.85%   balanced=71.46%   macroF1=63.80%   opposite-side errors=0/204
+
+--------------------------------------------------------------------------------
+  C) FEW-SHOT ADAPTATION  (simulated: 1 labelled hit per hand x drum from 8/5)
+--------------------------------------------------------------------------------
+  baseline (no adaptation) : acc=87.85%  balanced=71.46%  macroF1=63.80%
+  with 1 hit per handxdrum : acc=93.73%  balanced=86.94%  macroF1=75.32%   (20 trials)
+    acc range 88.56% .. 98.73%

@@ -593,34 +593,41 @@ def worker(port: str, conn: serial.Serial):
 def connect_all():
     ports = xiao_ports()
     log_event("PORT_SCAN", ports=ports)
-    if len(ports) < 1:
+    if not ports:
         uiq.put(("status", "找不到 XIAO（VID 303A:1001）。插上手套後按『重新連線』。"))
         return
 
+    # Open each port on its own. A glove that fails to open must not take the
+    # other one down with it -- one glove is a supported configuration.
     opened = []
-    try:
-        for p in ports[:2]:
+    failed = []
+    for p in ports[:2]:
+        try:
             opened.append((p, serial.Serial(p, SERIAL_BAUD, timeout=0.08)))
-        time.sleep(0.4)
-        for p, s in opened:
-            try:
-                s.reset_input_buffer()
-            except Exception:
-                pass
-            serials[p] = s
-            t = threading.Thread(target=worker, args=(p, s), daemon=True)
-            t.start()
-            threads.append(t)
-        log_event("CONNECTED", ports=[p for p, _ in opened])
-        uiq.put(("status", f"已連線 {', '.join(p for p, _ in opened)}。請按『R0 歸零』。"))
-    except Exception as e:
-        for _, s in opened:
-            try:
-                s.close()
-            except Exception:
-                pass
-        log_event("CONNECT_FAIL", error=repr(e))
-        uiq.put(("status", f"COM 連線失敗：{e}"))
+        except Exception as e:
+            failed.append(p)
+            log_event("PORT_OPEN_FAIL", port=p, error=repr(e))
+
+    if not opened:
+        uiq.put(("status", f"無法開啟任何手套埠：{', '.join(failed)}。請重新插拔或按『重新連線』。"))
+        return
+
+    time.sleep(0.4)
+    for p, s in opened:
+        try:
+            s.reset_input_buffer()
+        except Exception:
+            pass
+        serials[p] = s
+        t = threading.Thread(target=worker, args=(p, s), daemon=True)
+        t.start()
+        threads.append(t)
+
+    log_event("CONNECTED", ports=[p for p, _ in opened], failed=failed)
+    msg = f"已連線 {', '.join(p for p, _ in opened)}。請按『R0 歸零』。"
+    if failed:
+        msg += f"（{', '.join(failed)} 開啟失敗，已略過）"
+    uiq.put(("status", msg))
 
 
 def start_cal():

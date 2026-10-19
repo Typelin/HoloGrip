@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-19",
+  "candidate": "clear_accel256sqrt",
+  "runtime_contract": "hologrip_absolute_world_motion_1019_v1",
+  "generated_dimensions": 417,
+  "selected_dimensions": 219,
+  "training_events": 6667,
+  "training_recording_counts": {
+    "fourth_song03": 990,
+    "fifth_song01": 740,
+    "fifth_song02": 814,
+    "fifth_song03": 1067,
+    "sixth_S02": 524,
+    "sixth_S08": 707,
+    "sixth_S04": 522,
+    "sixth_S05": 425,
+    "sixth_S06": 460,
+    "sixth_S07": 418
+  },
+  "scaler_rows": {
+    "L": 3618,
+    "R": 3049
+  },
+  "fit_pretest_overlap": false,
+  "classes": [
+    "Crash",
+    "Hi-Hat",
+    "Ride",
+    "中音 Tom",
+    "小鼓",
+    "落地 Tom",
+    "高音 Tom"
+  ],
+  "detector_config": {
+    "confirm_samples": 1,
+    "threshold_g": 2.3,
+    "refractory_ms": 80,
+    "rise_g": 0.75,
+    "snap_g": 0,
+    "merge_ms": 80,
+    "context_ms": 80
+  },
+  "additional_calibration": false,
+  "field_package_updated": false,
+  "hardware_test": false,
+  "files": {
+    "Model/model.joblib": "81009fe0da1307a46cd8022ef09925efaccbdd83d3736ea8b430916a62f72622",
+    "Program/absolute_world_motion_runtime_1019.py": "20a80fd1bbc710332b10bf64695703b5a14f34c7e31829ab046d8a6dfc7a4419",
+    "Program/causal_hit_detector_1016.py": "65284372eefa8fdfb2a2b6569a80a2bdcb4034a5a65035125289d0ab80eb5dc8",
+    "Program/causal_hit_queue_1016.py": "1edeb0c6474acf9cb7309dc98047504352cebd45f7db4c56d1040e1979e41ae3",
+    "Program/drumhead_zero_runtime_1019.py": "4c7da2f45f6e32a6bb4ee2353e953b7de8cd0ca1e43832977198d4cc69290de7",
+    "Program/fourth_song03_raw_runtime_1008.py": "2c2e630fd9c56eddfb551b2b671106e7ec67140a225a94939a75c66d15804b04",
+    "Program/pretest_zone_trajectory_runtime_1019.py": "bc9316df8051c10a801cb3444874c7ca602b3b3b74f09001c02dadb2c1be3870",
+    "Program/trajectory_runtime_456_1016.py": "e69cf4f44826546e3ae57a3df345d44bbf6101768cde093a2cdb26b01c5533e4",
+    "Program/world_stream_runtime_1019.py": "8b9a6e2669c71241a3578bbd98ccdb8ad4d9bb2dbc930df4ea2ca5c4dcb10137"
+  }
+}

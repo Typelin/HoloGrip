@@ -1,0 +1,555 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-19",
+  "model_sha256": "81009fe0da1307a46cd8022ef09925efaccbdd83d3736ea8b430916a62f72622",
+  "metric": "event_correct_recall_not_frame_accuracy",
+  "matching_tolerance_ms": 80,
+  "one_to_one_matching": true,
+  "class_agnostic_pair_selection": true,
+  "extra_outputs_penalize_hit_rate": false,
+  "full_recording_role": "training_source_resubstitution",
+  "full_recordings": [
+    {
+      "session": "fourth_song03",
+      "round": 4,
+      "total": 992,
+      "correct": 965,
+      "time_hand_matched": 965,
+      "missed": 27,
+      "wrong_drum": 0,
+      "unmatched_extra": 22,
+      "predictions": 990
+    },
+    {
+      "session": "fifth_song01",
+      "round": 5,
+      "total": 740,
+      "correct": 734,
+      "time_hand_matched": 734,
+      "missed": 6,
+      "wrong_drum": 0,
+      "unmatched_extra": 13,
+      "predictions": 747
+    },
+    {
+      "session": "fifth_song02",
+      "round": 5,
+      "total": 816,
+      "correct": 815,
+      "time_hand_matched": 815,
+      "missed": 1,
+      "wrong_drum": 0,
+      "unmatched_extra": 28,
+      "predictions": 843
+    },
+    {
+      "session": "fifth_song03",
+      "round": 5,
+      "total": 1069,
+      "correct": 1057,
+      "time_hand_matched": 1058,
+      "missed": 11,
+      "wrong_drum": 1,
+      "unmatched_extra": 14,
+      "predictions": 1076
+    },
+    {
+      "session": "sixth_S02",
+      "round": 6,
+      "total": 532,
+      "correct": 509,
+      "time_hand_matched": 511,
+      "missed": 21,
+      "wrong_drum": 2,
+      "unmatched_extra": 125,
+      "predictions": 772
+    },
+    {
+      "session": "sixth_S08",
+      "round": 6,
+      "total": 687,
+      "correct": 673,
+      "time_hand_matched": 675,
+      "missed": 12,
+      "wrong_drum": 2,
+      "unmatched_extra": 14,
+      "predictions": 710
+    },
+    {
+      "session": "sixth_S04",
+      "round": 6,
+      "total": 544,
+      "correct": 517,
+      "time_hand_matched": 517,
+      "missed": 27,
+      "wrong_drum": 0,
+      "unmatched_extra": 0,
+      "predictions": 535
+    },
+    {
+      "session": "sixth_S05",
+      "round": 6,
+      "total": 537,
+      "correct": 448,
+      "time_hand_matched": 448,
+      "missed": 89,
+      "wrong_drum": 0,
+      "unmatched_extra": 1,
+      "predictions": 460
+    },
+    {
+      "session": "sixth_S06",
+      "round": 6,
+      "total": 506,
+      "correct": 470,
+      "time_hand_matched": 470,
+      "missed": 36,
+      "wrong_drum": 0,
+      "unmatched_extra": 0,
+      "predictions": 490
+    },
+    {
+      "session": "sixth_S07",
+      "round": 6,
+      "total": 656,
+      "correct": 448,
+      "time_hand_matched": 448,
+      "missed": 208,
+      "wrong_drum": 0,
+      "unmatched_extra": 2,
+      "predictions": 460
+    }
+  ],
+  "full_aggregate": {
+    "total": 7079,
+    "correct": 6636,
+    "time_hand_matched": 6641,
+    "missed": 438,
+    "wrong_drum": 5,
+    "unmatched_extra": 219
+  },
+  "normal_velocity_policy": {
+    "target_hand_and_drum_only": true,
+    "midi_velocity_min": 20,
+    "raw_peak_or_model_success_filter": false,
+    "misses_retained": true,
+    "excluded_low_velocity_not_confirmed_noise": true,
+    "same_frozen_model": true
+  },
+  "normal_velocity_recordings": [
+    {
+      "code": "S04",
+      "target_hand": "L",
+      "target_drum": "Hi-Hat",
+      "excluded_weak_target_events": 0,
+      "clear_target_training_members": 504,
+      "session": "sixth_S04",
+      "round": 6,
+      "total": 544,
+      "correct": 517,
+      "time_hand_matched": 517,
+      "missed": 27,
+      "wrong_drum": 0,
+      "unmatched_extra": 0,
+      "predictions": 535
+    },
+    {
+      "code": "S05",
+      "target_hand": "L",
+      "target_drum": "Crash",
+      "excluded_weak_target_events": 83,
+      "clear_target_training_members": 413,
+      "session": "sixth_S05",
+      "round": 6,
+      "total": 452,
+      "correct": 447,
+      "time_hand_matched": 447,
+      "missed": 5,
+      "wrong_drum": 0,
+      "unmatched_extra": 1,
+      "predictions": 460
+    },
+    {
+      "code": "S06",
+      "target_hand": "L",
+      "target_drum": "Ride",
+      "excluded_weak_target_events": 0,
+      "clear_target_training_members": 444,
+      "session": "sixth_S06",
+      "round": 6,
+      "total": 506,
+      "correct": 470,
+      "time_hand_matched": 470,
+      "missed": 36,
+      "wrong_drum": 0,
+      "unmatched_extra": 0,
+      "predictions": 490
+    },
+    {
+      "code": "S07",
+      "target_hand": "R",
+      "target_drum": "Crash",
+      "excluded_weak_target_events": 193,
+      "clear_target_training_members": 409,
+      "session": "sixth_S07",
+      "round": 6,
+      "total": 463,
+      "correct": 448,
+      "time_hand_matched": 448,
+      "missed": 15,
+      "wrong_drum": 0,
+      "unmatched_extra": 2,
+      "predictions": 460
+    }
+  ],
+  "pretest_role": "excluded_from_fit_but_reused_for_model_selection",
+  "unseen_round_holdout": false,
+  "pretests": [
+    {
+      "session": "round4",
+      "total": 294,
+      "correct": 256,
+      "matched": 280,
+      "missed": 14,
+      "wrong_drum": 24,
+      "extra_unmatched_in_span": 0,
+      "hand_truth": false,
+      "calibration_excluded": 0,
+      "scope_excluded": 0,
+      "unresolved": 0,
+      "per_drum": [
+        {
+          "drum": "小鼓",
+          "total": 41,
+          "correct": 35
+        },
+        {
+          "drum": "高音 Tom",
+          "total": 40,
+          "correct": 28
+        },
+        {
+          "drum": "中音 Tom",
+          "total": 40,
+          "correct": 38
+        },
+        {
+          "drum": "落地 Tom",
+          "total": 40,
+          "correct": 40
+        },
+        {
+          "drum": "Hi-Hat",
+          "total": 42,
+          "correct": 40
+        },
+        {
+          "drum": "Crash",
+          "total": 51,
+          "correct": 40
+        },
+        {
+          "drum": "Ride",
+          "total": 40,
+          "correct": 35
+        }
+      ],
+      "per_hand_drum": []
+    },
+    {
+      "session": "round5",
+      "total": 160,
+      "correct": 146,
+      "matched": 160,
+      "missed": 0,
+      "wrong_drum": 14,
+      "extra_unmatched_in_span": 0,
+      "hand_truth": false,
+      "calibration_excluded": 0,
+      "scope_excluded": 0,
+      "unresolved": 0,
+      "per_drum": [
+        {
+          "drum": "小鼓",
+          "total": 40,
+          "correct": 37
+        },
+        {
+          "drum": "高音 Tom",
+          "total": 40,
+          "correct": 32
+        },
+        {
+          "drum": "中音 Tom",
+          "total": 40,
+          "correct": 38
+        },
+        {
+          "drum": "落地 Tom",
+          "total": 40,
+          "correct": 39
+        },
+        {
+          "drum": "Hi-Hat",
+          "total": 0,
+          "correct": 0
+        },
+        {
+          "drum": "Crash",
+          "total": 0,
+          "correct": 0
+        },
+        {
+          "drum": "Ride",
+          "total": 0,
+          "correct": 0
+        }
+      ],
+      "per_hand_drum": []
+    },
+    {
+      "session": "round6",
+      "total": 140,
+      "correct": 127,
+      "matched": 140,
+      "missed": 0,
+      "wrong_drum": 13,
+      "extra_unmatched_in_span": 1,
+      "hand_truth": true,
+      "calibration_excluded": 0,
+      "scope_excluded": 22,
+      "unresolved": 20,
+      "per_drum": [
+        {
+          "drum": "小鼓",
+          "total": 20,
+          "correct": 20
+        },
+        {
+          "drum": "高音 Tom",
+          "total": 20,
+          "correct": 13
+        },
+        {
+          "drum": "中音 Tom",
+          "total": 20,
+          "correct": 18
+        },
+        {
+          "drum": "落地 Tom",
+          "total": 20,
+          "correct": 18
+        },
+        {
+          "drum": "Hi-Hat",
+          "total": 20,
+          "correct": 19
+        },
+        {
+          "drum": "Crash",
+          "total": 20,
+          "correct": 20
+        },
+        {
+          "drum": "Ride",
+          "total": 20,
+          "correct": 19
+        }
+      ],
+      "per_hand_drum": [
+        {
+          "hand": "L",
+          "drum": "小鼓",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "R",
+          "drum": "小鼓",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "L",
+          "drum": "高音 Tom",
+          "total": 10,
+          "correct": 9
+        },
+        {
+          "hand": "R",
+          "drum": "高音 Tom",
+          "total": 10,
+          "correct": 4
+        },
+        {
+          "hand": "L",
+          "drum": "中音 Tom",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "R",
+          "drum": "中音 Tom",
+          "total": 10,
+          "correct": 8
+        },
+        {
+          "hand": "L",
+          "drum": "落地 Tom",
+          "total": 10,
+          "correct": 9
+        },
+        {
+          "hand": "R",
+          "drum": "落地 Tom",
+          "total": 10,
+          "correct": 9
+        },
+        {
+          "hand": "L",
+          "drum": "Hi-Hat",
+          "total": 10,
+          "correct": 9
+        },
+        {
+          "hand": "R",
+          "drum": "Hi-Hat",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "L",
+          "drum": "Crash",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "R",
+          "drum": "Crash",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "L",
+          "drum": "Ride",
+          "total": 10,
+          "correct": 10
+        },
+        {
+          "hand": "R",
+          "drum": "Ride",
+          "total": 10,
+          "correct": 9
+        }
+      ]
+    }
+  ],
+  "pretest_aggregate": {
+    "total": 594,
+    "correct": 529,
+    "matched": 580,
+    "missed": 14,
+    "wrong_drum": 51,
+    "extra_unmatched_in_span": 1
+  },
+  "full_aggregate_per_hand_drum": [
+    {
+      "hand": "L",
+      "drum": "小鼓",
+      "total": 1187,
+      "correct": 1142,
+      "rate": 0.962089300758214
+    },
+    {
+      "hand": "R",
+      "drum": "小鼓",
+      "total": 433,
+      "correct": 428,
+      "rate": 0.9884526558891455
+    },
+    {
+      "hand": "L",
+      "drum": "高音 Tom",
+      "total": 426,
+      "correct": 424,
+      "rate": 0.9953051643192489
+    },
+    {
+      "hand": "R",
+      "drum": "高音 Tom",
+      "total": 223,
+      "correct": 220,
+      "rate": 0.9865470852017937
+    },
+    {
+      "hand": "L",
+      "drum": "中音 Tom",
+      "total": 225,
+      "correct": 223,
+      "rate": 0.9911111111111112
+    },
+    {
+      "hand": "R",
+      "drum": "中音 Tom",
+      "total": 215,
+      "correct": 214,
+      "rate": 0.9953488372093023
+    },
+    {
+      "hand": "L",
+      "drum": "落地 Tom",
+      "total": 328,
+      "correct": 326,
+      "rate": 0.9939024390243902
+    },
+    {
+      "hand": "R",
+      "drum": "落地 Tom",
+      "total": 958,
+      "correct": 947,
+      "rate": 0.988517745302714
+    },
+    {
+      "hand": "L",
+      "drum": "Hi-Hat",
+      "total": 597,
+      "correct": 566,
+      "rate": 0.948073701842546
+    },
+    {
+      "hand": "R",
+      "drum": "Hi-Hat",
+      "total": 200,
+      "correct": 198,
+      "rate": 0.99
+    },
+    {
+      "hand": "L",
+      "drum": "Crash",
+      "total": 556,
+      "correct": 468,
+      "rate": 0.841726618705036
+    },
+    {
+      "hand": "R",
+      "drum": "Crash",
+      "total": 752,
+      "correct": 539,
+      "rate": 0.7167553191489362
+    },
+    {
+      "hand": "L",
+      "drum": "Ride",
+      "total": 506,
+      "correct": 470,
+      "rate": 0.9288537549407114
+    },
+    {
+      "hand": "R",
+      "drum": "Ride",
+      "total": 473,
+      "correct": 471,
+      "rate": 0.9957716701902748
+    }
+  ]
+}

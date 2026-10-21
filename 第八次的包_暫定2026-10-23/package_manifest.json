@@ -1,0 +1,162 @@
+{
+  "schema": "hologrip-eighth-field-package-v1",
+  "target_date": "2026-10-23",
+  "prepared_date": "2026-10-21",
+  "workflow_revision": "2026-10-23-rounds4to7-adaptive",
+  "created_at": "2026-10-21T15:08:27.363300+08:00",
+  "model": {
+    "file": "venue_free_committee_1023.joblib",
+    "sha256": "abfef111139b7ee318295df7678f61a1d742702014d02daff88684b4eced55e3",
+    "input_dimensions": 104,
+    "selected_dimensions": 104,
+    "training_scope": "rounds 4-7 songs, four-drum, single-hand; pretests excluded",
+    "training_events": 13617,
+    "mode": "per_hand_committee",
+    "runtime_contract": "hologrip_venue_free_committee_1023_v1",
+    "members": [
+      [
+        "all",
+        0
+      ],
+      [
+        "all",
+        1
+      ],
+      [
+        "all",
+        2
+      ],
+      [
+        "all",
+        3
+      ],
+      [
+        "all",
+        4
+      ],
+      [
+        "all",
+        5
+      ]
+    ],
+    "learners": [
+      "xgboost_cpu_inference",
+      "mlp_numpy_forward"
+    ],
+    "compass_heading_used": false,
+    "pretests_in_training": false,
+    "per_hit_independent": false,
+    "adaptation": {
+      "kind": "per_drum_prototype_offset",
+      "alpha": 1.0,
+      "confidence": 0.7,
+      "min_confident_hits": 20,
+      "passes": 2,
+      "rot_slice": [
+        83,
+        104
+      ],
+      "causal": "past hits of the same hand in the take only"
+    },
+    "cymbal_rescue": {
+      "detector_threshold_g": 1.7,
+      "strong_g": 2.1,
+      "cymbals": [
+        "Hi-Hat",
+        "Crash",
+        "Ride"
+      ],
+      "min_score": 0.6
+    },
+    "future_context_ms": 80,
+    "frozen": true
+  },
+  "detector": {
+    "file": "detector_venue_free_1p7g.json",
+    "sha256": "081b53c83c7a4ee36b764e81aa0f1ea9ef414b85915f83caa2acbc7f3977cf5e",
+    "profile": "venue_free_1p7g_cymbal_rescue",
+    "threshold_g": 1.7,
+    "embedded_model_detector_ignored": false
+  },
+  "output_guard": {
+    "enabled": false,
+    "reason": "Every released hit is reported; no abstention or margin filter."
+  },
+  "runtime_hashes": {
+    "00_CHECK.bat": "288202aa5bd49e2c63ce5ff4999ea1e2db7aca5546e1c95fb82137bcafded535",
+    "1_測前次.bat": "6b8b9bf11accb398cfffef543912e04631100313c75f110d54907e1e70576c37",
+    "2_蒐集這次.bat": "a26cb6ccb070467ad49c597d8523bc565679903814f4e4037c74616ae9b0561b",
+    "3_檢查這次MIDI.bat": "0b3c7ab0b3a18940820406baae664a3df6eed381409b2ab2cd642dfa1b0d2b7c",
+    "4_對齊MIDI與CSV.bat": "bb0988985b582b175955a2d26a8e857c0401e6042b00ffef30f3c08c3098972a",
+    "5_開啟資料夾.bat": "7bed72b3044347d97bca343d227742e66b829c2d9448be8f980425f282ba6b54",
+    "Frontend/HoloGrip_MIDI_CSV現場檢查_空白模板_ZH_TW.html": "49fcd541e5d392691c401dbd1b720ccf80868917252c3f8ebfa1a3273933069f",
+    "Frontend/HoloGrip_MIDI異常檢查_空白模板_ZH_TW.html": "f75d7de06cd556669a6c9ec8e8766e1cdc8e9a7e183beb0cc38ced68738fba5f",
+    "Frontend/第七次_前測主控台.html": "94ccfa12ba98620317b0dffbf1eb47ea69390fd5efa1526b5417688707ac8268",
+    "Program/absolute_world_motion_runtime_1019.py": "20a80fd1bbc710332b10bf64695703b5a14f34c7e31829ab046d8a6dfc7a4419",
+    "Program/causal_hit_detector_1016.py": "65284372eefa8fdfb2a2b6569a80a2bdcb4034a5a65035125289d0ab80eb5dc8",
+    "Program/causal_hit_queue_1016.py": "1edeb0c6474acf9cb7309dc98047504352cebd45f7db4c56d1040e1979e41ae3",
+    "Program/drumhead_zero_runtime_1019.py": "4c7da2f45f6e32a6bb4ee2353e953b7de8cd0ca1e43832977198d4cc69290de7",
+    "Program/fourth_song03_raw_runtime_1008.py": "2c2e630fd9c56eddfb551b2b671106e7ec67140a225a94939a75c66d15804b04",
+    "Program/freeze_seventh_package.py": "6474958a1ad439a22b7fd327cfd5018bd0bfc3f2edd8fdbaf18cd4259f1db7ea",
+    "Program/midi_anomaly_check.py": "aeb37edd40e096c422ecb749c6f8eac879b48eb05a813363a97d6f8112ac703e",
+    "Program/midi_csv_alignment_gui.py": "b165e4c0d3db6e1aefe2ccbcfdb80c49c9e53c225a44bcd003d26c1b6a6e20c1",
+    "Program/midi_label_pipeline.py": "bdd4b0819d0973e3caefb9c8e105146fe1288e56adc55df0609ca04836515587",
+    "Program/pretest_zone_trajectory_runtime_1019.py": "bc9316df8051c10a801cb3444874c7ca602b3b3b74f09001c02dadb2c1be3870",
+    "Program/production_core.py": "2f6faf13f343d0c3c118b07ab85cb2bd782e444e77f8248b906aee85ad6d531e",
+    "Program/seventh_check.py": "2497e3bf133fa352903f3de3ef573467861f3a7921eae9dd180054704f19048c",
+    "Program/seventh_collect.py": "6c40824904684c05eaed7631944581fb4e4e32914fd0e675468cde96710ca257",
+    "Program/seventh_core.py": "005bde121525723fac58cb743fa73be3bb8eaaa96def9ca7cd3d5e2c5b321a28",
+    "Program/seventh_entry.py": "c0731bd45aa814eef49eb6f7fd490c60e296fba7ae6ddea810dfe93ff3c3786d",
+    "Program/seventh_heading_runtime.py": "050fdff405d7ec4ea8a1a1be82d426d765b7ee76bb28d8b83955b9e6574c4735",
+    "Program/seventh_live.py": "c6a7d6be56973d95ba09f89f1475f37300444cc7c73e29dee74951cc7cab16c4",
+    "Program/seventh_native_gui.py": "327fe4e4ab1814fec59faff69a6dcf1c4318b6f830d1676d07c66123352a117c",
+    "Program/seventh_replay.py": "742b0ee98b09f657515796c0beb0f353158703b4ea9829a3dee1d4ffff05bd9d",
+    "Program/song_collection_com.py": "34d4880c022c904ed4952a651a56c0098f489e1e0f3e01f5e938ee5ae1f86b50",
+    "Program/song_collection_server.py": "e0427b857b56c9b90eaace1773193bda03801345130f561493504314411faed2",
+    "Program/song_collection_ui.py": "26f7eee086bf6eb87b929fd62628e056b685ab8dfadae7ddda025955b1642175",
+    "Program/test_seventh_browser.py": "b9f56f3ff90fccc165127ecf65dec1a79a701e47420c30535be096fe56fbffda",
+    "Program/test_seventh_native_gui.py": "efe11b97431d2054a8f85ac1da11ae179024a70c54f10facb29acf0549476c5e",
+    "Program/test_seventh_package.py": "4e616b6e44de33dd6d66be3e074f85b56c69b2b2cd1c1d11a13c37adacda166e",
+    "Program/trajectory_runtime_456_1016.py": "e69cf4f44826546e3ae57a3df345d44bbf6101768cde093a2cdb26b01c5533e4",
+    "Program/venue_free_runtime_1020.py": "5f6fbadbd1dc55d910c6a1130ae0756cb735221d35c5caafe816676e7c096dfa",
+    "Program/venue_free_runtime_1023.py": "21836fd9aad787ba0991b96f3fe4f6bf9530fdd155b74f64162b212519e4bfce",
+    "Program/world_stream_runtime_1019.py": "8b9a6e2669c71241a3578bbd98ccdb8ad4d9bb2dbc930df4ea2ca5c4dcb10137",
+    "Firmware/Gloves_Left_L/Gloves_Left_L.ino": "8bf0fb4718b618c52017e52f3f7662e2bc3b9670c628f2e9e0fe21446a1ffa97",
+    "Firmware/Gloves_Right_R/Gloves_Right_R.ino": "6cf61b56a189115d4d7aadf7e148345a699ed8584f55607479f3b3a42cb37a6b"
+  },
+  "dependencies": {
+    "numpy": "2.4.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.0",
+    "joblib": "1.5.3",
+    "threadpoolctl": "3.7.0",
+    "xgboost": "3.4.1",
+    "pyserial": "3.5",
+    "mido": "1.3.3",
+    "customtkinter": "5.2.2",
+    "tkinterdnd2": "0.6.3"
+  },
+  "architecture": "detector 1.7 g -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction -> cymbal rescue gate for peaks < 2.1 g",
+  "research_reference": {
+    "pretests_in_training": false,
+    "dev_selected_on_pretests": true,
+    "unseen_day_blind_test": false,
+    "pretest_scores": "replay of 6 pretests through this engine: see 改動紀錄_第八次包_1023_ZH_TW.md"
+  },
+  "inactive_legacy_files": [
+    "Program/seventh_heading_runtime.py"
+  ],
+  "workflow": {
+    "mode": "direct_frozen_model_test",
+    "interface": "native_tkinter",
+    "gui_entry": "Program/seventh_native_gui.py",
+    "demonstration_required": false,
+    "expected_targets_used_during_inference": false,
+    "personal_adaptation": false,
+    "test_routine": "Existing per-drum 20-tap test; no enforced order or count gate."
+  },
+  "midi_read_during_inference": false,
+  "hardware_validation": "NOT_PERFORMED",
+  "software_validation": "SEE_QA",
+  "formal_data_files_at_preparation": 0
+}

@@ -25,7 +25,7 @@ MODEL_SHA256 = 'fd1d0d3f8f3fd55bfdf982578d897f901efdfc71880f95c88dabb8b4b361d1b1
 GENERATED_DIMENSIONS = runtime.INPUT_DIMENSIONS
 SELECTED_DIMENSIONS = runtime.INPUT_DIMENSIONS
 TRAINING_EVENTS = 13617
-MODEL_NAME = '第4～7次場地無關模型＋打擊判斷＋逐鼓位置校正'
+MODEL_NAME = '第4～7次場地無關模型＋打擊判斷＋逐鼓位置校正＋姿勢連續'
 
 
 def load_guard():

@@ -85,7 +85,7 @@ class App(tk.Tk):
             tk.Label(card,text='亮格＝最近一次打擊結果；不是目前手的位置',bg='#f6f8fb',font=('Microsoft JhengHei UI',10)).pack(pady=8)
         cards.rowconfigure(0,weight=1)
         ttk.Label(self,textvariable=self.status,wraplength=1100,font=('Microsoft JhengHei UI',12)).pack(fill='x',padx=20,pady=10)
-        ttk.Label(self,text='第八次（10/23）｜打擊判斷＋第4～7次模型＋逐鼓位置校正｜峰後 80 ms 出結果；每手前約 20 下後自動校正。').pack(padx=20,pady=8)
+        ttk.Label(self,text='第八次（10/23）｜打擊判斷＋第4～7次模型＋逐鼓位置校正＋姿勢連續｜峰後 80 ms 出結果；每手前約 20 下後自動校正。').pack(padx=20,pady=8)
         self.protocol('WM_DELETE_WINDOW',self.close)
         self.scan()
         self.refresh()

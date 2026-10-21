@@ -7,7 +7,10 @@ Per candidate peak (detector at 1.5 g, released at peak + 80 ms):
      and do not enter any history.
   2. drum: venue-free committee with per-drum offset correction from EARLIER accepted hits of the same
      hand in this take (score >= 0.7, after >= 20 such hits, two passes). No labels, no future.
+  3. pose continuity: if this hit's score is < 0.9 and the same hand's previous accepted hit was within
+     600 ms with a zero-relative yaw/pitch within 16 deg, it is the same drum as that previous hit.
 """
+from scipy.spatial.transform import Rotation as _Rot
 from collections import deque
 
 import numpy as np
@@ -20,6 +23,14 @@ POSE_DTS = base.POSE_DTS
 ROT = slice(83, 104)
 feature = base.feature
 probabilities = base.probabilities
+
+
+CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9)
+
+
+def _yaw_pitch(x):
+    v = np.asarray(x[ROT]).reshape(7, 3)[4]*np.pi
+    return _Rot.from_rotvec(v).as_euler('ZYX', degrees=True)[:2]
 
 
 def attach_boosters(bundle):
@@ -62,18 +73,18 @@ class StreamEngine:
         self.last_candidate = {h: None for h in 'LR'}
         self.hand_mode = {h: None for h in 'LR'}; self.zero_yaw = {h: None for h in 'LR'}; self.zero_pitch = {h: None for h in 'LR'}
         self.heading_distance = {h: None for h in 'LR'}; self.count = 0; self.adapted = {h: 0 for h in 'LR'}
-        self.rejected = {h: 0 for h in 'LR'}
+        self.rejected = {h: 0 for h in 'LR'}; self.previous = {h: None for h in 'LR'}; self.continued = {h: 0 for h in 'LR'}
 
     def _classify(self, hand, x):
         st = self.stats[hand]; p0 = probabilities(self.bundle, x[None, :], hand)[0]; p1 = p0
         if st[0].total >= self.minh:
             x1 = x.copy(); x1[ROT] = x[ROT]+self.alpha*st[0].offset(self.tm[hand]); p1 = probabilities(self.bundle, x1[None, :], hand)[0]
-        pf = p1
+        pf = p1; x2 = x
         if st[1].total >= self.minh:
             x2 = x.copy(); x2[ROT] = x[ROT]+self.alpha*st[1].offset(self.tm[hand]); pf = probabilities(self.bundle, x2[None, :], hand)[0]
             self.adapted[hand] += 1
         st[0].add(x[ROT], p0, self.conf); st[1].add(x[ROT], p1, self.conf)
-        return pf
+        return pf, _yaw_pitch(x2)
 
     def _other_peak(self, hand, t):
         other = 'R' if hand == 'L' else 'L'
@@ -99,10 +110,14 @@ class StreamEngine:
             ph = hit_probability(self.bundle, g, peak.get('feature', []), vector, ctx)
             if ph < self.gate_threshold:
                 self.rejected[hand] += 1; continue
-            q = self._classify(hand, vector); top = np.sort(q)
+            q, yp = self._classify(hand, vector); top = np.sort(q); label = int(q.argmax()); prev = self.previous[hand]
+            if (prev is not None and q.max() < CONTINUITY['below_score'] and t-prev[0] <= CONTINUITY['max_ms']
+                    and float(np.hypot(*(yp-prev[1]))) <= CONTINUITY['max_deg']):
+                label = prev[2]; self.continued[hand] += 1
+            self.previous[hand] = (t, yp, label)
             self.count += 1
             output.append(dict(**{k: v for k, v in peak.items() if k != 'feature'}, prediction_id=self.count,
                                direction_mode='venue_free_adaptive', zero_yaw_deg=self.zero_yaw[hand], heading_distance_deg=None,
-                               drum=self.classes[int(q.argmax())], model_score=float(q.max()), model_margin=float(top[-1]-top[-2]),
+                               drum=self.classes[label], model_score=float(q.max()), model_margin=float(top[-1]-top[-2]),
                                hit_probability=ph))
         return output

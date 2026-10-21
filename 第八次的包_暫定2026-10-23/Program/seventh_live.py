@@ -31,7 +31,7 @@ import seventh_core as core
 PACK=core.PACK
 PRED_FIELDS=['prediction_id','hand','peak_ms','emitted_ms','peak_g','drum','model_score',
     'model_margin','accepted','guard_reason','peak_index','available_index','window_samples','processing_latency_ms','phase',
-    'direction_mode','zero_yaw_deg','heading_distance_deg']
+    'direction_mode','zero_yaw_deg','heading_distance_deg','hit_probability']
 
 
 class Take:

@@ -12,8 +12,8 @@ PACK=Path(__file__).resolve().parents[1]
 
 
 def main():
-    model=PACK/'Model/venue_free_committee_1023.joblib';config=PACK/'Model/detector_venue_free_1p7g.json'
-    assert sha256(model)=='abfef111139b7ee318295df7678f61a1d742702014d02daff88684b4eced55e3'
+    model=PACK/'Model/venue_free_committee_1023.joblib';config=PACK/'Model/detector_venue_free_1p5g.json'
+    assert sha256(model)=='fd1d0d3f8f3fd55bfdf982578d897f901efdfc71880f95c88dabb8b4b361d1b1'
     bundle=joblib.load(model)
     assert bundle['contract']=='hologrip_venue_free_committee_1023_v1'
     assert not bundle['pretests_in_training'] and not bundle['compass_heading_used'] and bundle['training_events']==13617
@@ -25,18 +25,18 @@ def main():
     deps=['numpy','scipy','scikit-learn','joblib','threadpoolctl','xgboost','pyserial','mido','customtkinter','tkinterdnd2']
     versions={name:importlib.metadata.version(name) for name in deps}
     manifest=dict(schema='hologrip-eighth-field-package-v1',target_date='2026-10-23',prepared_date='2026-10-21',
-        workflow_revision='2026-10-23-rounds4to7-adaptive',created_at=datetime.now().astimezone().isoformat(),
+        workflow_revision='2026-10-23-rounds4to7-adaptive-hitgate',created_at=datetime.now().astimezone().isoformat(),
         model=dict(file=model.name,sha256=sha256(model),input_dimensions=104,selected_dimensions=104,
                    training_scope='rounds 4-7 songs, four-drum, single-hand; pretests excluded',
                    training_events=13617,mode='per_hand_committee',runtime_contract=bundle['contract'],
                    members=bundle['members'],learners=['xgboost_cpu_inference','mlp_numpy_forward'],
-                   compass_heading_used=False,pretests_in_training=False,per_hit_independent=False,adaptation=bundle['adaptation'],cymbal_rescue=bundle['cymbal_rescue'],
+                   compass_heading_used=False,pretests_in_training=False,per_hit_independent=False,adaptation=bundle['adaptation'],hit_gate=dict(threshold=bundle['hit_gate']['threshold'],dims=bundle['hit_gate']['dims'],training=bundle['hit_gate']['training']),
                    future_context_ms=80,frozen=True),
-        detector=dict(file=config.name,sha256=sha256(config),profile='venue_free_1p7g_cymbal_rescue',
-                      threshold_g=1.7,embedded_model_detector_ignored=False),
+        detector=dict(file=config.name,sha256=sha256(config),profile='venue_free_1p5g_hit_gate',
+                      threshold_g=1.5,embedded_model_detector_ignored=False),
         output_guard=dict(enabled=False,reason='Every released hit is reported; no abstention or margin filter.'),
         runtime_hashes=hashes,dependencies=versions,
-        architecture='detector 1.7 g -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction -> cymbal rescue gate for peaks < 2.1 g',
+        architecture='detector 1.5 g candidates -> learned hit gate -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction',
         research_reference=dict(pretests_in_training=False,dev_selected_on_pretests=True,unseen_day_blind_test=False,
             pretest_scores='replay of 6 pretests through this engine: see 改動紀錄_第八次包_1023_ZH_TW.md'),
         inactive_legacy_files=['Program/seventh_heading_runtime.py'],

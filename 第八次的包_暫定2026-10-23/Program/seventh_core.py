@@ -1,7 +1,7 @@
 """Field adapter: validated packets -> external hits -> venue-free per-hit committee.
 
 2026-10-23 (8th package): rounds 4-7 venue-free committee + causal per-drum offset
-correction (earlier hits of the same hand only) + cymbal light-hit rescue (1.7 g).
+correction (earlier hits of the same hand only) + learned hit gate on 1.5 g candidates.
 Each hit is reported as soon as the detector releases it (peak + 80 ms). No MIDI,
 target sequence, opening taps, fitting or confidence rejection is used. The
 caller saves every Raw packet before this quality validation and inference stage.
@@ -20,12 +20,12 @@ from production_core import FrameValidator
 PACK = Path(__file__).resolve().parents[1]
 DRUMS = ['小鼓', '高音 Tom', '中音 Tom', '落地 Tom', 'Hi-Hat', 'Crash', 'Ride']
 MODEL = PACK / 'Model/venue_free_committee_1023.joblib'
-CONFIG = PACK / 'Model/detector_venue_free_1p7g.json'
-MODEL_SHA256 = 'abfef111139b7ee318295df7678f61a1d742702014d02daff88684b4eced55e3'
+CONFIG = PACK / 'Model/detector_venue_free_1p5g.json'
+MODEL_SHA256 = 'fd1d0d3f8f3fd55bfdf982578d897f901efdfc71880f95c88dabb8b4b361d1b1'
 GENERATED_DIMENSIONS = runtime.INPUT_DIMENSIONS
 SELECTED_DIMENSIONS = runtime.INPUT_DIMENSIONS
 TRAINING_EVENTS = 13617
-MODEL_NAME = '第4～7次場地無關模型＋逐鼓位置校正＋鈸輕擊救回'
+MODEL_NAME = '第4～7次場地無關模型＋打擊判斷＋逐鼓位置校正'
 
 
 def load_guard():
@@ -67,6 +67,8 @@ def load_components():
                 raise ValueError('模型特徵維度錯誤')
     if bundle['detector_config'] != config['config'] or manifest['output_guard']['enabled']:
         raise ValueError('打擊參數或輸出政策與研究版不一致')
+    if 'hit_gate' not in bundle or bundle['hit_gate']['dims'] != 126:
+        raise ValueError('打擊判斷模型缺失或維度錯誤')
     if bundle['training_events'] != TRAINING_EVENTS:
         raise ValueError('訓練筆數契約錯誤')
     runtime.attach_boosters(bundle)

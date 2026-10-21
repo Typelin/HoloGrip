@@ -2,11 +2,11 @@
   "schema": "hologrip-eighth-field-package-v1",
   "target_date": "2026-10-23",
   "prepared_date": "2026-10-21",
-  "workflow_revision": "2026-10-23-rounds4to7-adaptive",
-  "created_at": "2026-10-21T15:08:27.363300+08:00",
+  "workflow_revision": "2026-10-23-rounds4to7-adaptive-hitgate",
+  "created_at": "2026-10-21T18:21:20.102030+08:00",
   "model": {
     "file": "venue_free_committee_1023.joblib",
-    "sha256": "abfef111139b7ee318295df7678f61a1d742702014d02daff88684b4eced55e3",
+    "sha256": "fd1d0d3f8f3fd55bfdf982578d897f901efdfc71880f95c88dabb8b4b361d1b1",
     "input_dimensions": 104,
     "selected_dimensions": 104,
     "training_scope": "rounds 4-7 songs, four-drum, single-hand; pretests excluded",
@@ -58,24 +58,19 @@
       ],
       "causal": "past hits of the same hand in the take only"
     },
-    "cymbal_rescue": {
-      "detector_threshold_g": 1.7,
-      "strong_g": 2.1,
-      "cymbals": [
-        "Hi-Hat",
-        "Crash",
-        "Ride"
-      ],
-      "min_score": 0.6
+    "hit_gate": {
+      "threshold": 0.4,
+      "dims": 126,
+      "training": "21 non-pretest recordings, 16087 candidates; leave-one-day-out recall 98.8% precision 99.1%"
     },
     "future_context_ms": 80,
     "frozen": true
   },
   "detector": {
-    "file": "detector_venue_free_1p7g.json",
-    "sha256": "081b53c83c7a4ee36b764e81aa0f1ea9ef414b85915f83caa2acbc7f3977cf5e",
-    "profile": "venue_free_1p7g_cymbal_rescue",
-    "threshold_g": 1.7,
+    "file": "detector_venue_free_1p5g.json",
+    "sha256": "e86a33a8554f68c5909126808c126860ba90da0e61a8efaddd6fb72145e89266",
+    "profile": "venue_free_1p5g_hit_gate",
+    "threshold_g": 1.5,
     "embedded_model_detector_ignored": false
   },
   "output_guard": {
@@ -97,29 +92,29 @@
     "Program/causal_hit_queue_1016.py": "1edeb0c6474acf9cb7309dc98047504352cebd45f7db4c56d1040e1979e41ae3",
     "Program/drumhead_zero_runtime_1019.py": "4c7da2f45f6e32a6bb4ee2353e953b7de8cd0ca1e43832977198d4cc69290de7",
     "Program/fourth_song03_raw_runtime_1008.py": "2c2e630fd9c56eddfb551b2b671106e7ec67140a225a94939a75c66d15804b04",
-    "Program/freeze_seventh_package.py": "6474958a1ad439a22b7fd327cfd5018bd0bfc3f2edd8fdbaf18cd4259f1db7ea",
+    "Program/freeze_seventh_package.py": "4df835a75ac2bd8211390e43d7ce2fa4a967ca5b12fe1aec18dc2021338e70eb",
     "Program/midi_anomaly_check.py": "aeb37edd40e096c422ecb749c6f8eac879b48eb05a813363a97d6f8112ac703e",
     "Program/midi_csv_alignment_gui.py": "b165e4c0d3db6e1aefe2ccbcfdb80c49c9e53c225a44bcd003d26c1b6a6e20c1",
     "Program/midi_label_pipeline.py": "bdd4b0819d0973e3caefb9c8e105146fe1288e56adc55df0609ca04836515587",
     "Program/pretest_zone_trajectory_runtime_1019.py": "bc9316df8051c10a801cb3444874c7ca602b3b3b74f09001c02dadb2c1be3870",
     "Program/production_core.py": "2f6faf13f343d0c3c118b07ab85cb2bd782e444e77f8248b906aee85ad6d531e",
-    "Program/seventh_check.py": "2497e3bf133fa352903f3de3ef573467861f3a7921eae9dd180054704f19048c",
+    "Program/seventh_check.py": "a897682f3271994baf56931976adc0dea1dbcc2df31a721bf82d018450916759",
     "Program/seventh_collect.py": "6c40824904684c05eaed7631944581fb4e4e32914fd0e675468cde96710ca257",
-    "Program/seventh_core.py": "005bde121525723fac58cb743fa73be3bb8eaaa96def9ca7cd3d5e2c5b321a28",
+    "Program/seventh_core.py": "cc19418dca3df57d5358d5505a8f59e123b4f1d19217fd23b8446c0d447c1cf0",
     "Program/seventh_entry.py": "c0731bd45aa814eef49eb6f7fd490c60e296fba7ae6ddea810dfe93ff3c3786d",
     "Program/seventh_heading_runtime.py": "050fdff405d7ec4ea8a1a1be82d426d765b7ee76bb28d8b83955b9e6574c4735",
-    "Program/seventh_live.py": "c6a7d6be56973d95ba09f89f1475f37300444cc7c73e29dee74951cc7cab16c4",
-    "Program/seventh_native_gui.py": "327fe4e4ab1814fec59faff69a6dcf1c4318b6f830d1676d07c66123352a117c",
+    "Program/seventh_live.py": "ccca23e4d2a1306c2b7e7f83596a428fad3ca12707a7dc3f762c93b9847733ef",
+    "Program/seventh_native_gui.py": "85cce6cec11615aaa9141d8d7861a5cc831ec78de8bc705a4c51e372b9fe5aa9",
     "Program/seventh_replay.py": "742b0ee98b09f657515796c0beb0f353158703b4ea9829a3dee1d4ffff05bd9d",
     "Program/song_collection_com.py": "34d4880c022c904ed4952a651a56c0098f489e1e0f3e01f5e938ee5ae1f86b50",
     "Program/song_collection_server.py": "e0427b857b56c9b90eaace1773193bda03801345130f561493504314411faed2",
     "Program/song_collection_ui.py": "26f7eee086bf6eb87b929fd62628e056b685ab8dfadae7ddda025955b1642175",
     "Program/test_seventh_browser.py": "b9f56f3ff90fccc165127ecf65dec1a79a701e47420c30535be096fe56fbffda",
-    "Program/test_seventh_native_gui.py": "efe11b97431d2054a8f85ac1da11ae179024a70c54f10facb29acf0549476c5e",
-    "Program/test_seventh_package.py": "4e616b6e44de33dd6d66be3e074f85b56c69b2b2cd1c1d11a13c37adacda166e",
+    "Program/test_seventh_native_gui.py": "7c9016134633b980ba275d7c9117e1f2e7a7f45e8da7a2e85848afb08e3d8d8f",
+    "Program/test_seventh_package.py": "6709020da39b9255e98eff446c15d84bb64f7bdfdde6dbbfc70f31a9003838a1",
     "Program/trajectory_runtime_456_1016.py": "e69cf4f44826546e3ae57a3df345d44bbf6101768cde093a2cdb26b01c5533e4",
     "Program/venue_free_runtime_1020.py": "5f6fbadbd1dc55d910c6a1130ae0756cb735221d35c5caafe816676e7c096dfa",
-    "Program/venue_free_runtime_1023.py": "21836fd9aad787ba0991b96f3fe4f6bf9530fdd155b74f64162b212519e4bfce",
+    "Program/venue_free_runtime_1023.py": "2664c2baee7d5dc7eaff3e61abd73bcad465d07db9d0f4f74ef787bf5418fdad",
     "Program/world_stream_runtime_1019.py": "8b9a6e2669c71241a3578bbd98ccdb8ad4d9bb2dbc930df4ea2ca5c4dcb10137",
     "Firmware/Gloves_Left_L/Gloves_Left_L.ino": "8bf0fb4718b618c52017e52f3f7662e2bc3b9670c628f2e9e0fe21446a1ffa97",
     "Firmware/Gloves_Right_R/Gloves_Right_R.ino": "6cf61b56a189115d4d7aadf7e148345a699ed8584f55607479f3b3a42cb37a6b"
@@ -136,7 +131,7 @@
     "customtkinter": "5.2.2",
     "tkinterdnd2": "0.6.3"
   },
-  "architecture": "detector 1.7 g -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction -> cymbal rescue gate for peaks < 2.1 g",
+  "architecture": "detector 1.5 g candidates -> learned hit gate -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction",
   "research_reference": {
     "pretests_in_training": false,
     "dev_selected_on_pretests": true,

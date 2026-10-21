@@ -55,9 +55,9 @@ class Tests(unittest.TestCase):
         self.assertFalse(self.bundle['compass_heading_used']);self.assertFalse(self.bundle['pretests_in_training'])
         self.assertLessEqual(self.bundle['future_context_ms'],80)
         self.assertEqual(self.bundle['adaptation']['kind'],'per_drum_prototype_offset')
-        self.assertEqual(self.bundle['cymbal_rescue']['strong_g'],2.1)
+        self.assertEqual(self.bundle['hit_gate']['dims'],126);self.assertEqual(self.bundle['hit_gate']['threshold'],0.4)
         self.assertEqual(self.config['refractory_ms'],80.)
-        self.assertEqual(self.config['threshold_g'],1.7)
+        self.assertEqual(self.config['threshold_g'],1.5)
         self.assertEqual(self.bundle['training_events'],13617)
         import inspect
         self.assertEqual(list(inspect.signature(core.Engine.push).parameters),['self','hand','s','raw_frame'])
@@ -79,7 +79,8 @@ class Tests(unittest.TestCase):
                 signatures.append([(p['hand'],p['peak_ms'],p['emitted_ms'],p['drum'],round(p['model_score'],6)) for p in out])
         self.assertTrue(all(sig==signatures[0] for sig in signatures))
 
-    def test_native_live_entry_and_marker_isolation(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_native_live_entry_and_marker_isolation(self,_gate):
         import seventh_entry
         with patch.object(seventh_entry.sys,'argv',['seventh_entry.py','live','--smoke']), \
              patch.object(seventh_entry.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
@@ -118,9 +119,10 @@ class Tests(unittest.TestCase):
             self.assertEqual([(p['hand'],p['peak_ms'],p['emitted_ms'],p['drum']) for p in outputs],
                 [(p['hand'],float(p['peak_ms']),float(p['emitted_ms']),p['drum']) for p in reference])
             self.assertTrue(np.allclose([p['model_score'] for p in outputs],[float(p['model_score']) for p in reference]))
-            self.assertTrue(all(p['peak_g']>=2.1 or p['drum'] in ('Hi-Hat','Crash','Ride') for p in outputs))
+            self.assertTrue(all(p['hit_probability']>=0.4 for p in outputs))
 
-    def test_raw_preserves_invalid_and_multiple_hits(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_raw_preserves_invalid_and_multiple_hits(self,_gate):
         clock=Clock();take=live.Take(OUT,'QA_RAW_ALL',self.bundle,self.config,{'L':(25,15),'R':(25,15)},
             {'QA_A':'L','QA_B':'R'},clock=clock);base=clock.now
         for i in range(80):
@@ -135,7 +137,8 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(p['phase']=='formal' for p in readcsv(take.folder/'predictions.csv')))
         self.assertFalse(report['reference_targets_used_during_inference'])
 
-    def test_direct_start_has_no_demonstration_gate_or_answers(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_direct_start_has_no_demonstration_gate_or_answers(self,_gate):
         clock=Clock();take=live.Take(OUT,'QA_DIRECT_TEST',self.bundle,self.config,{'L':(25,15),'R':(25,15)},
             {'QA_A':'L','QA_B':'R'},clock=clock);base=clock.now
         self.assertEqual(take.snapshot()['phase'],'formal')
@@ -163,7 +166,8 @@ class Tests(unittest.TestCase):
         self.assertEqual(report['model_sha256'],core.MODEL_SHA256)
         self.assertFalse(report['output_guard']['enabled'])
 
-    def test_metadata_failure_still_stops_raw(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_metadata_failure_still_stops_raw(self,_gate):
         clock=Clock();take=live.Take(OUT,'QA_CLOSE_ERROR',self.bundle,self.config,{'L':(0,0),'R':(0,0)},
             {'QA_A':'L','QA_B':'R'},clock=clock);base=clock.now
         for i in range(20):
@@ -173,7 +177,8 @@ class Tests(unittest.TestCase):
         self.assertFalse(report['saved_ok']);self.assertEqual(report['raw_written'],40)
         self.assertFalse(take.recorder.active);self.assertTrue(report['errors'])
 
-    def test_close_scores_are_logged_and_emitted_without_guard(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_close_scores_are_logged_and_emitted_without_guard(self,_gate):
         clock=Clock();take=live.Take(OUT,'QA_AMBIGUOUS',self.bundle,self.config,{'L':(25,15),'R':(25,15)},
             {'QA_A':'L','QA_B':'R'},clock=clock);base=clock.now
         probabilities=np.zeros((1,7));probabilities[0,:2]=[.55,.45]
@@ -189,7 +194,8 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(p['accepted']=='True' and p['guard_reason']=='accepted_no_confidence_filter' for p in rows))
         self.assertTrue(report['rejected_predictions_preserved'])
 
-    def test_sensor_clock_reset_cancels_pending_but_preserves_raw(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_sensor_clock_reset_cancels_pending_but_preserves_raw(self,_gate):
         clock=Clock();take=live.Take(OUT,'QA_SENSOR_RESET',self.bundle,self.config,{'L':(25,15),'R':(25,15)},
             {'QA_A':'L','QA_B':'R'},clock=clock);base=clock.now
         for i in range(100):
@@ -264,7 +270,8 @@ class Tests(unittest.TestCase):
             env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1','OPENBLAS_NUM_THREADS':'1'},capture_output=True,text=True,encoding='utf-8',timeout=30)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
 
-    def test_new_raw_schema_to_alignment_html(self):
+    @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
+    def test_new_raw_schema_to_alignment_html(self,_gate):
         import midi_csv_alignment_gui as gui
         clock=Clock();take=live.Take(OUT,'QA_ALIGNMENT_SCHEMA',self.bundle,self.config,
             {'L':(25,15),'R':(25,15)},{'QA_A':'L','QA_B':'R'},clock=clock)

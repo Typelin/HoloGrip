@@ -39,7 +39,8 @@ def main():
     clock=Clock();base=clock.now;tick=0;checks=[]
     with patch('webbrowser.open',side_effect=AssertionError('Browser must not open')), \
          patch.object(live,'ThreadingHTTPServer',side_effect=AssertionError('HTTP must not start')), \
-         patch.object(live.serial,'Serial',side_effect=AssertionError('Real COM must not open')):
+         patch.object(live.serial,'Serial',side_effect=AssertionError('Real COM must not open')), \
+         patch.object(core.runtime,'hit_probability',return_value=1.0):  # synthetic spikes test GUI mechanics, not the hit gate
         service=live.Service(data_root=OUT/'recordings',clock=clock,
             ports_provider=lambda:['QA_LEFT','QA_RIGHT'],serial_factory=FakeSerial)
         app=native.App(service=service);app.withdraw()

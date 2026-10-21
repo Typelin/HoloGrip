@@ -1,14 +1,12 @@
-"""10/23 runtime: venue-free committee + causal per-drum offset correction + cymbal light-hit rescue.
+"""10/23 runtime: hit gate + venue-free committee + causal per-drum offset correction.
 
-Per hit (released by the detector at peak + 80 ms):
-  1. features: heading-free trajectory summary + rotation relative to the recorded drumhead zero
-     (same 104 dims as 10/20, see venue_free_runtime_1020);
-  2. per-drum offset correction: from EARLIER hits of the same hand in this take that the model was
-     confident about (score >= 0.7), compare their mean rotation per predicted drum with that drum's
-     training mean; the count-weighted gap shifts this hit's rotation block (after >= 20 such hits).
-     Done twice (second pass uses the corrected predictions of earlier hits). No labels, no future;
-  3. cymbal light-hit rescue: the detector runs at 1.7 g; peaks below 2.1 g are reported only when
-     the model calls them Hi-Hat / Crash / Ride with score >= 0.6. All peaks feed the history.
+Per candidate peak (detector at 1.5 g, released at peak + 80 ms):
+  1. hit gate: a learned classifier decides whether the stick really hit a drum, from the peak's
+     shape (detector features), the 104 venue-free features, the other hand's motion within +-40 ms
+     and the time / strength relative to the previous candidate of the same hand. Non-hits are dropped
+     and do not enter any history.
+  2. drum: venue-free committee with per-drum offset correction from EARLIER accepted hits of the same
+     hand in this take (score >= 0.7, after >= 20 such hits, two passes). No labels, no future.
 """
 from collections import deque
 
@@ -22,7 +20,19 @@ POSE_DTS = base.POSE_DTS
 ROT = slice(83, 104)
 feature = base.feature
 probabilities = base.probabilities
-attach_boosters = base.attach_boosters
+
+
+def attach_boosters(bundle):
+    base.attach_boosters(bundle)
+    gate = bundle['hit_gate']; bst = bundle['_xgb'].Booster(); bst.load_model(bytearray(gate['xgb_json'])); bst.set_param({'nthread': 1})
+    bundle['_hit_gate'] = bst
+    return bundle
+
+
+def hit_probability(bundle, g, det, x, ctx):
+    d = np.asarray(det, np.float32) if len(det) else np.zeros(18, np.float32)
+    v = np.r_[g, d, x, ctx].astype(np.float32)[None, :]
+    return float(bundle['_hit_gate'].predict(bundle['_xgb'].DMatrix(v))[0])
 
 
 class _Stats:
@@ -41,27 +51,34 @@ class _Stats:
 
 class StreamEngine:
     def __init__(self, bundle):
-        self.bundle = bundle; ad = bundle['adaptation']; cr = bundle['cymbal_rescue']
+        self.bundle = bundle; ad = bundle['adaptation']
         self.alpha, self.conf, self.minh = ad['alpha'], ad['confidence'], ad['min_confident_hits']
-        self.strong_g, self.cym, self.min_score = cr['strong_g'], set(cr['cymbals']), cr['min_score']
+        self.gate_threshold = bundle['hit_gate']['threshold']
         self.classes = [str(c) for c in bundle['classes']]
         self.tm = {h: np.array([bundle['drum_rotation_means'].get(f'{h}|{d}', np.zeros(21)) for d in self.classes]) for h in 'LR'}
         self.history = {h: deque(maxlen=1024) for h in 'LR'}
         self.hit = {h: base.world.base.detector.HitStream(h, bundle['detector_config']) for h in 'LR'}
         self.stats = {h: [_Stats(), _Stats()] for h in 'LR'}
+        self.last_candidate = {h: None for h in 'LR'}
         self.hand_mode = {h: None for h in 'LR'}; self.zero_yaw = {h: None for h in 'LR'}; self.zero_pitch = {h: None for h in 'LR'}
         self.heading_distance = {h: None for h in 'LR'}; self.count = 0; self.adapted = {h: 0 for h in 'LR'}
+        self.rejected = {h: 0 for h in 'LR'}
 
     def _classify(self, hand, x):
-        st = self.stats[hand]; p0 = probabilities(self.bundle, x[None, :], hand)[0]; p = p0; x1 = x
+        st = self.stats[hand]; p0 = probabilities(self.bundle, x[None, :], hand)[0]; p1 = p0
         if st[0].total >= self.minh:
-            x1 = x.copy(); x1[ROT] = x[ROT]+self.alpha*st[0].offset(self.tm[hand]); p = probabilities(self.bundle, x1[None, :], hand)[0]
-        p1 = p; pf = p1
+            x1 = x.copy(); x1[ROT] = x[ROT]+self.alpha*st[0].offset(self.tm[hand]); p1 = probabilities(self.bundle, x1[None, :], hand)[0]
+        pf = p1
         if st[1].total >= self.minh:
             x2 = x.copy(); x2[ROT] = x[ROT]+self.alpha*st[1].offset(self.tm[hand]); pf = probabilities(self.bundle, x2[None, :], hand)[0]
             self.adapted[hand] += 1
         st[0].add(x[ROT], p0, self.conf); st[1].add(x[ROT], p1, self.conf)
         return pf
+
+    def _other_peak(self, hand, t):
+        other = 'R' if hand == 'L' else 'L'
+        vals = [s['mag'] for s in self.history[other] if abs(s['t']-t) <= 40]
+        return max(vals) if vals else 1.0
 
     def push(self, hand, sample):
         self.zero_yaw[hand] = (sample['absolute_yaw']-sample['yaw']+180) % 360-180
@@ -72,15 +89,20 @@ class StreamEngine:
         if not peaks: return []
         rows = list(self.history[hand])
         prepared = base.world.base.legacy.prepare({hand: rows}); first = rows[0]['index']; output = []
-        for peak in peaks:
+        for peak in sorted(peaks, key=lambda p: p['peak_ms']):
             local = {**peak, 'peak_index': int(peak['peak_index'])-first, 'available_index': len(rows)-1}
             vector = feature(prepared, local, self.zero_yaw[hand], self.zero_pitch[hand])
             if vector is None: continue
-            q = self._classify(hand, vector); top = np.sort(q); drum = self.classes[int(q.argmax())]
-            if float(peak.get('peak_g', 99)) < self.strong_g and not (drum in self.cym and q.max() >= self.min_score):
-                continue
+            t, g = float(peak['peak_ms']), float(peak['peak_g']); pv = self.last_candidate[hand]
+            ctx = np.array([self._other_peak(hand, t), np.log1p(min(t-pv[0], 3000)) if pv else np.log1p(3000), g/pv[1] if pv else 1.0], np.float32)
+            self.last_candidate[hand] = (t, g)
+            ph = hit_probability(self.bundle, g, peak.get('feature', []), vector, ctx)
+            if ph < self.gate_threshold:
+                self.rejected[hand] += 1; continue
+            q = self._classify(hand, vector); top = np.sort(q)
             self.count += 1
             output.append(dict(**{k: v for k, v in peak.items() if k != 'feature'}, prediction_id=self.count,
                                direction_mode='venue_free_adaptive', zero_yaw_deg=self.zero_yaw[hand], heading_distance_deg=None,
-                               drum=drum, model_score=float(q.max()), model_margin=float(top[-1]-top[-2])))
+                               drum=self.classes[int(q.argmax())], model_score=float(q.max()), model_margin=float(top[-1]-top[-2]),
+                               hit_probability=ph))
         return output

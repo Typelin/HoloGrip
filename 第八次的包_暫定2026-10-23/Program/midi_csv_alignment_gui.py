@@ -308,15 +308,15 @@ def render_frontend_html(
 
 def default_output_dir() -> Path:
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    return DEFAULT_OUTPUT_ROOT / f"現場MIDI_CSV對齊_1020_ZH_TW_{stamp}"
+    return DEFAULT_OUTPUT_ROOT / f"現場MIDI_CSV對齊_1023_ZH_TW_{stamp}"
 
 
 def unused_output_dir(requested: Path) -> Path:
     """Keep an earlier MIDI-only or alignment review from being overwritten."""
     outputs = (
-        "HoloGrip_MIDI單檔檢查_1020_ZH_TW.html",
-        "HoloGrip_MIDI_CSV對齊現場檢查_1020_ZH_TW.html",
-        "MIDI_CSV對齊報告_1020_ZH_TW.json",
+        "HoloGrip_MIDI單檔檢查_1023_ZH_TW.html",
+        "HoloGrip_MIDI_CSV對齊現場檢查_1023_ZH_TW.html",
+        "MIDI_CSV對齊報告_1023_ZH_TW.json",
         "midi_events.csv",
         "labeled_window_samples.csv",
     )
@@ -487,12 +487,12 @@ class AlignmentGui:
         self.output_var.set(str(output_dir))
         output_dir.mkdir(parents=True, exist_ok=True)
         data = build_midi_only_data(self.midi_path, bpm)
-        frontend_path = output_dir / "HoloGrip_MIDI單檔檢查_1020_ZH_TW.html"
+        frontend_path = output_dir / "HoloGrip_MIDI單檔檢查_1023_ZH_TW.html"
         frontend_path.write_text(
             render_midi_only_html(data, int(float(self.window_var.get()))),
             encoding="utf-8",
         )
-        (output_dir / "MIDI單檔檢查資料_1020_ZH_TW.json").write_text(
+        (output_dir / "MIDI單檔檢查資料_1023_ZH_TW.json").write_text(
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         self.frontend_path = frontend_path
@@ -584,7 +584,7 @@ class AlignmentGui:
                     pre_ms=window,
                     post_ms=window,
                 )
-                report_path = output_dir / "MIDI_CSV對齊報告_1020_ZH_TW.json"
+                report_path = output_dir / "MIDI_CSV對齊報告_1023_ZH_TW.json"
                 report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
                 data = build_frontend_data(
                     csv_path,
@@ -594,7 +594,7 @@ class AlignmentGui:
                     output_dir / "midi_events.csv",
                 )
                 frontend_text = render_frontend_html(FRONTEND_TEMPLATE.read_text(encoding="utf-8"), data, auto_play, window, media_defaults=False)
-                frontend_path = output_dir / "HoloGrip_MIDI_CSV對齊現場檢查_1020_ZH_TW.html"
+                frontend_path = output_dir / "HoloGrip_MIDI_CSV對齊現場檢查_1023_ZH_TW.html"
                 frontend_path.write_text(frontend_text, encoding="utf-8")
                 manifest = {
                     "midi": str(midi_path.resolve()),
@@ -608,7 +608,7 @@ class AlignmentGui:
                     "auto_play": auto_play,
                     "status": report["status"],
                 }
-                (output_dir / "現場MIDI_CSV對齊工作區_1020_ZH_TW.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+                (output_dir / "現場MIDI_CSV對齊工作區_1023_ZH_TW.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
                 self.queue.put(("success", report, frontend_path, output_dir, report_path))
             except Exception as error:  # noqa: BLE001 - show every field/parse failure in the GUI.
                 self.queue.put(("error", error))
@@ -692,7 +692,7 @@ def self_test() -> None:
         target = Path(temp) / "take01"
         target.mkdir()
         assert unused_output_dir(target) == target
-        (target / "HoloGrip_MIDI單檔檢查_1020_ZH_TW.html").touch()
+        (target / "HoloGrip_MIDI單檔檢查_1023_ZH_TW.html").touch()
         assert unused_output_dir(target) != target
     print("SIXTH_ALIGNMENT_GUI_SELF_TEST_PASS")
 

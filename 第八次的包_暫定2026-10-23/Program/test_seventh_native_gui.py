@@ -94,7 +94,7 @@ def main():
             checks.append('20 hits per hand, large drum labels, Hz/counters and one active tile per hand')
 
             low=np.zeros((1,7));low[0,:2]=[.55,.45]
-            with patch.object(core.runtime,'probabilities',return_value=low):feed(80,'L',[30])
+            with patch.object(core.runtime,'probabilities',side_effect=lambda b,X,h:np.repeat(low,len(X),0)):feed(80,'L',[30])
             assert app.counts=={'L':21,'R':20}
             assert app.labels['L'].cget('text')==str(service.bundle['classes'][0])
             click('stop')

@@ -146,7 +146,7 @@ class Tests(unittest.TestCase):
         import inspect
         self.assertNotIn('reference',inspect.signature(live.Take).parameters)
         probabilities=np.zeros((1,7));probabilities[0,list(self.bundle['classes']).index('Ride')]=1
-        with patch.object(core.runtime,'probabilities',return_value=probabilities):
+        with patch.object(core.runtime,'probabilities',side_effect=lambda b,X,h:np.repeat(probabilities,len(X),0)):
             for i in range(80):
                 for h in 'LR':take.push(packet(h,base,i,6. if h=='L' and i==30 else 1.,clock))
             self.assertEqual(take.snapshot()['formal_counts'],{'L':1,'R':0})
@@ -182,7 +182,7 @@ class Tests(unittest.TestCase):
         clock=Clock();take=live.Take(OUT,'QA_AMBIGUOUS',self.bundle,self.config,{'L':(25,15),'R':(25,15)},
             {'QA_A':'L','QA_B':'R'},clock=clock);base=clock.now
         probabilities=np.zeros((1,7));probabilities[0,:2]=[.55,.45]
-        with patch.object(core.runtime,'probabilities',return_value=probabilities):
+        with patch.object(core.runtime,'probabilities',side_effect=lambda b,X,h:np.repeat(probabilities,len(X),0)):
             for i in range(80):
                 for h in 'LR':take.push(packet(h,base,i,6. if i==30 else 1.,clock))
         snap=take.snapshot();self.assertEqual(snap['formal_counts'],{'L':1,'R':1})

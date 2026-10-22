@@ -43,7 +43,7 @@ def attach_boosters(bundle):
 def hit_probability(bundle, g, det, x, ctx):
     d = np.asarray(det, np.float32) if len(det) else np.zeros(18, np.float32)
     v = np.r_[g, d, x, ctx].astype(np.float32)[None, :]
-    return float(bundle['_hit_gate'].predict(bundle['_xgb'].DMatrix(v))[0])
+    return float(bundle['_hit_gate'].inplace_predict(v)[0])
 
 
 class _Stats:
@@ -76,13 +76,16 @@ class StreamEngine:
         self.rejected = {h: 0 for h in 'LR'}; self.previous = {h: None for h in 'LR'}; self.continued = {h: 0 for h in 'LR'}
 
     def _classify(self, hand, x):
-        st = self.stats[hand]; p0 = probabilities(self.bundle, x[None, :], hand)[0]; p1 = p0
-        if st[0].total >= self.minh:
-            x1 = x.copy(); x1[ROT] = x[ROT]+self.alpha*st[0].offset(self.tm[hand]); p1 = probabilities(self.bundle, x1[None, :], hand)[0]
-        pf = p1; x2 = x
-        if st[1].total >= self.minh:
-            x2 = x.copy(); x2[ROT] = x[ROT]+self.alpha*st[1].offset(self.tm[hand]); pf = probabilities(self.bundle, x2[None, :], hand)[0]
+        # Both corrections depend only on earlier hits, so all inputs go to the committee in one batch.
+        st = self.stats[hand]; use1 = st[0].total >= self.minh; use2 = st[1].total >= self.minh
+        rows = [x]; x2 = x
+        if use1:
+            x1 = x.copy(); x1[ROT] = x[ROT]+self.alpha*st[0].offset(self.tm[hand]); rows.append(x1)
+        if use2:
+            x2 = x.copy(); x2[ROT] = x[ROT]+self.alpha*st[1].offset(self.tm[hand]); rows.append(x2)
             self.adapted[hand] += 1
+        P = probabilities(self.bundle, np.stack(rows), hand)
+        p0 = P[0]; p1 = P[1] if use1 else p0; pf = P[-1] if use2 else p1
         st[0].add(x[ROT], p0, self.conf); st[1].add(x[ROT], p1, self.conf)
         return pf, _yaw_pitch(x2)
 

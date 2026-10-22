@@ -213,7 +213,7 @@ def main():
     if args.smoke:
         app.withdraw();app.after(100,app.close)
     app.mainloop()
-    if args.smoke:print('PASS: native Tk GUI + 1.5 g candidates + learned hit gate + rounds4-7 committee with per-drum offset correction; no browser or COM opened.')
+    if args.smoke:print('PASS: native Tk GUI + 1.5 g candidates + learned hit gate + rounds4-7 committee + per-drum offset correction + pose continuity; no browser or COM opened.')
     return 0
 
 

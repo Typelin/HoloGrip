@@ -114,9 +114,8 @@ def attach_boosters(bundle):
 def probabilities(bundle, X, hand):
     """Committee average of (XGBoost + MLP)/2 over all members; columns follow bundle['classes']."""
     X = np.asarray(X, dtype=np.float32); out = 0
-    dm = bundle['_xgb'].DMatrix(X)
     for key, member in bundle['portable'].items():
-        px = bundle['_boosters'][key, hand].predict(dm)
+        px = bundle['_boosters'][key, hand].inplace_predict(X)
         out = out+(px+mlp_proba(member[hand]['mlp'], X))/2
     return out/len(bundle['portable'])
 

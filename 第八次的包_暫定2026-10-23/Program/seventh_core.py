@@ -93,13 +93,13 @@ def raw_row(packet, s, index):
 
 
 class Engine:
-    def __init__(self, bundle, config):
+    def __init__(self, bundle, config, snare_anchor=0):
         if config != bundle['detector_config']:
             raise ValueError('打擊參數必須等於凍結研究版')
         self.bundle = bundle
         self.config = dict(config)
         self.output_guard = load_guard()
-        self.runtime = runtime.StreamEngine(bundle)
+        self.runtime = runtime.StreamEngine(bundle, snare_anchor)
         self.streams = self.runtime.hit
         self.history = self.runtime.history
         self.validators = {h: FrameValidator() for h in 'LR'}

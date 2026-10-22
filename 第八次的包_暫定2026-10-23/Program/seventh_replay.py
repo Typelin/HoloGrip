@@ -11,9 +11,10 @@ import seventh_core as core
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--raw',required=True);ap.add_argument('--output',required=True)
+    ap.add_argument('--pretest',action='store_true',help='pretest protocol: each hand starts on the snare (same as 1_測前次)')
     args=ap.parse_args();target=Path(args.output)
     if target.exists():raise ValueError('Refuse overwrite')
-    bundle,config=core.load_components();engine=core.Engine(bundle,config)
+    bundle,config=core.load_components();engine=core.Engine(bundle,config,snare_anchor=core.runtime.PRETEST_SNARE_ANCHOR if args.pretest else 0)
     hands=core.trajectory.read_raw(args.raw)
     source=[]
     with Path(args.raw).open(encoding='utf-8-sig',newline='') as f:source=list(csv.DictReader(f))
@@ -28,7 +29,7 @@ def main():
     manifest=dict(raw_sha256=core.detector.rt.sha256(args.raw),output_sha256=core.detector.rt.sha256(target),
         model_sha256=core.detector.rt.sha256(core.MODEL),detector_config_sha256=core.detector.rt.sha256(core.CONFIG),
         classifier_contract=core.runtime.CONTRACT,direction_modes=engine.runtime.hand_mode,
-        zero_yaw=engine.runtime.zero_yaw,zero_pitch=engine.runtime.zero_pitch,
+        zero_yaw=engine.runtime.zero_yaw,snare_anchor_hits=engine.runtime.anchor,zero_pitch=engine.runtime.zero_pitch,
         rows=len(source),predictions=len(output),invalid=engine.invalid,
         midi_read_during_inference=False,uses_exact_field_engine=True,detector=config)
     target.with_suffix('.manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')

@@ -104,6 +104,7 @@ def main():
             assert not report['reference_targets_used_during_inference'] and not report['personal_adaptation']
             assert report['formal_counts']=={'L':21,'R':20}
             assert report['rejected_counts']=={'L':0,'R':0}
+            assert report['venue_free']['snare_anchor_hits']==5 and report['venue_free']['continuity']['previous_in_top']==2
             assert len(rows(report['raw_path']))==1520
             predictions=rows(folder/'predictions.csv')
             assert len(predictions)==41 and all(p['accepted']=='True' for p in predictions)

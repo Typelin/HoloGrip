@@ -25,7 +25,7 @@ def main():
     deps=['numpy','scipy','scikit-learn','joblib','threadpoolctl','xgboost','pyserial','mido','customtkinter','tkinterdnd2']
     versions={name:importlib.metadata.version(name) for name in deps}
     manifest=dict(schema='hologrip-eighth-field-package-v1',target_date='2026-10-23',prepared_date='2026-10-21',
-        workflow_revision='2026-10-23-rounds4to7-adaptive-hitgate',created_at=datetime.now().astimezone().isoformat(),
+        workflow_revision='2026-10-23-rounds4to7-adaptive-hitgate-snare-anchor',created_at=datetime.now().astimezone().isoformat(),
         model=dict(file=model.name,sha256=sha256(model),input_dimensions=104,selected_dimensions=104,
                    training_scope='rounds 4-7 songs, four-drum, single-hand; pretests excluded',
                    training_events=13617,mode='per_hand_committee',runtime_contract=bundle['contract'],
@@ -36,13 +36,13 @@ def main():
                       threshold_g=1.5,embedded_model_detector_ignored=False),
         output_guard=dict(enabled=False,reason='Every released hit is reported; no abstention or margin filter.'),
         runtime_hashes=hashes,dependencies=versions,
-        architecture='detector 1.5 g candidates -> learned hit gate -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction',
+        architecture='detector 1.5 g candidates -> learned hit gate -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction (pretest: first 5 hits per hand anchor the snare) -> pose continuity (previous drum in top-2)',
         research_reference=dict(pretests_in_training=False,dev_selected_on_pretests=True,unseen_day_blind_test=False,
             pretest_scores='replay of 6 pretests through this engine: see 改動紀錄_第八次包_1023_ZH_TW.md'),
         inactive_legacy_files=['Program/seventh_heading_runtime.py'],
         workflow=dict(mode='direct_frozen_model_test',interface='native_tkinter',gui_entry='Program/seventh_native_gui.py',demonstration_required=False,
             expected_targets_used_during_inference=False,personal_adaptation=False,
-            test_routine='Existing per-drum 20-tap test; no enforced order or count gate.'),
+            test_routine='Each hand starts on the snare (L10, R10), then each drum L20/R20; the first 5 accepted hits per hand anchor the snare offset; no enforced count gate.',snare_anchor_hits=5),
         midi_read_during_inference=False,hardware_validation='NOT_PERFORMED',software_validation='SEE_QA',
         formal_data_files_at_preparation=len([p for p in (PACK/'Data').rglob('*') if p.is_file()]))
     (PACK/'package_manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')

@@ -45,7 +45,7 @@ class Take:
         self.recorder._start_monotonic=self.clock()
         self.calibration=dict(calibration)
         self.ports=dict(ports)
-        self.engine=core.Engine(bundle,config)
+        self.engine=core.Engine(bundle,config,snare_anchor=core.runtime.PRETEST_SNARE_ANCHOR)  # pretest protocol: each hand starts on the snare
         self.indices={h:0 for h in 'LR'}
         self.last_ids={h:None for h in 'LR'}
         self.gaps={h:0 for h in 'LR'}
@@ -151,7 +151,8 @@ class Take:
             venue_free=dict(contract=core.runtime.CONTRACT,compass_heading_used=False,
                 pretests_in_training=False,per_hit_independent=True,future_context_ms=80,
                 hand_mode=self.engine.runtime.hand_mode,zero_yaw=self.engine.runtime.zero_yaw,
-                zero_pitch=self.engine.runtime.zero_pitch),
+                zero_pitch=self.engine.runtime.zero_pitch,snare_anchor_hits=self.engine.runtime.anchor,
+                continuity=core.runtime.CONTINUITY),
             training_scope='songs+four-drum+clear single-hand (round4/5/6 pretests excluded)',prediction_count=self.engine.count,
             formal_counts=self.formal_counts,rejected_counts=self.rejected_counts,rejected_predictions_preserved=True,
             demonstration_required=False,
@@ -346,7 +347,7 @@ class Service:
                             if not re.fullmatch(r'[A-Za-z0-9_\-\u4e00-\u9fff]{1,80}',sid):raise ValueError('場次名稱限中英文、數字、底線或連字號')
                             self.errors=[];self.take_drops=self.drops
                             self.take=Take(self.data_root/'模型實測',sid,self.bundle,self.config,self.calibration,self.port_hands,clock=self.clock)
-                            self.status='前測已開始，Raw同步保存。照原本每鼓20下測試並同步錄MIDI；不需額外示範。'
+                            self.status='前測已開始，Raw同步保存。每手請先打小鼓（左10下、右10下），再照每鼓20下測試並同步錄MIDI。'
                             self.event('take_start',str(self.take.folder))
                         elif name=='stop':self.save()
                         elif name=='marker_start':

@@ -108,7 +108,7 @@ class Tests(unittest.TestCase):
         cache=joblib.load(ROOT/'第七次的包_暫定2026-10-20/Data/實驗_姿態模型自動標記_20261020/實驗快取.joblib')
         for name,_ in recordings:
             raw=cache['tests'][name.replace('pretest_','pretest:')]['raw']
-            hands=core.trajectory.read_raw(raw);source=readcsv(raw);engine=core.Engine(self.bundle,self.config);outputs=[]
+            hands=core.trajectory.read_raw(raw);source=readcsv(raw);engine=core.Engine(self.bundle,self.config,snare_anchor=core.runtime.PRETEST_SNARE_ANCHOR);outputs=[]
             with threadpool_limits(limits=1):
                 for _,h,s in sorted((s['row_index'],h,s) for h,a in hands.items() for s in a):
                     row=source[s['row_index']]
@@ -120,6 +120,7 @@ class Tests(unittest.TestCase):
                 [(p['hand'],float(p['peak_ms']),float(p['emitted_ms']),p['drum']) for p in reference])
             self.assertTrue(np.allclose([p['model_score'] for p in outputs],[float(p['model_score']) for p in reference]))
             self.assertTrue(all(p['hit_probability']>=0.4 for p in outputs))
+            self.assertEqual(engine.runtime.anchor,5);self.assertTrue(all(engine.runtime.stats[h][1].n[engine.runtime.anchor_drum]>=5 for h in 'LR'))
 
     @patch.object(core.runtime,'hit_probability',return_value=1.0)  # synthetic spikes: test mechanics, not the hit gate
     def test_raw_preserves_invalid_and_multiple_hits(self,_gate):

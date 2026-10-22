@@ -7,8 +7,13 @@ Per candidate peak (detector at 1.5 g, released at peak + 80 ms):
      and do not enter any history.
   2. drum: venue-free committee with per-drum offset correction from EARLIER accepted hits of the same
      hand in this take (score >= 0.7, after >= 20 such hits, two passes). No labels, no future.
-  3. pose continuity: if this hit's score is < 0.9 and the same hand's previous accepted hit was within
-     600 ms with a zero-relative yaw/pitch within 16 deg, it is the same drum as that previous hit.
+  3. pose continuity: if this hit's score is < 0.9, the same hand's previous accepted hit was within
+     600 ms with a zero-relative yaw/pitch within 16 deg, and that previous drum is among this hit's two
+     highest-scoring drums, it is the same drum as that previous hit.
+Pretest mode (snare_anchor=N): the pretest protocol starts with each hand on the snare, so the first N
+accepted hits of each hand enter the offset statistics as snare (the protocol is known in advance; no
+MIDI). The correction then starts after those N hits instead of after 20 confident hits. The model's
+own output for those hits is unchanged.
 """
 from scipy.spatial.transform import Rotation as _Rot
 from collections import deque
@@ -25,7 +30,9 @@ feature = base.feature
 probabilities = base.probabilities
 
 
-CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9)
+CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9, previous_in_top=2)
+PRETEST_SNARE_ANCHOR = 5
+ANCHOR_DRUM = '小鼓'
 
 
 def _yaw_pitch(x):
@@ -53,7 +60,10 @@ class _Stats:
 
     def add(self, rot, p, conf):
         if p.max() >= conf:
-            d = int(p.argmax()); self.sum[d] += rot; self.n[d] += 1; self.total += 1
+            self.force(rot, int(p.argmax()))
+
+    def force(self, rot, d):
+        self.sum[d] += rot; self.n[d] += 1; self.total += 1
 
     def offset(self, tm):
         m = self.n > 0
@@ -61,8 +71,8 @@ class _Stats:
 
 
 class StreamEngine:
-    def __init__(self, bundle):
-        self.bundle = bundle; ad = bundle['adaptation']
+    def __init__(self, bundle, snare_anchor=0):
+        self.bundle = bundle; ad = bundle['adaptation']; self.anchor = int(snare_anchor)
         self.alpha, self.conf, self.minh = ad['alpha'], ad['confidence'], ad['min_confident_hits']
         self.gate_threshold = bundle['hit_gate']['threshold']
         self.classes = [str(c) for c in bundle['classes']]
@@ -74,10 +84,13 @@ class StreamEngine:
         self.hand_mode = {h: None for h in 'LR'}; self.zero_yaw = {h: None for h in 'LR'}; self.zero_pitch = {h: None for h in 'LR'}
         self.heading_distance = {h: None for h in 'LR'}; self.count = 0; self.adapted = {h: 0 for h in 'LR'}
         self.rejected = {h: 0 for h in 'LR'}; self.previous = {h: None for h in 'LR'}; self.continued = {h: 0 for h in 'LR'}
+        self.anchor_drum = self.classes.index(ANCHOR_DRUM); self.accepted = {h: 0 for h in 'LR'}
 
     def _classify(self, hand, x):
         # Both corrections depend only on earlier hits, so all inputs go to the committee in one batch.
-        st = self.stats[hand]; use1 = st[0].total >= self.minh; use2 = st[1].total >= self.minh
+        st = self.stats[hand]; anchored = self.accepted[hand] < self.anchor
+        ready = [s.total >= self.minh or (self.anchor > 0 and s.n[self.anchor_drum] >= self.anchor) for s in st]
+        use1, use2 = ready
         rows = [x]; x2 = x
         if use1:
             x1 = x.copy(); x1[ROT] = x[ROT]+self.alpha*st[0].offset(self.tm[hand]); rows.append(x1)
@@ -86,7 +99,11 @@ class StreamEngine:
             self.adapted[hand] += 1
         P = probabilities(self.bundle, np.stack(rows), hand)
         p0 = P[0]; p1 = P[1] if use1 else p0; pf = P[-1] if use2 else p1
-        st[0].add(x[ROT], p0, self.conf); st[1].add(x[ROT], p1, self.conf)
+        if anchored:
+            st[0].force(x[ROT], self.anchor_drum); st[1].force(x[ROT], self.anchor_drum)
+        else:
+            st[0].add(x[ROT], p0, self.conf); st[1].add(x[ROT], p1, self.conf)
+        self.accepted[hand] += 1
         return pf, _yaw_pitch(x2)
 
     def _other_peak(self, hand, t):
@@ -115,6 +132,7 @@ class StreamEngine:
                 self.rejected[hand] += 1; continue
             q, yp = self._classify(hand, vector); top = np.sort(q); label = int(q.argmax()); prev = self.previous[hand]
             if (prev is not None and q.max() < CONTINUITY['below_score'] and t-prev[0] <= CONTINUITY['max_ms']
+                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']]
                     and float(np.hypot(*(yp-prev[1]))) <= CONTINUITY['max_deg']):
                 label = prev[2]; self.continued[hand] += 1
             self.previous[hand] = (t, yp, label)

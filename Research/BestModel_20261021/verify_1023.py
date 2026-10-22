@@ -1,4 +1,5 @@
-"""Replay Raw CSVs through the EXACT 8th-package field Engine (sample by sample, like 1_測前次) and score:
+"""Replay Raw CSVs through the EXACT 8th-package field Engine (sample by sample, like 1_測前次, i.e. pretest
+snare anchor on) and score:
 6 pretests (14 cells, hand from glove peak) + per-recording MIDI score for the pretests and a few songs.
 Also checks heading invariance (all yaw + 90 deg) on one pretest. Writes reference CSVs for the tests."""
 import csv, json, sys
@@ -18,10 +19,10 @@ TESTS = ['pretest:round4', 'pretest:round5', 'pretest:round6', 'seventh_01', 'se
 DRUMS = ['小鼓', '高音 Tom', '中音 Tom', '落地 Tom', 'Hi-Hat', 'Crash', 'Ride']
 
 
-def stream(bundle, config, raw, turn=0.0):
+def stream(bundle, config, raw, turn=0.0, anchor=0):
     hands = core.trajectory.read_raw(raw)
     with open(raw, encoding='utf-8-sig', newline='') as f: source = list(csv.DictReader(f))
-    engine = core.Engine(bundle, config); out = []
+    engine = core.Engine(bundle, config, snare_anchor=anchor); out = []
     for _, h, s in sorted((s['row_index'], h, s) for h, a in hands.items() for s in a):
         row = source[s['row_index']]; s = dict(s, absolute_yaw=(s['absolute_yaw']+turn+180) % 360-180)
         frame = dict(ax=s['ax'], ay=s['ay'], az=s['az'], yaw=(float(row['yaw_deg'])+turn+180) % 360-180, pitch=float(row['pitch_deg']), roll=s['roll'])
@@ -39,7 +40,7 @@ def match(truth, P):
 def main():
     bundle, config = core.load_components(); cells = defaultdict(Counter); rec = {}; ref = OUT/'replay_1023'; ref.mkdir(exist_ok=True)
     for k in TESTS:
-        P, eng = stream(bundle, config, C['tests'][k]['raw']); truth = TRUTH[k]; pairs = match(truth, P)
+        P, eng = stream(bundle, config, C['tests'][k]['raw'], anchor=core.runtime.PRETEST_SNARE_ANCHOR); truth = TRUTH[k]; pairs = match(truth, P)
         tt = [g['t'] for g in truth]; lo, hi = min(tt)-200, max(tt)+200
         ok = 0
         for i, g in enumerate(truth):

@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 import numpy as np, joblib
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT/'第八次的包_暫定2026-10-23/Program'))
+sys.path.insert(0, str(ROOT/'第八次的包_暫定2026-10-27/Program'))
 import seventh_core as core
 import venue_free_runtime_1023 as R
 from verify_1023 import TRUTH, match

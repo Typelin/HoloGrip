@@ -1,9 +1,9 @@
 {
   "schema": "hologrip-eighth-field-package-v1",
-  "target_date": "2026-10-23",
+  "target_date": "2026-10-27",
   "prepared_date": "2026-10-21",
-  "workflow_revision": "2026-10-23-rounds4to7-adaptive-hitgate-snare-anchor",
-  "created_at": "2026-10-22T19:44:55.871751+08:00",
+  "workflow_revision": "2026-10-27-rounds4to7-adaptive-hitgate-snare-anchor",
+  "created_at": "2026-10-26T19:11:47.372283+08:00",
   "model": {
     "file": "venue_free_committee_1023.joblib",
     "sha256": "fd1d0d3f8f3fd55bfdf982578d897f901efdfc71880f95c88dabb8b4b361d1b1",
@@ -92,19 +92,19 @@
     "Program/causal_hit_queue_1016.py": "1edeb0c6474acf9cb7309dc98047504352cebd45f7db4c56d1040e1979e41ae3",
     "Program/drumhead_zero_runtime_1019.py": "4c7da2f45f6e32a6bb4ee2353e953b7de8cd0ca1e43832977198d4cc69290de7",
     "Program/fourth_song03_raw_runtime_1008.py": "2c2e630fd9c56eddfb551b2b671106e7ec67140a225a94939a75c66d15804b04",
-    "Program/freeze_seventh_package.py": "fe2ab9a35fe70443cc7368c0ea6bcd830396988396c7262f38e46e6f57c97a39",
+    "Program/freeze_seventh_package.py": "7697abbc837bd0c19770e12e022134fa9e8b3b7f0b352e5ca1a0f7e8de058ea4",
     "Program/midi_anomaly_check.py": "aeb37edd40e096c422ecb749c6f8eac879b48eb05a813363a97d6f8112ac703e",
-    "Program/midi_csv_alignment_gui.py": "bfae3611d47e0fe96d2c7d903c5c191be382227dfa8526aac294c72fcebd67b9",
+    "Program/midi_csv_alignment_gui.py": "b37edcba2d76c6fbde2883cf7b1e6afcd9fb15bc54f1ee53a9e0982a2a78c5bf",
     "Program/midi_label_pipeline.py": "bdd4b0819d0973e3caefb9c8e105146fe1288e56adc55df0609ca04836515587",
     "Program/pretest_zone_trajectory_runtime_1019.py": "bc9316df8051c10a801cb3444874c7ca602b3b3b74f09001c02dadb2c1be3870",
     "Program/production_core.py": "2f6faf13f343d0c3c118b07ab85cb2bd782e444e77f8248b906aee85ad6d531e",
     "Program/seventh_check.py": "7b2a2b322272877d8d5e76d52dfd468237bf92bcf7bb084bcbed7c9328d8fc52",
-    "Program/seventh_collect.py": "6c40824904684c05eaed7631944581fb4e4e32914fd0e675468cde96710ca257",
-    "Program/seventh_core.py": "5c5b56d4cb23aed5292c0ee44719b395b6f01aae79334058e13f14ded9ad11bf",
+    "Program/seventh_collect.py": "0770f9064d31baf2e431bc449151a8d96455ae8631b9f3e7fd9bb84c6fd6190d",
+    "Program/seventh_core.py": "964b0eb7e6d566ee14df725f175ea3911c64da237e6329dfa06e6c811f1e2392",
     "Program/seventh_entry.py": "c0731bd45aa814eef49eb6f7fd490c60e296fba7ae6ddea810dfe93ff3c3786d",
     "Program/seventh_heading_runtime.py": "050fdff405d7ec4ea8a1a1be82d426d765b7ee76bb28d8b83955b9e6574c4735",
-    "Program/seventh_live.py": "72b1034a41bfc302b197868527f2dc1bfc9a5cde93542b571293357d51f27456",
-    "Program/seventh_native_gui.py": "cb40b74a744e47038febc1511507498b3b54b3be4cf5d2464cccf7c4ec4e7d34",
+    "Program/seventh_live.py": "868b6bf80defcb9a7160bc6c45ab8b057a034fd9d110c0b264c3f77718044a2d",
+    "Program/seventh_native_gui.py": "5aacedccd9883826885b7155a47bc8de2c79f3f3605e706e01443bda39c4be83",
     "Program/seventh_replay.py": "62390e2f90a89c2490aefba5c963dfd9ad0aa6ac544eea6680de285580d5b1b9",
     "Program/song_collection_com.py": "34d4880c022c904ed4952a651a56c0098f489e1e0f3e01f5e938ee5ae1f86b50",
     "Program/song_collection_server.py": "e0427b857b56c9b90eaace1773193bda03801345130f561493504314411faed2",
@@ -114,7 +114,7 @@
     "Program/test_seventh_package.py": "daed8c37e93c4a4a798b07af16cdc1ac46b7469978ebb482a7b0ac65a67fa94f",
     "Program/trajectory_runtime_456_1016.py": "e69cf4f44826546e3ae57a3df345d44bbf6101768cde093a2cdb26b01c5533e4",
     "Program/venue_free_runtime_1020.py": "820be6547550031fadc47d6d9dc1e1b5c8571f559a72c4a2dcff0c7a6f22e9df",
-    "Program/venue_free_runtime_1023.py": "05b56a46c05c32ed46f4d21bcb866661baf058cb302d454e4b307a333896c7e2",
+    "Program/venue_free_runtime_1023.py": "f6f1832730ea94fa2116a4c3f249537ac4ab14c61cebd37f1f1bcee7c36f2e58",
     "Program/world_stream_runtime_1019.py": "8b9a6e2669c71241a3578bbd98ccdb8ad4d9bb2dbc930df4ea2ca5c4dcb10137",
     "Firmware/Gloves_Left_L/Gloves_Left_L.ino": "8bf0fb4718b618c52017e52f3f7662e2bc3b9670c628f2e9e0fe21446a1ffa97",
     "Firmware/Gloves_Right_R/Gloves_Right_R.ino": "6cf61b56a189115d4d7aadf7e148345a699ed8584f55607479f3b3a42cb37a6b"
@@ -136,7 +136,7 @@
     "pretests_in_training": false,
     "dev_selected_on_pretests": true,
     "unseen_day_blind_test": false,
-    "pretest_scores": "replay of 6 pretests through this engine: see 改動紀錄_第八次包_1023_ZH_TW.md"
+    "pretest_scores": "replay of 6 pretests through this engine: see 改動紀錄_第八次包_1027_ZH_TW.md"
   },
   "inactive_legacy_files": [
     "Program/seventh_heading_runtime.py"

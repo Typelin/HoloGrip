@@ -1,4 +1,4 @@
-"""10/23 runtime: hit gate + venue-free committee + causal per-drum offset correction.
+"""8th package runtime (file/contract version 1023, used on 10/27): hit gate + venue-free committee + causal per-drum offset correction.
 
 Per candidate peak (detector at 1.5 g, released at peak + 80 ms):
   1. hit gate: a learned classifier decides whether the stick really hit a drum, from the peak's

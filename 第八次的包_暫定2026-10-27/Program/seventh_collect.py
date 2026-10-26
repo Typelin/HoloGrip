@@ -21,7 +21,7 @@ class Collection(DesignedSongCollectionApp):
         self.raw_only=True
         self.mode_var.set('raw_100hz');self.mode_segment.set('原始 100 Hz');self.mode_segment.configure(state='disabled')
         self._update_mode_description()
-        self.title('HoloGrip｜10/23 第八次｜完整Raw 100Hz收集')
+        self.title('HoloGrip｜10/27 第八次｜完整Raw 100Hz收集')
         self.file_var.set(f'CSV儲存：{self.output_dir.resolve()}')
 
     def _connect_serial_ports(self):

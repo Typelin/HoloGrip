@@ -9,7 +9,7 @@ import numpy as np, joblib
 from scipy.optimize import linear_sum_assignment
 
 ROOT = Path(__file__).resolve().parents[2]
-PACK = ROOT/'第八次的包_暫定2026-10-23'
+PACK = ROOT/'第八次的包_暫定2026-10-27'
 sys.path.insert(0, str(PACK/'Program'))
 import seventh_core as core
 OUT = Path(__file__).resolve().parent/'out'

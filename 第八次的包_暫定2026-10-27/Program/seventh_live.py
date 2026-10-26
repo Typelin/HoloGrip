@@ -241,7 +241,7 @@ class Service:
         self.port_hands={};self.calibration=None;self.cal_ports=None
         for h in 'LR':self.history[h].clear();self.valid[h].clear();self.health[h]=FrameValidator();self.last_invalid[h]=-1e12
         self.monitor=AsyncCsvRecorder(self.data_root/'全程監聽',lambda text:self.log.append(text))
-        self.monitor.start('raw_100hz','monitor_live_1023');self.monitor._start_monotonic=self.clock();self.monitor_count=0
+        self.monitor.start('raw_100hz','monitor_live_1027');self.monitor._start_monotonic=self.clock();self.monitor_count=0
         self.monitor_events=self.monitor.path.with_suffix('.events.jsonl').open('w',encoding='utf-8')
         self.event('connect',','.join(ports))
         for conn in self.connections:

@@ -6,7 +6,7 @@ import numpy as np, joblib, xgboost as xgb
 sys.argv = ['x', '1p5']
 import hit_clf as H, common as K
 
-PACK = K.P7.parent/'第八次的包_暫定2026-10-23'
+PACK = K.P7.parent/'第八次的包_暫定2026-10-27'
 
 
 def main():

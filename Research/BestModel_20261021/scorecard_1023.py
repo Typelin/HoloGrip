@@ -5,7 +5,7 @@ import json, sys
 from collections import Counter, defaultdict
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT/'第八次的包_暫定2026-10-23/Program'))
+sys.path.insert(0, str(ROOT/'第八次的包_暫定2026-10-27/Program'))
 import seventh_core as core  # 8th package first
 from verify_1023 import stream, TRUTH, match
 import full_report as F

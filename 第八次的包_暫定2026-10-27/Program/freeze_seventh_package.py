@@ -24,8 +24,8 @@ def main():
     hashes={p.relative_to(PACK).as_posix():sha256(p) for p in files}
     deps=['numpy','scipy','scikit-learn','joblib','threadpoolctl','xgboost','pyserial','mido','customtkinter','tkinterdnd2']
     versions={name:importlib.metadata.version(name) for name in deps}
-    manifest=dict(schema='hologrip-eighth-field-package-v1',target_date='2026-10-23',prepared_date='2026-10-21',
-        workflow_revision='2026-10-23-rounds4to7-adaptive-hitgate-snare-anchor',created_at=datetime.now().astimezone().isoformat(),
+    manifest=dict(schema='hologrip-eighth-field-package-v1',target_date='2026-10-27',prepared_date='2026-10-21',
+        workflow_revision='2026-10-27-rounds4to7-adaptive-hitgate-snare-anchor',created_at=datetime.now().astimezone().isoformat(),
         model=dict(file=model.name,sha256=sha256(model),input_dimensions=104,selected_dimensions=104,
                    training_scope='rounds 4-7 songs, four-drum, single-hand; pretests excluded',
                    training_events=13617,mode='per_hand_committee',runtime_contract=bundle['contract'],
@@ -38,7 +38,7 @@ def main():
         runtime_hashes=hashes,dependencies=versions,
         architecture='detector 1.5 g candidates -> learned hit gate -> 104 venue-free features -> per-hand XGBoost+MLP committee -> causal per-drum offset correction (pretest: first 5 hits per hand anchor the snare) -> pose continuity (previous drum in top-2)',
         research_reference=dict(pretests_in_training=False,dev_selected_on_pretests=True,unseen_day_blind_test=False,
-            pretest_scores='replay of 6 pretests through this engine: see 改動紀錄_第八次包_1023_ZH_TW.md'),
+            pretest_scores='replay of 6 pretests through this engine: see 改動紀錄_第八次包_1027_ZH_TW.md'),
         inactive_legacy_files=['Program/seventh_heading_runtime.py'],
         workflow=dict(mode='direct_frozen_model_test',interface='native_tkinter',gui_entry='Program/seventh_native_gui.py',demonstration_required=False,
             expected_targets_used_during_inference=False,personal_adaptation=False,

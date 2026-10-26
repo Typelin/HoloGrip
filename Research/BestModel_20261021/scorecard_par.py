@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np, joblib
 
 HERE = Path(__file__).resolve().parent; ROOT = HERE.parents[1]
-PACK = ROOT/'第八次的包_暫定2026-10-23'
+PACK = ROOT/'第八次的包_暫定2026-10-27'
 
 
 def work(args):

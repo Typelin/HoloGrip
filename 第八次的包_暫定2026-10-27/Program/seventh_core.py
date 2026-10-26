@@ -1,6 +1,6 @@
 """Field adapter: validated packets -> external hits -> venue-free per-hit committee.
 
-2026-10-23 (8th package): rounds 4-7 venue-free committee + causal per-drum offset
+2026-10-27 (8th package; originally planned for 10-23): rounds 4-7 venue-free committee + causal per-drum offset
 correction (earlier hits of the same hand only) + learned hit gate on 1.5 g candidates.
 Each hit is reported as soon as the detector releases it (peak + 80 ms). No MIDI,
 target sequence, opening taps, fitting or confidence rejection is used. The

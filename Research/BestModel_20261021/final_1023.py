@@ -22,7 +22,7 @@ def main():
                                   rot_slice=[83, 104], causal='past hits of the same hand in the take only'),
                   cymbal_rescue=dict(detector_threshold_g=1.7, strong_g=2.1, cymbals=['Hi-Hat', 'Crash', 'Ride'], min_score=0.6),
                   pretests_in_training=False, compass_heading_used=False, per_hit_independent=False, future_context_ms=80)
-    out = K.P7.parent/'第八次的包_暫定2026-10-23/Model/venue_free_committee_1023.joblib'
+    out = K.P7.parent/'第八次的包_暫定2026-10-27/Model/venue_free_committee_1023.joblib'
     joblib.dump(bundle, out, compress=3); print('saved', out, len(rows))
 
 

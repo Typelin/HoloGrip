@@ -13,7 +13,7 @@ PACK=Path(__file__).resolve().parents[1]
 
 def main():
     model=PACK/'Model/venue_free_committee_1023.joblib';config=PACK/'Model/detector_venue_free_1p5g.json'
-    assert sha256(model)=='85d15e6b501e20c7c69feccd73d4951eef644f860f96d33073fac012f42fc47f'
+    assert sha256(model)=='29f8f2d45738b179e2ef6b03857d74904ec7502658e2e68f7c1aaadd6d131b38'
     bundle=joblib.load(model)
     assert bundle['contract']=='hologrip_venue_free_committee_1023_v1'
     assert not bundle['pretests_in_training'] and not bundle['compass_heading_used'] and bundle['training_events']==19358

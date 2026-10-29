@@ -26,7 +26,7 @@ DAYS = ['R4', 'R5', 'R6', 'R7', 'R8']
 CACHE = HERE/'out/cache'
 DEFAULT = dict(w_rc=0.5, anchor_top=2, anchor_deg=8.0, layout='shift', conf=0.7, minh=20, cont_deg=16.0, cont_score=0.9, cont_top=2,
                scale_min=0.6, scale_max=1.4, min_drums=2, pos_w=0.0, pos_sigma=10.0, pos_in_stats=False, cont_margin=1.0, pos_all=False, anchor_any=False, anchor_minp=0.5, pos_sigma_pitch=None, layout_mix=False, mix_temp=1.0, mix_conf=0.8, mix_min=0.0,
-               auto_zero=False, az_step=5.0, az_range=90.0, az_sigma=40.0, az_min=5, az_window=0, az_score='logmax', az_freeze=0, az_mode='conf', yf_conf=0.7, yf_min=5, yf_round=0.0, yf_thr=0.0, yf_agree=0.0, yf_band=15.0, az_consistent=False, yf_drums=1, az_verify=False, az_margin=0.0, az_persist=0, yf_max=999.0)
+               auto_zero=False, az_step=5.0, az_range=90.0, az_sigma=40.0, az_min=5, az_window=0, az_score='logmax', az_freeze=0, az_mode='conf', yf_conf=0.7, yf_min=5, yf_round=0.0, yf_thr=0.0, yf_agree=0.0, yf_band=15.0, az_consistent=False, yf_drums=1, az_verify=False, az_margin=0.0, az_persist=0, yf_max=999.0, cont_mode='rule', hmm_stay=0.8, cont_ratio=0.0)
 
 
 def pos_prior(Y, tmY, sigma, sigma_p=None):
@@ -208,11 +208,20 @@ def run_hand(M, h, X, t, o):
     if o['layout_mix']: p = mix_prior(M, h, p, Y, o)
     elif not o['pos_in_stats']: p = combine(p, Y, tmY, o) if o['pos_all'] else np.where(valid[:, None], combine(p, Y, tmY, o), p)
     lab = p.argmax(1).copy(); sc = p.max(1); srt = np.sort(p, 1); margin = srt[:, -1]-srt[:, -2]
-    for i in range(1, n):
-        if (sc[i] < o['cont_score'] and margin[i] < o['cont_margin'] and t[i]-t[i-1] <= 600 and np.hypot(*(Y[i]-Y[i-1])) <= o['cont_deg']
-                and lab[i-1] in np.argsort(-p[i])[:o['cont_top']]):
-            lab[i] = lab[i-1]
+    if o['cont_mode'] == 'hmm':
+        # causal sticky filter: belief carries over only for a nearby same-hand hit (time and pose), strong evidence overrides
+        post = p[0].copy(); lab[0] = int(post.argmax()); s_ = o['hmm_stay']
+        for i in range(1, n):
+            near = t[i]-t[i-1] <= 600 and np.hypot(*(Y[i]-Y[i-1])) <= o['cont_deg']
+            prior = s_*post+(1-s_)/len(post) if near else np.full(len(post), 1/len(post))
+            post = p[i]*prior; post = post/post.sum(); lab[i] = int(post.argmax())
+    else:
+        for i in range(1, n):
+            if (sc[i] < o['cont_score'] and margin[i] < o['cont_margin'] and t[i]-t[i-1] <= 600 and np.hypot(*(Y[i]-Y[i-1])) <= o['cont_deg']
+                    and lab[i-1] in np.argsort(-p[i])[:o['cont_top']] and p[i][lab[i-1]] >= o['cont_ratio']*sc[i]):
+                lab[i] = lab[i-1]
     globals()['LAST_SCORE'] = p[np.arange(n), lab]
+    globals()['LAST_DEBUG'] = dict(Y=Y, p=p, lab=lab.copy())
     return lab, bool(anchor)
 
 

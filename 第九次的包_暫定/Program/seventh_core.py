@@ -21,11 +21,11 @@ PACK = Path(__file__).resolve().parents[1]
 DRUMS = ['小鼓', '高音 Tom', '中音 Tom', '落地 Tom', 'Hi-Hat', 'Crash', 'Ride']
 MODEL = PACK / 'Model/venue_free_committee_1023.joblib'
 CONFIG = PACK / 'Model/detector_venue_free_1p5g.json'
-MODEL_SHA256 = '85d15e6b501e20c7c69feccd73d4951eef644f860f96d33073fac012f42fc47f'
+MODEL_SHA256 = '29f8f2d45738b179e2ef6b03857d74904ec7502658e2e68f7c1aaadd6d131b38'
 GENERATED_DIMENSIONS = runtime.INPUT_DIMENSIONS
 SELECTED_DIMENSIONS = runtime.INPUT_DIMENSIONS
 TRAINING_EVENTS = 19358
-MODEL_NAME = '第4～8次場地無關模型（原始0.4＋對齊0.6）＋打擊判斷＋逐鼓位置校正＋位置先驗＋自動小鼓錨點＋姿勢連續'
+MODEL_NAME = '第4～8次場地無關模型（原始0.4＋對齊0.6）＋打擊判斷＋逐鼓位置校正＋位置先驗＋自動錨點＋歸零方向保護＋姿勢連續'
 
 
 def load_guard():

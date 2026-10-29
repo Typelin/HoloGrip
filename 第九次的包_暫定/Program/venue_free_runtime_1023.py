@@ -25,6 +25,14 @@ the committee calls the same drum every time (mean score >= 0.7), they anchor on
 (e.g. a take that opens on the Hi-Hat). Otherwise they enter normally and the correction starts
 after 20 confident hits. No protocol is assumed and no MIDI is used. The model's own output for those
 hits is unchanged.
+Zero-direction guard (bundle['zero_estimator']): a drumhead zero taken with the hand pointing elsewhere
+rotates every zero-relative rotation by Rz(-d). A heading-free classifier (83 trajectory dims + pitch/roll
++ pose path relative to the hit, all unchanged by d) votes (training yaw of its drum - hit yaw) for hits
+it is sure of (>= 0.9). The estimate is the 15-deg-rounded median of the largest +-15 deg cluster when that
+cluster holds at least half of the votes, and only 40-60 deg estimates count. It is used after it stayed the
+same for 10 hits and only while the committee is more confident on the hits so far with it than without
+it. When the estimate changes, the hand's whole history is replayed with the new rotation (batch) so the
+offset statistics, anchor and continuity stay consistent. Earlier hits only; normal zeros never trigger it.
 """
 from scipy.spatial.transform import Rotation as _Rot
 from collections import deque
@@ -61,10 +69,39 @@ def _yaw_pitch(x):
     return _Rot.from_rotvec(v).as_euler('ZYX', degrees=True)[:2]
 
 
+def _yaw_pitch_rows(X):
+    v = np.asarray(X)[:, ROT].reshape(len(X), 7, 3)[:, 4]*np.pi
+    return _Rot.from_rotvec(v).as_euler('ZYX', degrees=True)[:, :2]
+
+
+def rotate_zero(X, delta):
+    """Rotation block as if the drumhead zero yaw had been delta degrees off: R_rel -> Rz(-delta) * R_rel."""
+    X = np.array(X, dtype=np.float32, copy=True)
+    if not delta: return X
+    r = _Rot.from_rotvec(X[:, ROT].reshape(-1, 3).astype(np.float64)*np.pi)
+    X[:, ROT] = ((_Rot.from_euler('Z', -delta, degrees=True)*r).as_rotvec()/np.pi).reshape(len(X), 21).astype(np.float32)
+    return X
+
+
+def heading_free(X):
+    """83 trajectory dims + pitch/roll of the 7 poses + each pose relative to the hit pose (zero-yaw invariant)."""
+    X = np.asarray(X, np.float32); n = len(X)
+    r = _Rot.from_rotvec(X[:, ROT].reshape(-1, 3).astype(np.float64)*np.pi)
+    e = r.as_euler('ZYX', degrees=True).reshape(n, 7, 3)
+    hit = _Rot.from_rotvec(np.repeat(X[:, ROT].reshape(n, 7, 3)[:, 4:5], 7, 1).reshape(-1, 3).astype(np.float64)*np.pi)
+    body = (hit.inv()*r).as_rotvec().reshape(n, 7, 3)[:, [0, 1, 2, 3, 5, 6]].reshape(n, 18)
+    return np.hstack([X[:, :83], e[:, :, 1]/90, e[:, :, 2]/180, body]).astype(np.float32)
+
+
 def attach_boosters(bundle):
     base.attach_boosters(bundle)
     gate = bundle['hit_gate']; bst = bundle['_xgb'].Booster(); bst.load_model(bytearray(gate['xgb_json'])); bst.set_param({'nthread': 1})
     bundle['_hit_gate'] = bst
+    ze = bundle.get('zero_estimator')
+    if ze:
+        bundle['_zero_estimator'] = {}
+        for h in 'LR':
+            b = bundle['_xgb'].Booster(); b.load_model(bytearray(ze['models'][h])); b.set_param({'nthread': 1}); bundle['_zero_estimator'][h] = b
     return bundle
 
 
@@ -109,6 +146,77 @@ class StreamEngine:
         self.pending = {h: [] for h in 'LR'}; self.anchored = {h: None for h in 'LR'}; self.anchored_drum = {h: None for h in 'LR'}
         self.position = bundle.get('position_prior')
         self.tm_pose = {h: np.array([_yaw_pitch(np.r_[np.zeros(83), m]) for m in self.tm[h]]) for h in 'LR'}
+        self.ze = bundle.get('zero_estimator') if '_zero_estimator' in bundle else None
+        self.zero_rot = {h: 0.0 for h in 'LR'}; self.zero_rebuilds = {h: 0 for h in 'LR'}
+        self.zh = {h: dict(x=[], t=[], votes=[], drums=[], raw=[], run=0, cur=0.0, base=[], cache={}) for h in 'LR'}
+        if self.ze:
+            # training yaw per drum in the estimator's class order (float32 like the research code)
+            tm32 = {h: np.array([bundle['drum_rotation_means'][f'{h}|{d}'] for d in self.ze['classes']], np.float32) for h in 'LR'}
+            self.ze_yaw = {h: _yaw_pitch_rows(np.hstack([np.zeros((len(tm32[h]), 83), np.float32), tm32[h]]))[:, 0] for h in 'LR'}
+
+    def _zero_estimate(self, hand, x):
+        """Zero-direction estimate for the hit just accepted (history in self.zh[hand], this hit included)."""
+        ze = self.ze; z = self.zh[hand]; i = len(z['x'])-1
+        pf = self.bundle['_zero_estimator'][hand].inplace_predict(heading_free(x[None, :]))[0]
+        if pf.max() >= ze['vote_confidence']:
+            yaw = _yaw_pitch_rows(x[None, :])[0, 0]
+            z['votes'].append((self.ze_yaw[hand][int(pf.argmax())]-yaw+180) % 360-180); z['drums'].append(int(pf.argmax()))
+        raw = 0.0
+        if len(z['votes']) >= ze['min_votes']:
+            v = np.array(z['votes']); grid = np.arange(-180, 180, 5.0); band = ze['band_deg']
+            cnt = np.array([(np.abs((v-g+180) % 360-180) <= band).sum() for g in grid]); k = int(cnt.argmax())
+            inb = np.abs((v-grid[k]+180) % 360-180) <= band
+            if cnt[k] >= ze['agree']*len(v) and len(set(np.array(z['drums'])[inb])) >= ze['min_drums']:
+                m = float(np.median(v[inb])); m = round(m/ze['round_deg'])*ze['round_deg']
+                raw = m if ze['min_deg'] <= abs(m) <= ze['max_deg'] else 0.0
+            else:
+                raw = z['raw'][i-1] if i else 0.0
+        z['run'] = z['run']+1 if i and raw == z['raw'][i-1] else 1
+        z['raw'].append(raw)
+        if z['run'] >= ze['persist_hits']: z['cur'] = raw
+        est = z['cur']
+        z['base'].append(None)   # log max of the uncorrected committee; filled after classification or on demand
+        if est:
+            # verification: committee (uncorrected) more confident over the hits so far with the rotation than without.
+            # Only computed while an estimate is pending, so a normal zero costs no extra committee call.
+            c = z['cache'].setdefault(est, [])
+            miss_b = [k for k in range(i+1) if z['base'][k] is None]; miss_c = list(range(len(c), i+1))
+            X = np.stack([z['x'][k] for k in miss_b]+[rotate_zero(z['x'][k][None, :], -est)[0] for k in miss_c])
+            lm = np.log(probabilities(self.bundle, X, hand).max(1)+1e-9)
+            for k, val in zip(miss_b, lm[:len(miss_b)]): z['base'][k] = float(val)
+            c.extend(float(v) for v in lm[len(miss_b):])
+            if (sum(c[:i+1])-sum(z['base'][:i+1]))/(i+1) <= ze['verify_margin']: est = 0.0
+        return est
+
+    def _replay(self, hand, X, t):
+        """Rebuild this hand's state from its history under a new rotation (same logic as hit by hit, batched)."""
+        n = len(X); st0, st1 = _Stats(), _Stats(); tm = self.tm[hand]
+        P0 = probabilities(self.bundle, X, hand); drum = None
+        if self.anchor and n >= self.anchor:
+            poses = _yaw_pitch_rows(X[:self.anchor]); med = np.median(poses, 0)
+            tight = bool(np.all(np.hypot(*(poses-med).T) <= ANCHOR_RULE['max_pose_deg']))
+            if tight and all(self.anchor_drum in np.argsort(-P0[k])[:ANCHOR_RULE['snare_in_top']] for k in range(self.anchor)): drum = self.anchor_drum
+            elif tight:
+                top = P0[:self.anchor].argmax(1)
+                if np.all(top == top[0]) and P0[:self.anchor, top[0]].mean() >= ANCHOR_RULE['any_drum_min_score']: drum = int(top[0])
+        p = P0; stats = []
+        for _ in range(2):
+            st = _Stats(); Xc = X.copy(); valid = np.zeros(n, bool)
+            for k in range(n):
+                if st.total >= self.minh or (drum is not None and st.n[drum] >= self.anchor):
+                    Xc[k, ROT] = X[k, ROT]+self.alpha*st.offset(tm); valid[k] = True
+                if drum is not None and k < self.anchor: st.force(X[k, ROT], drum)
+                else: st.add(X[k, ROT], p[k], self.conf)
+            p = np.where(valid[:, None], probabilities(self.bundle, Xc, hand), p); stats.append(st)
+        Y = _yaw_pitch_rows(Xc); prev = None
+        for k in range(n):
+            q = self._position_prior(hand, p[k], Y[k]); label = int(q.argmax())
+            if (prev is not None and q.max() < CONTINUITY['below_score'] and t[k]-prev[0] <= CONTINUITY['max_ms']
+                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and float(np.hypot(*(Y[k]-prev[1]))) <= CONTINUITY['max_deg']):
+                label = prev[2]
+            prev = (t[k], Y[k], label)
+        self.stats[hand] = stats; self.previous[hand] = prev; self.accepted[hand] = n; self.pending[hand] = []
+        self.anchored[hand] = drum is not None if (self.anchor and n >= self.anchor) else None; self.anchored_drum[hand] = drum
 
     def _position_prior(self, hand, p, yp):
         """Down-weight drums whose training position (yaw/pitch at the hit, circular yaw) is far from this hit."""
@@ -147,6 +255,7 @@ class StreamEngine:
             self.adapted[hand] += 1
         P = probabilities(self.bundle, np.stack(rows), hand)
         p0 = P[0]; p1 = P[1] if use1 else p0; pf = P[-1] if use2 else p1
+        self._last_p0 = p0
         if holding:
             self.pending[hand].append((x[ROT].copy(), p0, p1, _yaw_pitch(x)))
             if len(self.pending[hand]) == self.anchor: self._settle_anchor(hand)
@@ -180,7 +289,16 @@ class StreamEngine:
             ph = hit_probability(self.bundle, g, peak.get('feature', []), vector, ctx)
             if ph < self.gate_threshold:
                 self.rejected[hand] += 1; continue
+            if self.ze:
+                z = self.zh[hand]; z['x'].append(vector.astype(np.float32)); z['t'].append(t)
+                est = self._zero_estimate(hand, vector.astype(np.float32))
+                if est != self.zero_rot[hand]:
+                    if len(z['x']) > 1: self._replay(hand, rotate_zero(np.stack(z['x'][:-1]), -est), np.array(z['t'][:-1]))
+                    self.zero_rot[hand] = est; self.zero_rebuilds[hand] += 1
+                if est: vector = rotate_zero(vector[None, :], -est)[0]
             q, yp = self._classify(hand, vector); top = np.sort(q); label = int(q.argmax()); prev = self.previous[hand]
+            if self.ze and self.zero_rot[hand] == 0 and self.zh[hand]['base'][-1] is None:
+                self.zh[hand]['base'][-1] = float(np.log(self._last_p0.max()+1e-9))   # the uncorrected committee output of this hit
             if (prev is not None and q.max() < CONTINUITY['below_score'] and t-prev[0] <= CONTINUITY['max_ms']
                     and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']]
                     and float(np.hypot(*(yp-prev[1]))) <= CONTINUITY['max_deg']):
@@ -190,5 +308,5 @@ class StreamEngine:
             output.append(dict(**{k: v for k, v in peak.items() if k != 'feature'}, prediction_id=self.count,
                                direction_mode='venue_free_adaptive', zero_yaw_deg=self.zero_yaw[hand], heading_distance_deg=None,
                                drum=self.classes[label], model_score=float(q.max()), model_margin=float(top[-1]-top[-2]),
-                               hit_probability=ph))
+                               hit_probability=ph, zero_correction_deg=float(self.zero_rot[hand])))
         return output

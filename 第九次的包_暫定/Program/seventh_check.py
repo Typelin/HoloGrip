@@ -32,7 +32,7 @@ def main():
                       'Hi-Hat':[46],'Crash':[49],'Ride':[51,59]},excluded_foot_notes=[36,44])
     (PACK/'QA').mkdir(exist_ok=True)
     (PACK/'QA/software_preflight.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
-    print('Software PASS: 9th package - rounds 4-8 committee (raw + re-centred) + per-drum offset correction + hit gate (1.5 g) + automatic snare anchor + pose continuity (top-2), no compass heading.')
+    print('Software PASS: 9th package - rounds 4-8 committee (raw + re-centred) + per-drum offset correction + hit gate (1.5 g) + automatic anchor + position prior + zero-direction guard + pose continuity (top-2), no compass heading.')
     print('Hardware NOT TESTED: actual two COMs, L/R, 80-120 Hz and drumhead zero must pass in the live console.')
     return 0
 

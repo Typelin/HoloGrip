@@ -1,0 +1,28 @@
+{
+ "_comment": "Dry run only: 10/27 (round 8) described as a new day, labels written to out/dryrun_labels_1027 (the real 10/27 labels are untouched). Use with HOLOGRIP_ROUNDS=dryrun_1027.json; never enable together with R8 training.",
+ "T8": {
+  "enabled": true,
+  "date": "20261027",
+  "package": "第八次的包_暫定2026-10-27",
+  "label_dir": "out/dryrun_labels_1027",
+  "midi_dir": "C:/Users/Typelin_Station/Desktop/今天",
+  "pretest_midi": "測試1.mid",
+  "single": {
+   "crash L": ["Crash", "S20261020_L_Crash_take02_raw_100hz_20261027_134706"],
+   "crash R": ["Crash", "S20261020_R_Crash_take01_raw_100hz_20261027_135005"],
+   "fioor ton L": ["落地 Tom", "S20261020_P01_L_GND_take02_raw_100hz_20261027_131305"],
+   "fioor ton R": ["落地 Tom", "S20261020_P01_R_GND_take01_raw_100hz_20261027_131706"],
+   "ride L": ["Ride", "S20261020_P01_L_Ride_take01_raw_100hz_20261027_130314"],
+   "ride R": ["Ride", "S20261020_P01_R_Ride_take01_raw_100hz_20261027_130814"],
+   "ton1 L": ["高音 Tom", "S20261020_P01_L_HI_take01_raw_100hz_20261027_133332"],
+   "ton1 R": ["高音 Tom", "S20261020_P01_R_HI_take01_raw_100hz_20261027_133640"],
+   "ton2 L": ["中音 Tom", "S20261020_P01_L_MID_take01_raw_100hz_20261027_132126"],
+   "ton2 R": ["中音 Tom", "S20261020_P01_R_MID_take02_raw_100hz_20261027_132946"]
+  },
+  "songs": {
+   "測試3改": ["four_drum", "S20261020_P01_song02_take02_raw_100hz_20261027_123510"],
+   "測試2改": ["song", "S20261020_P01_song01_take01_raw_100hz_20261027_115924"]
+  },
+  "void": ["song02_take01", "L_GND_take01", "L_Crash_take01", "R_MID_take01"]
+ }
+}

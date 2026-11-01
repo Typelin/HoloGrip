@@ -1,0 +1,23 @@
+{
+ "_comment": "New field days added after rounds 4-8. Fill in on the night of the field day, then set enabled=true. single: MIDI stem (ending in ' L' or ' R') -> [drum, raw stem in <package>/Data/Raw]. songs: MIDI stem -> [kind (song|four_drum), raw stem]. pretest_midi: MIDI file name(s) of the pretest(s) in midi_dir, in the order of the pretest recordings (sorted by file name). Pretests are exam only.",
+ "R9": {
+  "enabled": false,
+  "date": "20261105",
+  "package": "第九次的包_暫定",
+  "midi_dir": "C:/Users/Typelin_Station/Desktop/今天",
+  "pretest_midi": "測試1.mid",
+  "single": {},
+  "songs": {},
+  "void": []
+ },
+ "R10": {
+  "enabled": false,
+  "date": "20261106",
+  "package": "第十次的包_暫定",
+  "midi_dir": "C:/Users/Typelin_Station/Desktop/今天",
+  "pretest_midi": "測試1.mid",
+  "single": {},
+  "songs": {},
+  "void": []
+ }
+}

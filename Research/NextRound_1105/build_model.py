@@ -23,8 +23,10 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--tag', required=True)
 ap.add_argument('--hold', default='', help='comma separated days left out of training (leave-one-day-out)')
 ap.add_argument('--days', default='all', help="new days to add from rounds.json: 'all', 'none' or comma list")
+ap.add_argument('--exclude', default='', help='labelled takes left out of training and the hit gate (comma separated names, e.g. "R9:ton1轉ton2 L")')
+ap.add_argument('--cfg', default='{}', help='training weights as JSON, e.g. {"group_w": {"R10": 0.5}} or {"group_bal": true} (default {} = unchanged)')
 ap.add_argument('--seeds', type=int, default=0, help='seeds per half (default 3 full / 1 with --hold)')
-ARGS = ap.parse_args()   # parsed before the research imports (lodo_full rewrites sys.argv)
+ARGS = ap.parse_args() if __name__ == '__main__' else ap.parse_args(['--tag', '_worker'])   # parsed before the research imports (lodo_full rewrites sys.argv)
 
 import numpy as np
 import joblib
@@ -51,16 +53,19 @@ def main():
     extra = None if ARGS.days == 'all' else ([] if ARGS.days == 'none' else ARGS.days.split(','))
     rows, names, Lb, T, info = RD.setup(extra)
     hold = {d for d in ARGS.hold.split(',') if d}
-    tr = [r for r in rows if L5.day_of(r['session']) not in hold]
+    excl = {t for t in ARGS.exclude.split(',') if t}
+    assert excl <= set(names), f'unknown takes {excl - set(names)}'
+    tr = [r for r in rows if L5.day_of(r['session']) not in hold and r['session'] not in excl]
+    CFG = json.loads(ARGS.cfg)
     ns = ARGS.seeds or (1 if hold else 3); seeds = tuple(range(ns))
     print('training rows', len(tr), 'of', len(rows), 'hold', sorted(hold), 'seeds', ns, flush=True)
     rc = RC.recenter(tr)
-    com = K.train(tr, {}, seeds=seeds)+K.train(rc, {}, seeds=seeds)
+    com = K.train(tr, CFG, seeds=seeds)+K.train(rc, CFG, seeds=seeds)
     tmd = {f'{h}|{d}': np.mean([r['x'][ROT] for r in rc if r['hand'] == h and r['drum'] == d], 0).astype(np.float32)
            for h in 'LR' for d in K.DRUMS if any(r['hand'] == h and r['drum'] == d for r in rc)}
     missing = [f'{h}|{d}' for h in 'LR' for d in K.DRUMS if f'{h}|{d}' not in tmd]
     assert not missing, f'no training rows for {missing}'
-    gn = [n for n in names if n not in K.TESTS and L5.day_of(n) not in hold]
+    gn = [n for n in names if n not in K.TESTS and L5.day_of(n) not in hold and n not in excl]
     Xg = np.vstack([np.stack([H.feats(c) for c in H.CAND[n]])[Lb[n][0] != 2] for n in gn]); yg = np.concatenate([Lb[n][0][Lb[n][0] != 2] for n in gn])
     gate = xgb.XGBClassifier(n_estimators=800, max_depth=6, learning_rate=.05, subsample=.8, colsample_bytree=.6, device='cuda', tree_method='hist', random_state=0).fit(Xg, yg)
     zero = YF.train(tr)
@@ -84,7 +89,7 @@ def main():
     assert not trained & set(K.TESTS), 'a pretest reached training'
     for k in [k for k in b if k.startswith('_')]: b.pop(k)
     out = RD.OUT/f'model_{ARGS.tag}.joblib'; joblib.dump(b, out, compress=3)
-    summary = dict(tag=ARGS.tag, model=str(out), built=time.strftime('%Y-%m-%d'), hold=sorted(hold), days=days, seeds_per_half=ns, training_rows=len(tr),
+    summary = dict(tag=ARGS.tag, cfg=CFG, model=str(out), built=time.strftime('%Y-%m-%d'), hold=sorted(hold), excluded=sorted(excl), days=days, seeds_per_half=ns, training_rows=len(tr),
                    rows_by_day=dict(Counter(L5.day_of(r['session']) for r in tr)), gate_candidates=int(len(yg)), gate_recordings=len(gn),
                    pretests=sorted(K.TESTS), new_days=info, minutes=round((time.time()-t0)/60, 1))
     (RD.OUT/f'model_{ARGS.tag}.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding='utf-8')

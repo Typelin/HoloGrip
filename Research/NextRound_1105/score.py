@@ -17,11 +17,12 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--code', default='第九次的包_暫定', help='package whose Program/ runs the replay')
 ap.add_argument('--model', default='', help='bundle to replay (default: the package model, fingerprint-checked)')
 ap.add_argument('--lodo', action='store_true', help='score day D with out/model_lodo_<D>.joblib')
+ap.add_argument('--lodo-prefix', default='lodo', help='leave-one-day-out models are out/model_<prefix>_<day>.joblib')
 ap.add_argument('--live', default='', help='package whose Data/模型實測/*/predictions.csv is scored (no replay)')
 ap.add_argument('--days', default='', help='comma list of days (default all)')
 ap.add_argument('--tag', default='')
 ap.add_argument('--refs', default='', help='also write each replay to out/<refs>/<take>.csv (package test references)')
-ARGS = ap.parse_args()
+ARGS = ap.parse_args() if __name__ == '__main__' else ap.parse_args([])   # spawned worker processes re-import this module
 
 import numpy as np
 import joblib
@@ -86,7 +87,7 @@ def main():
     mode = 'live' if ARGS.live else ('lodo' if ARGS.lodo else ('model' if ARGS.model else 'package'))
     res = dict(mode=mode, code=ARGS.code, model=ARGS.model, live=ARGS.live, takes={}, ok=0, n=0)
     for D in days:
-        b = load_bundle(RD.OUT/f'model_lodo_{D}.joblib', config) if ARGS.lodo else bundle
+        b = load_bundle(RD.OUT/f'model_{ARGS.lodo_prefix}_{D}.joblib', config) if ARGS.lodo else bundle
         for nm in FB.PRETESTS[D]:
             P = live_predictions(raws[nm]) if ARGS.live else stream(b, config, raws[nm])
             if ARGS.refs:

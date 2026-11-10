@@ -20,6 +20,9 @@ ap.add_argument('--date', required=True, help='field date YYYY-MM-DD')
 ap.add_argument('--src', default='第九次的包_暫定')
 ap.add_argument('--tag', default='', help='short name for logs / references (default: folder name before 的包)')
 ap.add_argument('--replace', action='store_true', help='rebuild an existing destination (only when its Data/ has no files)')
+ap.add_argument('--snare-relaxed-top', type=int, default=0,
+                help='automatic anchor: when neither existing rule holds and the first N hits are tight, anchor on the snare '
+                     'if it is within the committee top K for every one of them (0 = off, the 9th package rule)')
 ARGS = ap.parse_args()
 
 import joblib
@@ -47,6 +50,20 @@ def patch(rel, pairs):
         assert n == 1, f'{rel}: expected 1 occurrence of {old!r}, found {n}'
         s = s.replace(old, new)
     p.write_bytes(s.encode('utf-8'))
+
+
+def relax_anchor(k):
+    """Third anchor rule (after 'snare top-1' and 'one consistent drum'): snare within the top k for all first N hits."""
+    rel = 'Program/venue_free_runtime_1023.py'; s = (DST/rel).read_bytes().decode('utf-8'); nl = '\r\n' if '\r\n' in s else '\n'
+    l1 = "                if np.all(top == top[0]) and P0[:self.anchor, top[0]].mean() >= ANCHOR_RULE['any_drum_min_score']: drum = int(top[0])"
+    l2 = "            if np.all(top == top[0]) and P0[:, top[0]].mean() >= ANCHOR_RULE['any_drum_min_score']: drum = int(top[0])"
+    patch(rel, [("ANCHOR_RULE = dict(snare_in_top=1, max_pose_deg=8.0, any_drum_min_score=0.7)",
+                 f"ANCHOR_RULE = dict(snare_in_top=1, max_pose_deg=8.0, any_drum_min_score=0.7, snare_relaxed_top={k})"),
+                (l1, l1+nl+"                if drum is None and all(self.anchor_drum in np.argsort(-P0[j])[:ANCHOR_RULE['snare_relaxed_top']] for j in range(self.anchor)): drum = self.anchor_drum"),
+                (l2, l2+nl+"            if drum is None and all(self.anchor_drum in np.argsort(-p0)[:ANCHOR_RULE['snare_relaxed_top']] for _, p0, _, _ in pend): drum = self.anchor_drum"),
+                ("(e.g. a take that opens on the Hi-Hat). Otherwise they enter normally",
+                 f"(e.g. a take that opens on the Hi-Hat). If neither holds but the N poses are still tight, they anchor on the{nl}"
+                 f"snare when it is within the committee's top {k} for every one of them. Otherwise they enter normally")])
 
 
 def rounds_label(days):
@@ -91,12 +108,14 @@ def main():
                                         f"Software PASS: {tag} package (9th recipe) - {','.join(summary['days'])} committee")])
     patch('Program/seventh_native_gui.py', [('HoloGrip｜第九次 ', f'HoloGrip｜{ARGS.ordinal} '),
                                             ('第九次｜打擊判斷＋第4～8次模型', f'{ARGS.ordinal}｜打擊判斷＋{label}模型')])
+    if ARGS.snare_relaxed_top: relax_anchor(ARGS.snare_relaxed_top)
     readme = (SRC/'README_現場流程_ZH_TW.md').read_text(encoding='utf-8')
     field = readme[readme.index('## 現場操作'):]
     (DST/'README_現場流程_ZH_TW.md').write_text(
         f"# HoloGrip {ARGS.ordinal}現場包｜{ARGS.date}\n\n## 跟{ARGS.src.split('的包')[0]}包的差別\n"
-        f"- 程式與判斷邏輯完全相同（打擊判斷、雙模型加權、逐鼓位置校正、位置先驗、自動錨點、歸零方向保護、姿勢連續）。\n"
-        f"- 模型用 {label} 資料重新訓練（{n:,} 下；前測一律不進訓練），做法與第九次包相同（`Research/NextRound_1105/build_model.py`）。\n"
+        + (f"- 自動錨點多一條規則：前 5 下姿勢集中、但兩條原規則都不成立時，只要每一下小鼓都在模型前 {ARGS.snare_relaxed_top} 名，就以小鼓當錨點（前測開頭固定是小鼓）。其餘程式相同。\n"
+           if ARGS.snare_relaxed_top else "- 程式與判斷邏輯完全相同（打擊判斷、雙模型加權、逐鼓位置校正、位置先驗、自動錨點、歸零方向保護、姿勢連續）。\n")
+        + f"- 模型用 {label} 資料重新訓練（{n:,} 下；前測一律不進訓練），做法與第九次包相同（`Research/NextRound_1105/build_model.py`）。\n"
         f"- 模型指紋 `{digest[:12]}…`。\n\n## 成績\n見 `Research/NextRound_1105/out/score_*.md`（全部訓練與留一天分開列）。\n\n" + field, encoding='utf-8')
     py = sys.executable
     report['steps']['freeze'] = run([py, 'Program/freeze_seventh_package.py'], DST, f'log_{tag}_freeze.log')

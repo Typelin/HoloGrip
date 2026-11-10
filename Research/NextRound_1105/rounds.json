@@ -1,20 +1,79 @@
 {
  "_comment": "New field days added after rounds 4-8. Fill in on the night of the field day, then set enabled=true. single: MIDI stem (ending in ' L' or ' R') -> [drum, raw stem in <package>/Data/Raw]. songs: MIDI stem -> [kind (song|four_drum), raw stem]. pretest_midi: MIDI file name(s) of the pretest(s) in midi_dir, in the order of the pretest recordings (sorted by file name). Pretests are exam only.",
  "R9": {
-  "enabled": false,
+  "enabled": true,
   "date": "20261105",
   "package": "第九次的包_暫定",
-  "midi_dir": "C:/Users/Typelin_Station/Desktop/今天",
+  "midi_dir": "C:/Users/Typelin_Station/Desktop/HoloGrip/第九次的包_暫定/今天",
   "pretest_midi": "測試1.mid",
-  "single": {},
-  "songs": {},
-  "void": []
+  "single": {
+   "ton2 轉ride L": [
+    [
+     "中音 Tom",
+     "Ride"
+    ],
+    "S20261020_P01_L_H_R_take01_raw_100hz_20261105_130946"
+   ],
+   "ton2 轉ride Ｒ": [
+    [
+     "中音 Tom",
+     "Ride"
+    ],
+    "S20261020_P01_R_M_R_take01_raw_100hz_20261105_131458"
+   ],
+   "ton1轉ton2 L": [
+    [
+     "高音 Tom",
+     "中音 Tom"
+    ],
+    "S20261020_P01_L_H_M_take01_raw_100hz_20261105_131917"
+   ],
+   "ton1轉ton2 R": [
+    [
+     "高音 Tom",
+     "中音 Tom"
+    ],
+    "S20261020_P01_R_H_M_take01_raw_100hz_20261105_132330"
+   ],
+   "floor ton轉ride L": [
+    [
+     "落地 Tom",
+     "Ride"
+    ],
+    "S20261020_P01_L_R_D_take01_raw_100hz_20261105_134333"
+   ],
+   "floor ton轉ride R": [
+    [
+     "落地 Tom",
+     "Ride"
+    ],
+    "S20261020_P01_R_R_D_take01_raw_100hz_20261105_134700"
+   ]
+  },
+  "songs": {
+   "測試2": [
+    "song",
+    "S20261105_P01_song01_take02_raw_100hz_20261105_124826"
+   ],
+   "測試3": [
+    "four_drum",
+    "S20261020_P01_song02_take01_raw_100hz_20261105_130041"
+   ]
+  },
+  "void": [
+   "S20261105_P01_song01_take01_raw_100hz_20261105_124317 (no MIDI)",
+   "S20261105_P01_song01_take02_raw_100hz_20261105_124758 (no MIDI)",
+   "pretest takes 12:33, 12:39, 13:52 (no MIDI; not scored, not trained)"
+  ],
+  "pretest_raw": [
+   "Data/模型實測/S9_P01_sevendrum_take01_20261105_123117_475178/S9_P01_sevendrum_take01_raw_100hz_20261105_123117.csv"
+  ]
  },
  "R10": {
   "enabled": false,
   "date": "20261106",
   "package": "第十次的包_暫定",
-  "midi_dir": "C:/Users/Typelin_Station/Desktop/今天",
+  "midi_dir": "C:/Users/Typelin_Station/Desktop/HoloGrip/第十次的包_暫定/今天",
   "pretest_midi": "測試1.mid",
   "single": {},
   "songs": {},

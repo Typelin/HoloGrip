@@ -26,7 +26,7 @@ OUT = HERE/'out'; OUT.mkdir(exist_ok=True)
 def main():
     cfg = json.loads((HERE/os.environ.get('HOLOGRIP_ROUNDS', 'rounds.json')).read_text(encoding='utf-8'))[DAY]
     pack = ROOT/cfg['package']/'Data'
-    raws = sorted((pack/'Raw').glob('*_raw_100hz_*.csv'))+sorted((pack/'模型實測').glob(f"S{cfg['date']}*/*_raw_100hz_*.csv"))
+    raws = sorted((pack/'Raw').glob('*_raw_100hz_*.csv'))+sorted((pack/'模型實測').glob(f"*/*_raw_100hz_{cfg['date']}_*.csv"))
     mids = sorted(Path(cfg['midi_dir']).glob('*.mid'))
     print('raw', len(raws), 'midi', len(mids), flush=True)
     peaks = {}

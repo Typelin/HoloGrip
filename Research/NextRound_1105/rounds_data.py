@@ -36,7 +36,7 @@ def label_dir(c):
 
 def pretest_raws(c):
     if c.get('pretest_raw'): return [Path(p) if Path(p).is_absolute() else ROOT/c['package']/p for p in c['pretest_raw']]
-    return sorted((ROOT/c['package']/'Data/模型實測').glob(f"S{c['date']}*/S{c['date']}_*_raw_100hz_*.csv"))
+    return sorted((ROOT/c['package']/'Data/模型實測').glob(f"*/*_raw_100hz_{c['date']}_*.csv"))
 
 
 def pretest_names(R, c):
@@ -58,8 +58,16 @@ L5.day_of = day_of; L5.LF.day_of = day_of
 
 
 def docs_of(R, c):
-    tag = f"_自動標記_{c['date']}"
-    return {f"{R}:{p.name.split(tag)[0]}": json.loads(p.read_text(encoding='utf-8')) for p in sorted(label_dir(c).glob(f'*{tag}.json'))}
+    """Labelled takes of a day. c['cut_ms'] = {take: ms}: a glove stopped sending at that Raw time, so every
+    note from there on is marked 'exclude' (rule glove_dropout) for training, the hit gate and scoring."""
+    tag = f"_自動標記_{c['date']}"; cut = c.get('cut_ms', {})
+    docs = {f"{R}:{p.name.split(tag)[0]}": json.loads(p.read_text(encoding='utf-8')) for p in sorted(label_dir(c).glob(f'*{tag}.json'))}
+    for name, d in docs.items():
+        ms = cut.get(name.split(':', 1)[1])
+        if ms is None: continue
+        for e in d['events']:
+            if float(e['csv_ms']) >= ms: d['labels'][str(e['id'])] = dict(d['labels'][str(e['id'])], mark='exclude', rule='glove_dropout')
+    return docs
 
 
 def rows_of(R, docs):
@@ -84,7 +92,7 @@ def truth_of(midi_path, cand):
 def load_round(R, c):
     """Candidates (1.5 g), training rows and pretest truth of one new day, cached in out/round_<R>.joblib."""
     docs = docs_of(R, c); pre = pretest_names(R, c)
-    key = dict(docs=sorted(docs), pretests={k: str(v) for k, v in pre.items()},
+    key = dict(docs=sorted(docs), pretests={k: str(v) for k, v in pre.items()}, cut=c.get('cut_ms', {}),
                mtime=max([p.stat().st_mtime for p in label_dir(c).glob('*.json')]+[Path(v).stat().st_mtime for v in pre.values()], default=0))
     cf = OUT/f'round_{R}.joblib'
     if cf.exists():

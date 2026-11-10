@@ -42,3 +42,6 @@ outputs/
 
 # Build artifacts
 *.zip
+
+# Wi-Fi credentials for the UDP glove firmware (copy from wifi_secrets.example.h)
+**/wifi_secrets.h

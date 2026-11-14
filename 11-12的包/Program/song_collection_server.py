@@ -443,7 +443,7 @@ class SongCollectionApp(tk.Tk):
         self.record_hit_index = 0
 
         self.mode_var = tk.StringVar(value="hit_events")
-        self.session_var = tk.StringVar(value="S20261020_P01_song01_take01")
+        self.session_var = tk.StringVar(value=f"S{datetime.now():%Y%m%d}_P01_song01_take01")
         self.status_var = tk.StringVar(value="等待手套 UDP 封包")
         self.mode_desc_var = tk.StringVar()
         self.file_var = tk.StringVar(value="尚未開始收集")
@@ -808,6 +808,15 @@ class SongCollectionApp(tk.Tk):
         value = re.sub(r"[^A-Za-z0-9_\-\u4e00-\u9fff]+", "_", value.strip())
         return value[:80].strip("_") or "song_session"
 
+    @staticmethod
+    def _with_today_date(session_id: str) -> tuple[str, str]:
+        """Replace a leading SYYYYMMDD date with today's date; return (id, old date or "")."""
+        match = re.match(r"S(\d{8})(?=_|$)", session_id)
+        today = datetime.now().strftime("%Y%m%d")
+        if match is None or match.group(1) == today:
+            return session_id, ""
+        return f"S{today}{session_id[match.end():]}", match.group(1)
+
     def _set_recording_widgets(self, recording: bool) -> None:
         self.start_button.configure(state="disabled" if recording else "normal")
         self.stop_button.configure(state="normal" if recording else "disabled")
@@ -824,7 +833,10 @@ class SongCollectionApp(tk.Tk):
             messagebox.showwarning("尚未連接", "請先選擇 COM 埠並按「連接 COM」。")
             return
         session_id = self._safe_session_id(self.session_var.get())
+        session_id, replaced_date = self._with_today_date(session_id)
         self.session_var.set(session_id)
+        if replaced_date:
+            self._append_log(f"場次日期 {replaced_date} 已改成今天：{session_id}")
         self.record_sample_index = 0
         self.record_hit_index = 0
         for detector in self.detectors.values():

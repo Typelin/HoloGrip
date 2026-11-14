@@ -1,6 +1,7 @@
 """Create `11-17的包` from `11-12的包` (same program; the collector's session name already follows today's date)
 with model g6 retrained on 10/09-11/12 (R4..R13; R13 = 11/12 人員2 controlled drills + song 1, weight 2, 5 seeds).
-Also the live-test window's default session name follows today's date (was fixed at S9_P01_sevendrum_take01).
+Also the live-test window's default session name follows today's date (was fixed at S9_P01_sevendrum_take01),
+and the position prior has a kernel floor of 0.1 (exp_rt.py experiments, 11/14).
 Field data is never copied: Data/, QA/ and 今天/ start empty. Refuses to touch a destination that holds field data.
 
   HOLOGRIP_ROUNDS=out/rounds_R13.json python make_package_1117.py --model=out/model_g6.joblib [--replace]
@@ -75,6 +76,14 @@ def load_components():
     manifest, config = verify_files()
     bundle = joblib.load(MODEL)''')])
     patch('Program/seventh_live.py', [("self.ready();core.load_components()", "self.ready();core.verify_files()")])
+    # Position-prior floor (exp_rt.py, 11/14): the kernel exp(-d^2/2 sigma^2) never drops below 0.1, so a hit that is far
+    # from every training position (body sway, slow direction drift) is not pushed onto one drum; close calls keep the prior.
+    patch('Program/venue_free_runtime_1023.py', [
+        ("ANCHOR_RULE = dict(", "POSITION_FLOOR = 0.1   # lower bound of the position-prior kernel\nANCHOR_RULE = dict("),
+        ("exp(-d^2 / 2 sigma^2)^weight, d = distance", "max(exp(-d^2 / 2 sigma^2), POSITION_FLOOR)^weight, d = distance"),
+        ("        q = p*np.exp(-(d**2).sum(1)/(2*self.position['sigma_deg']**2))**self.position['weight']+1e-12",
+         "        k = np.maximum(np.exp(-(d**2).sum(1)/(2*self.position['sigma_deg']**2)), POSITION_FLOOR)\n"
+         "        q = p*k**self.position['weight']+1e-12")])
     py = sys.executable; rep = dict(src=SRC.name, dst=DST.name, model=str(MODEL), model_sha256=digest, training_events=n, days=S['days'], excluded=S['excluded'], steps={})
     rep['steps']['freeze'] = P.run([py, 'Program/freeze_seventh_package.py'], DST, f'log_{TAG}_freeze.log')
     rep['steps']['references'] = P.run([py, str(HERE/'score.py'), '--code', DST.name, '--days', 'R6,R7', '--tag', f'refs_{TAG}', '--refs', f'replay_{TAG}'], HERE, f'log_{TAG}_refs.log')

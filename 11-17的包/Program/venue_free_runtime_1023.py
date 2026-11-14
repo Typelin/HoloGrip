@@ -3,7 +3,7 @@
 Committee: members trained on raw rows and members trained on rows re-centred per recording and hand;
 their probabilities are averaged with bundle['member_weights'] (equal weights when absent).
 Position prior (bundle['position_prior']): the final drum probabilities are multiplied by
-exp(-d^2 / 2 sigma^2)^weight, d = distance between this hit's (corrected) yaw/pitch and each drum's
+max(exp(-d^2 / 2 sigma^2), POSITION_FLOOR)^weight, d = distance between this hit's (corrected) yaw/pitch and each drum's
 training position (circular yaw), then renormalised. Applied to every hit before pose continuity.
 
 Per candidate peak (detector at 1.5 g, released at peak + 80 ms):
@@ -62,6 +62,7 @@ def probabilities(bundle, X, hand):
 CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9, previous_in_top=2)
 PRETEST_SNARE_ANCHOR = 5
 ANCHOR_DRUM = '小鼓'
+POSITION_FLOOR = 0.1   # lower bound of the position-prior kernel
 ANCHOR_RULE = dict(snare_in_top=1, max_pose_deg=8.0, any_drum_min_score=0.7, snare_relaxed_top=3)
 
 
@@ -224,7 +225,8 @@ class StreamEngine:
         """Down-weight drums whose training position (yaw/pitch at the hit, circular yaw) is far from this hit."""
         if not self.position: return p
         d = yp[None, :]-self.tm_pose[hand]; d[:, 0] = (d[:, 0]+180) % 360-180
-        q = p*np.exp(-(d**2).sum(1)/(2*self.position['sigma_deg']**2))**self.position['weight']+1e-12
+        k = np.maximum(np.exp(-(d**2).sum(1)/(2*self.position['sigma_deg']**2)), POSITION_FLOOR)
+        q = p*k**self.position['weight']+1e-12
         return q/q.sum()
 
     def _settle_anchor(self, hand):

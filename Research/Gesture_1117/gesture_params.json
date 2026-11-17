@@ -1,0 +1,67 @@
+{
+ "params": {
+  "trig_dps": 150.0,
+  "release_dps": 80.0,
+  "release_ms": 40.0,
+  "max_ms": 800.0,
+  "refractory_ms": 250.0,
+  "swing_min_deg": 40.0,
+  "swing_share": 0.6,
+  "swing_dir_L": "+",
+  "swing_dir_R": "-",
+  "strike_g": 2.2,
+  "strike_share_max": 0.4,
+  "strike_window_ms": 200.0,
+  "strike_pose_ms": 150.0,
+  "pose_max_deg": 90.0,
+  "strike_min_deg_L": 25.0,
+  "strike_min_deg_R": 35.0,
+  "swing_refractory_ms": 450.0,
+  "strike_to_swing_ms": 500.0,
+  "swing_rearm_deg": 20.0,
+  "swing_up_max_deg": 80.0,
+  "swing_to_strike_ms": 800.0,
+  "switch_gap_ms": 600.0,
+  "switch_confirm": 2.0,
+  "strike_strong_g": 4.5,
+  "strike_share_max_strong": 0.7
+ },
+ "poses": {
+  "L": {
+   "side": [
+    0.06272801283652056,
+    -0.6418637506439256,
+    0.7642487304633838
+   ],
+   "up": [
+    -0.8291045518041329,
+    -0.5161509270437395,
+    0.21488104311352405
+   ]
+  },
+  "R": {
+   "side": [
+    0.25692694563462004,
+    0.08054058273106804,
+    0.9630689275125665
+   ],
+   "up": [
+    -0.7635598027269793,
+    0.6154313558923238,
+    0.19550108399717966
+   ]
+  }
+ },
+ "notes": {
+  "L": {
+   "1": 60,
+   "2": 61,
+   "3": 62
+  },
+  "R": {
+   "1": 64,
+   "2": 65,
+   "3": 66
+  }
+ }
+}

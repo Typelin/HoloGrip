@@ -15,7 +15,8 @@ Per candidate peak (detector at 1.5 g, released at peak + 80 ms):
      hand in this take (score >= bundle confidence, after >= 20 such hits, two passes). No labels, no future.
   3. pose continuity: if this hit's score is < 0.9, the same hand's previous accepted hit was within
      600 ms with a zero-relative yaw/pitch within 16 deg, and that previous drum is among this hit's two
-     highest-scoring drums, it is the same drum as that previous hit.
+     highest-scoring drums, it is the same drum as that previous hit. During the hand's first 5 accepted
+     hits the previous drum must also score within 0.5 of the top drum (one wrong opening hit is not carried).
 Automatic snare anchor (snare_anchor=N): the first N accepted hits of each hand are held back from the
 offset statistics. At the N-th hit they are used as a snare anchor only if, for every one of them, the
 uncorrected committee ranks the snare first and all N zero-relative poses lie within 8 deg of
@@ -59,7 +60,12 @@ def probabilities(bundle, X, hand):
     return out/sum(weights[k] for k in bundle['portable'])
 
 
-CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9, previous_in_top=2)
+CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9, previous_in_top=2, opening_hits=5, opening_max_gap=0.5)
+
+
+def _opening_ok(q, previous_drum, accepted):
+    """Opening gap: within the first opening_hits accepted hits, continuity needs the previous drum within opening_max_gap of the top score."""
+    return accepted > CONTINUITY['opening_hits'] or q.max()-q[previous_drum] <= CONTINUITY['opening_max_gap']
 PRETEST_SNARE_ANCHOR = 5
 ANCHOR_DRUM = '小鼓'
 POSITION_FLOOR = 0.1   # lower bound of the position-prior kernel
@@ -215,7 +221,8 @@ class StreamEngine:
         for k in range(n):
             q = self._position_prior(hand, p[k], Y[k]); label = int(q.argmax())
             if (prev is not None and q.max() < CONTINUITY['below_score'] and t[k]-prev[0] <= CONTINUITY['max_ms']
-                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and float(np.hypot(*(Y[k]-prev[1]))) <= CONTINUITY['max_deg']):
+                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and _opening_ok(q, prev[2], k+1)
+                    and float(np.hypot(*(Y[k]-prev[1]))) <= CONTINUITY['max_deg']):
                 label = prev[2]
             prev = (t[k], Y[k], label)
         self.stats[hand] = stats; self.previous[hand] = prev; self.accepted[hand] = n; self.pending[hand] = []
@@ -305,7 +312,7 @@ class StreamEngine:
             if self.ze and self.zero_rot[hand] == 0 and self.zh[hand]['base'][-1] is None:
                 self.zh[hand]['base'][-1] = float(np.log(self._last_p0.max()+1e-9))   # the uncorrected committee output of this hit
             if (prev is not None and q.max() < CONTINUITY['below_score'] and t-prev[0] <= CONTINUITY['max_ms']
-                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']]
+                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and _opening_ok(q, prev[2], self.accepted[hand])
                     and float(np.hypot(*(yp-prev[1]))) <= CONTINUITY['max_deg']):
                 label = prev[2]; self.continued[hand] += 1
             self.previous[hand] = (t, yp, label)

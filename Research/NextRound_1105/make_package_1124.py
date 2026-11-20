@@ -1,6 +1,6 @@
 """Create `11-24的包` from `11-17的包` (same program and runtime: position-prior floor 0.1, fast 'start', dated session names)
 with a model retrained on 10/09-11/17 (R4..R14; R14 = 11/17 人員3 song 1 + left single-hand drill; the right drill is left out,
-see 現場紀錄_20261117_ZH_TW.md). Field data is never copied: Data/, QA/ and 今天/ start empty.
+see 現場紀錄_20261117_ZH_TW.md) and an opening gap on pose continuity (exp_gap_1124.py). Field data is never copied: Data/, QA/ and 今天/ start empty.
 Refuses to touch a destination that holds field data.
 
   HOLOGRIP_ROUNDS=out/rounds_R14.json python make_package_1124.py --model=out/model_h5.joblib [--replace]
@@ -18,6 +18,8 @@ MODEL = HERE/next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--model
 def patch(rel, pairs):
     p = DST/rel; s = p.read_bytes().decode('utf-8')
     for old, new in pairs:
+        if '\n' in old and s.count(old) == 0 and s.count(old.replace('\n', '\r\n')) == 1:   # CRLF source file
+            old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
         n = s.count(old); assert n == 1, f'{rel}: expected 1 occurrence of {old!r}, found {n}'
         s = s.replace(old, new)
     p.write_bytes(s.encode('utf-8'))
@@ -55,6 +57,28 @@ def main():
         patch('Program/seventh_core.py', [(f"len(bundle['portable']) != {k0}", f"len(bundle['portable']) != {k}")])
         patch('Program/freeze_seventh_package.py', [(f"assert len(bundle['portable'])=={k0}", f"assert len(bundle['portable'])=={k}")])
         patch('Program/test_seventh_package.py', [(f"self.assertEqual(len(self.bundle['portable']),{k0})", f"self.assertEqual(len(self.bundle['portable']),{k})")])
+    # Opening continuity gap (exp_gap_1124.py, 11/20): during the first 5 accepted hits of a hand, pose continuity keeps
+    # the previous drum only if its score is within 0.5 of this hit's top score. On 11/17 one wrong first hit
+    # (Hi-Hat 0.54 vs snare 0.34) was carried over hits the committee called snare at 0.85+.
+    patch('Program/venue_free_runtime_1023.py', [
+        ("CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9, previous_in_top=2)",
+         "CONTINUITY = dict(max_ms=600.0, max_deg=16.0, below_score=0.9, previous_in_top=2, opening_hits=5, opening_max_gap=0.5)\n\n\n"
+         "def _opening_ok(q, previous_drum, accepted):\n"
+         "    \"\"\"Opening gap: within the first opening_hits accepted hits, continuity needs the previous drum within opening_max_gap of the top score.\"\"\"\n"
+         "    return accepted > CONTINUITY['opening_hits'] or q.max()-q[previous_drum] <= CONTINUITY['opening_max_gap']"),
+        ("  3. pose continuity: if this hit's score is < 0.9, the same hand's previous accepted hit was within\n"
+         "     600 ms with a zero-relative yaw/pitch within 16 deg, and that previous drum is among this hit's two\n"
+         "     highest-scoring drums, it is the same drum as that previous hit.",
+         "  3. pose continuity: if this hit's score is < 0.9, the same hand's previous accepted hit was within\n"
+         "     600 ms with a zero-relative yaw/pitch within 16 deg, and that previous drum is among this hit's two\n"
+         "     highest-scoring drums, it is the same drum as that previous hit. During the hand's first 5 accepted\n"
+         "     hits the previous drum must also score within 0.5 of the top drum (one wrong opening hit is not carried)."),
+        ("and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and float(np.hypot(*(Y[k]-prev[1]))) <= CONTINUITY['max_deg']):",
+         "and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and _opening_ok(q, prev[2], k+1)\n"
+         "                    and float(np.hypot(*(Y[k]-prev[1]))) <= CONTINUITY['max_deg']):"),
+        ("                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']]\n                    and float(np.hypot(*(yp-prev[1])))",
+         "                    and prev[2] in np.argsort(-q)[:CONTINUITY['previous_in_top']] and _opening_ok(q, prev[2], self.accepted[hand])\n"
+         "                    and float(np.hypot(*(yp-prev[1])))")])
     py = sys.executable; rep = dict(src=SRC.name, dst=DST.name, model=str(MODEL), model_sha256=digest, training_events=n, days=S['days'], excluded=S['excluded'], steps={})
     rep['steps']['freeze'] = P.run([py, 'Program/freeze_seventh_package.py'], DST, f'log_{TAG}_freeze.log')
     rep['steps']['references'] = P.run([py, str(HERE/'score.py'), '--code', DST.name, '--days', 'R6,R7', '--tag', f'refs_{TAG}', '--refs', f'replay_{TAG}'], HERE, f'log_{TAG}_refs.log')
